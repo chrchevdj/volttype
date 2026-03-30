@@ -1,0 +1,13 @@
+node_modules/
+dist/
+out/
+*.log
+*.txt
+*.pdf
+.env
+.env.local
+.env.master
+Interface*
+MASTER_PROMPT*
+CLAUDE_CODE_MASTER_PROMPT*
+electron-output*

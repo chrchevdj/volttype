@@ -1,0 +1,10 @@
+{
+  "name": "volttype-api",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "secrets": "echo 'Run: wrangler secret put GROQ_API_KEY && wrangler secret put SUPABASE_URL && wrangler secret put SUPABASE_SERVICE_KEY && wrangler secret put SUPABASE_JWT_SECRET'"
+  }
+}
