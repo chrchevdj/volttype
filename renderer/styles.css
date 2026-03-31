@@ -273,8 +273,8 @@ body {
 /* ---- Cards — glassmorphism with colored accents ---- */
 .card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
   margin-bottom: 28px;
 }
 .status-card {
@@ -315,10 +315,10 @@ body {
 #card-dictations .card-icon { background: rgba(96,165,250,0.12); color: var(--blue); }
 
 .card-icon {
-  font-size: 22px;
+  font-size: 18px;
   flex-shrink: 0;
-  width: 46px;
-  height: 46px;
+  width: 38px;
+  height: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -327,8 +327,8 @@ body {
 }
 .status-card:hover .card-icon { transform: scale(1.05); }
 .card-info { flex: 1; min-width: 0; }
-.card-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.7px; font-weight: 600; }
-.card-value { font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 3px; }
+.card-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+.card-value { font-size: 13px; font-weight: 700; margin-top: 3px; word-break: break-word; }
 .card-status {
   font-size: 11px;
   padding: 4px 12px;
