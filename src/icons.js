@@ -60,7 +60,7 @@ function drawMicShape(rgba) {
 
 function createIdleIcon() {
   const rgba = Buffer.alloc(SIZE * SIZE * 4);
-  drawCircle(rgba, SIZE / 2, SIZE / 2, SIZE / 2 - 1, 124, 58, 237); // Purple brand color
+  drawCircle(rgba, SIZE / 2, SIZE / 2, SIZE / 2 - 1, 56, 189, 156); // Teal brand color
   drawMicShape(rgba);
   return nativeImage.createFromBuffer(createPNG(SIZE, SIZE, rgba), { width: SIZE, height: SIZE });
 }

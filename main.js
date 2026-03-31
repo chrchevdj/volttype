@@ -142,7 +142,7 @@ function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
     },
-    icon: iconIdle,
+    icon: path.join(__dirname, 'build', 'icon.png'),
   });
 
   mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
