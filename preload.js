@@ -47,6 +47,13 @@ contextBridge.exposeInMainWorld('volttype', {
   removeSnippet: (id) => ipcRenderer.invoke('remove-snippet', id),
   injectSnippet: (id) => ipcRenderer.invoke('inject-snippet', id),
 
+  // Auth
+  login: (data) => ipcRenderer.invoke('auth-login', data),
+  signup: (data) => ipcRenderer.invoke('auth-signup', data),
+  logout: () => ipcRenderer.invoke('auth-logout'),
+  getAuthStatus: () => ipcRenderer.invoke('auth-status'),
+  getAuthToken: () => ipcRenderer.invoke('auth-token'),
+
   // Window controls
   minimize: () => ipcRenderer.send('window-minimize'),
   maximize: () => ipcRenderer.send('window-maximize'),

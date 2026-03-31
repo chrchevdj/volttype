@@ -17,6 +17,7 @@ const { createIdleIcon, createRecordingIcon, createProcessingIcon } = require('.
 const HotkeyManager = require('./src/hotkey');
 const TextCleaner = require('./src/text-cleaner');
 const VocabLearner = require('./src/vocab-learner');
+const Auth = require('./src/auth');
 
 // Catch uncaught errors so the app doesn't silently die
 process.on('uncaughtException', (err) => {
@@ -45,6 +46,7 @@ let snippets = null;
 let sttEngine = null;
 let textCleaner = null;
 let vocabLearner = null;
+let auth = null;
 let hotkeyManager = null;
 let isRecording = false;
 let isTranscribing = false;  // Block new recordings while transcribing
@@ -69,6 +71,7 @@ app.whenReady().then(() => {
   sttEngine = new GroqSTT(settings.get('groqApiKey'));
   textCleaner = new TextCleaner(settings.get('groqApiKey'));
   vocabLearner = new VocabLearner();
+  auth = new Auth();
 
   // Auto-grant microphone permission
   session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
@@ -88,6 +91,11 @@ app.whenReady().then(() => {
   createOverlay();
   createTray();
   registerHotkeys();
+
+  // Ensure overlay is hidden on startup (prevents stuck overlay from previous crash)
+  hideOverlay();
+  isTranscribing = false;
+  isRecording = false;
 
   // Apply auto-start setting
   if (settings.get('startWithWindows') && !getAutoStartEnabled()) {
@@ -128,7 +136,7 @@ function createWindow() {
     show: false,
     frame: false,
     titleBarStyle: 'hidden',
-    backgroundColor: '#f8f9fc',
+    backgroundColor: '#0c1222',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -213,12 +221,12 @@ function createOverlay() {
         transition: all 0.3s ease;
       }
       .recording {
-        background: linear-gradient(135deg, #ef4444, #dc2626);
-        box-shadow: 0 4px 20px rgba(239,68,68,0.4);
+        background: linear-gradient(135deg, #f87171, #ef4444);
+        box-shadow: 0 4px 20px rgba(248,113,113,0.4);
       }
       .processing {
-        background: linear-gradient(135deg, #7c3aed, #2563eb);
-        box-shadow: 0 4px 20px rgba(124,58,237,0.4);
+        background: linear-gradient(135deg, #38bd9c, #3b82f6);
+        box-shadow: 0 4px 20px rgba(56,189,156,0.4);
       }
       .dot {
         width: 10px;
@@ -470,12 +478,14 @@ ipcMain.handle('audio-captured', async (event, { audioBase64, mimeType }) => {
       return { success: false, error: 'Too short' };
     }
 
+    // Set auth token for Worker backend (if logged in)
+    sttEngine.setAuthToken(auth.getToken());
+
     // Build Whisper prompt — ONLY personal terms and corrections (not recent history)
-    // Recent history causes Whisper to hallucinate and repeat phrases
     const learnedPrompt = vocabLearner.getWhisperPrompt();
     if (learnedPrompt) console.log(`[STT] Whisper prompt: "${learnedPrompt.slice(0, 80)}..."`);
 
-    // Transcribe
+    // Transcribe (uses Worker if logged in, direct Groq if has own API key)
     const result = await sttEngine.transcribe(
       audioBuffer,
       settings.get('language'),
@@ -598,6 +608,30 @@ ipcMain.on('vad-auto-stop', () => {
   console.log('[VAD] Auto-stop triggered by renderer');
   stopRecording();
 });
+
+// Auth
+ipcMain.handle('auth-login', async (event, { email, password }) => {
+  try {
+    await auth.login(email, password);
+    return { success: true, user: auth.getUser() };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+ipcMain.handle('auth-signup', async (event, { email, password }) => {
+  try {
+    await auth.signup(email, password);
+    return { success: true, user: auth.getUser() };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+ipcMain.handle('auth-logout', () => { auth.logout(); return true; });
+ipcMain.handle('auth-status', () => ({
+  loggedIn: auth.isLoggedIn(),
+  user: auth.getUser(),
+}));
+ipcMain.handle('auth-token', () => auth.getToken());
 
 // Vocabulary learner
 ipcMain.handle('get-vocab-stats', () => vocabLearner.getStats());

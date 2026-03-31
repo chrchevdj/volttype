@@ -26,6 +26,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     btn.addEventListener('click', () => navigateTo(btn.dataset.page));
   });
 
+  // Check auth — show login screen or main app
+  await initAuth();
+
   // Load settings
   settings = await vf.getSettings();
   applySettings(settings);
@@ -678,4 +681,100 @@ function setVal(id, value) {
 function setChecked(id, value) {
   const el = document.getElementById(id);
   if (el) el.checked = !!value;
+}
+
+// ---- Auth ----
+let authMode = 'login'; // 'login' or 'signup'
+
+async function initAuth() {
+  const status = await vf.getAuthStatus();
+  const authScreen = document.getElementById('auth-screen');
+
+  if (status.loggedIn) {
+    // Already logged in — hide auth screen
+    authScreen.classList.add('hidden');
+    return;
+  }
+
+  // Check if user has their own API key configured
+  const s = await vf.getSettings();
+  if (s.groqApiKey && s.groqApiKey.length > 10) {
+    // Has own API key — skip auth, let them use BYOK
+    authScreen.classList.add('hidden');
+    return;
+  }
+
+  // Show auth screen
+  authScreen.classList.remove('hidden');
+  setupAuthHandlers();
+}
+
+function setupAuthHandlers() {
+  const submitBtn = document.getElementById('auth-submit');
+  const toggleBtn = document.getElementById('auth-toggle');
+  const skipBtn = document.getElementById('auth-skip');
+  const emailInput = document.getElementById('auth-email');
+  const passwordInput = document.getElementById('auth-password');
+  const switchText = document.getElementById('auth-switch-text');
+  const errorEl = document.getElementById('auth-error');
+
+  submitBtn.addEventListener('click', async () => {
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+
+    if (!email || !password) {
+      showAuthError('Please enter email and password');
+      return;
+    }
+    if (password.length < 6) {
+      showAuthError('Password must be at least 6 characters');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = authMode === 'login' ? 'Signing in...' : 'Creating account...';
+    errorEl.classList.add('hidden');
+
+    const result = authMode === 'login'
+      ? await vf.login({ email, password })
+      : await vf.signup({ email, password });
+
+    submitBtn.disabled = false;
+    submitBtn.textContent = authMode === 'login' ? 'Sign In' : 'Create Account';
+
+    if (result.success) {
+      document.getElementById('auth-screen').classList.add('hidden');
+    } else {
+      showAuthError(result.error || 'Something went wrong');
+    }
+  });
+
+  // Enter key submits
+  passwordInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') submitBtn.click();
+  });
+  emailInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') passwordInput.focus();
+  });
+
+  // Toggle login/signup
+  toggleBtn.addEventListener('click', () => {
+    authMode = authMode === 'login' ? 'signup' : 'login';
+    submitBtn.textContent = authMode === 'login' ? 'Sign In' : 'Create Account';
+    switchText.textContent = authMode === 'login' ? "Don't have an account?" : 'Already have an account?';
+    toggleBtn.textContent = authMode === 'login' ? 'Create one' : 'Sign in';
+    errorEl.classList.add('hidden');
+  });
+
+  // Skip — use own API key
+  skipBtn.addEventListener('click', () => {
+    document.getElementById('auth-screen').classList.add('hidden');
+    navigateTo('settings');
+  });
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg;
+  el.classList.remove('hidden');
 }
