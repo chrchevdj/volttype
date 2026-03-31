@@ -47,6 +47,10 @@ contextBridge.exposeInMainWorld('volttype', {
   removeSnippet: (id) => ipcRenderer.invoke('remove-snippet', id),
   injectSnippet: (id) => ipcRenderer.invoke('inject-snippet', id),
 
+  // Upgrade / checkout
+  checkout: (plan) => ipcRenderer.invoke('checkout', plan),
+  getUsage: () => ipcRenderer.invoke('get-usage'),
+
   // Auth
   login: (data) => ipcRenderer.invoke('auth-login', data),
   signup: (data) => ipcRenderer.invoke('auth-signup', data),

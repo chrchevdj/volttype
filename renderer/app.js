@@ -64,6 +64,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Setup all event handlers
   setupHomeHandlers();
+  setupUpgradeHandlers();
   setupVocabHandlers();
   setupDictionaryHandlers();
   setupSnippetHandlers();
@@ -246,13 +247,25 @@ function handleTranscriptionResult({ text, duration, apiLatency }) {
   }
 }
 
+function showUpgradeBanner() {
+  document.getElementById('upgrade-banner').classList.remove('hidden');
+}
+
+function hideUpgradeBanner() {
+  document.getElementById('upgrade-banner').classList.add('hidden');
+}
+
 function handleTranscriptionError({ message }) {
   const status = document.getElementById('sidebar-status');
   status.className = 'status-error';
   status.querySelector('.status-text').textContent = 'Error';
   playErrorSound();
 
-  // Non-blocking error — just update status, no alert
+  // Check if this is a limit error — show upgrade banner
+  if (message && (message.includes('limit') || message.includes('Daily limit'))) {
+    showUpgradeBanner();
+  }
+
   console.log('[APP] Transcription error:', message);
 
   setTimeout(() => {
@@ -400,6 +413,21 @@ function updateQuickStart() {
 }
 
 // ---- Vocabulary learning ----
+function setupUpgradeHandlers() {
+  document.getElementById('btn-upgrade-basic').addEventListener('click', async () => {
+    const result = await vf.checkout('basic');
+    if (!result.success) {
+      console.log('[APP] Checkout error:', result.error);
+    }
+  });
+  document.getElementById('btn-upgrade-pro').addEventListener('click', async () => {
+    const result = await vf.checkout('pro');
+    if (!result.success) {
+      console.log('[APP] Checkout error:', result.error);
+    }
+  });
+}
+
 function setupVocabHandlers() {
   document.getElementById('btn-add-term').addEventListener('click', async () => {
     const input = document.getElementById('vocab-term-input');

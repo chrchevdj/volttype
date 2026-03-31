@@ -92,6 +92,46 @@ export default {
       }, 200, request);
     }
 
+    // --- POST /v1/checkout ---
+    if (path === '/v1/checkout' && request.method === 'POST') {
+      try {
+        const { plan } = await request.json();
+        const priceId = plan === 'pro' ? env.STRIPE_PRICE_PRO : env.STRIPE_PRICE_BASIC;
+
+        if (!priceId || !env.STRIPE_SECRET_KEY) {
+          return json({ error: 'Payment not configured' }, 500, request);
+        }
+
+        // Create Stripe Checkout Session
+        const stripeRes = await fetch('https://api.stripe.com/v1/checkout/sessions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${env.STRIPE_SECRET_KEY}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: new URLSearchParams({
+            'mode': 'subscription',
+            'payment_method_types[]': 'card',
+            'line_items[0][price]': priceId,
+            'line_items[0][quantity]': '1',
+            'success_url': 'https://volttype.com/?payment=success',
+            'cancel_url': 'https://volttype.com/?payment=cancelled',
+            'client_reference_id': user.userId,
+            'customer_email': user.email,
+          }),
+        });
+
+        const session = await stripeRes.json();
+        if (!stripeRes.ok) {
+          return json({ error: session.error?.message || 'Stripe error' }, 400, request);
+        }
+
+        return json({ url: session.url }, 200, request);
+      } catch (err) {
+        return json({ error: err.message }, 500, request);
+      }
+    }
+
     return json({ error: 'Not found' }, 404, request);
   },
 };

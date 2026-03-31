@@ -609,6 +609,48 @@ ipcMain.on('vad-auto-stop', () => {
   stopRecording();
 });
 
+// Checkout — open Stripe payment in browser
+ipcMain.handle('checkout', async (event, plan) => {
+  const token = auth.getToken();
+  if (!token) return { success: false, error: 'Not logged in' };
+
+  try {
+    const { net, shell } = require('electron');
+    const res = await net.fetch('https://volttype-api.crcaway.workers.dev/v1/checkout', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ plan }),
+    });
+    const data = await res.json();
+    if (data.url) {
+      shell.openExternal(data.url); // Opens Stripe checkout in browser
+      return { success: true };
+    }
+    return { success: false, error: data.error || 'Failed to create checkout' };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
+// Usage check
+ipcMain.handle('get-usage', async () => {
+  const token = auth.getToken();
+  if (!token) return null;
+
+  try {
+    const { net } = require('electron');
+    const res = await net.fetch('https://volttype-api.crcaway.workers.dev/v1/usage', {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    return await res.json();
+  } catch {
+    return null;
+  }
+});
+
 // Auth
 ipcMain.handle('auth-login', async (event, { email, password }) => {
   try {
