@@ -11,10 +11,18 @@
   <meta property="og:description" content="AI-powered voice typing. Speak naturally — your words appear in any app, 4x faster than typing.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://volttype.com">
-  <meta name="twitter:card" content="summary">
+  <meta property="og:image" content="https://volttype.com/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="VoltType — Stop Typing. Start Speaking.">
   <meta name="twitter:description" content="AI-powered voice typing. 4x faster than keyboard. Free to start.">
+  <meta name="twitter:image" content="https://volttype.com/og-image.png">
   <link rel="canonical" href="https://volttype.com">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <meta name="theme-color" content="#7c3aed">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
@@ -448,7 +456,7 @@
     <h1>Stop Typing. <span>Start Speaking.</span></h1>
     <p>AI-powered voice typing for Windows. Speak naturally — your words appear in any app, 4x faster than typing. It even learns your vocabulary.</p>
     <div class="hero-buttons">
-      <a href="https://github.com/chrchevdj/volttype/releases/download/v1.0.0/VoltType.Setup.1.0.0.exe" class="btn-hero btn-primary">Download Free for Windows</a>
+      <a href="https://github.com/chrchevdj/volttype-releases/releases/download/v1.0.0/VoltType.Setup.1.0.0.exe" class="btn-hero btn-primary">Download Free for Windows</a>
       <a href="javascript:void(0)" class="btn-hero btn-secondary-hero" id="hero-signup-btn">Create Account</a>
     </div>
     <p class="hero-note">Free tier — 10 minutes/day. No credit card needed.</p>
@@ -567,7 +575,7 @@
     <h2 class="section-title">Download VoltType</h2>
     <p class="section-sub">Download, create an account, and start voice typing.</p>
     <div class="download-buttons">
-      <a href="https://github.com/chrchevdj/volttype/releases/download/v1.0.0/VoltType.Setup.1.0.0.exe" class="btn-hero btn-primary">Download for Windows</a>
+      <a href="https://github.com/chrchevdj/volttype-releases/releases/download/v1.0.0/VoltType.Setup.1.0.0.exe" class="btn-hero btn-primary">Download for Windows</a>
     </div>
     <p class="hero-note">Windows 10/11 required. Free tier — no credit card needed.</p>
   </section>
@@ -930,6 +938,13 @@
       // Sign out
       document.getElementById('nav-logout').addEventListener('click', signOut);
     });
+
+    // PWA service worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+      });
+    }
   </script>
 </body>
 </html>
