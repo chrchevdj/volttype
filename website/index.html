@@ -651,6 +651,44 @@
     let authMode = 'signup';
     let token = localStorage.getItem('vt_token');
     let pendingPlan = null;
+    let pendingEmail = ''; // persists email so Resend works after form is hidden
+
+    // ── JWT auto-refresh ──────────────────────────────────────
+    async function refreshSession() {
+      const refresh = localStorage.getItem('vt_refresh');
+      if (!refresh) return;
+      try {
+        const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+          body: JSON.stringify({ refresh_token: refresh })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          token = data.access_token;
+          localStorage.setItem('vt_token', data.access_token);
+          localStorage.setItem('vt_refresh', data.refresh_token);
+          updateNavAuth();
+        } else {
+          // Refresh token is dead — sign out cleanly
+          signOut();
+        }
+      } catch { /* network error — keep existing token, try again next cycle */ }
+    }
+
+    function scheduleTokenRefresh() {
+      const payload = token ? decodeJWT(token) : null;
+      if (payload?.exp) {
+        const msUntilExpiry = (payload.exp * 1000) - Date.now() - 60000; // 1 min early
+        if (msUntilExpiry <= 0) {
+          refreshSession(); // already expired or about to — refresh immediately
+        } else {
+          setTimeout(refreshSession, msUntilExpiry);
+        }
+      }
+      // Safety net: refresh every 45 minutes regardless
+      setInterval(refreshSession, 45 * 60 * 1000);
+    }
 
     function decodeJWT(t) {
       try { return JSON.parse(atob(t.split('.')[1])); } catch { return null; }
@@ -720,8 +758,9 @@
     }
 
     async function resendVerification() {
-      const email = document.getElementById('modal-email').value.trim();
-      if (!email) return;
+      // Use pendingEmail saved when form was hidden; fall back to field value if still visible
+      const email = pendingEmail || document.getElementById('modal-email').value.trim();
+      if (!email) { alert('Could not determine email address. Please close and try again.'); return; }
       await fetch(`${SUPABASE_URL}/auth/v1/resend`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
@@ -794,6 +833,7 @@
           }
         } else {
           // Signup with email confirmation required — show verification screen
+          pendingEmail = email; // save before form is hidden so Resend can use it
           document.getElementById('verify-email-text').textContent = `We sent a confirmation link to ${email}. Click it to activate your account.`;
           document.getElementById('modal-form').classList.add('hidden');
           document.getElementById('modal-verify').classList.remove('hidden');
@@ -893,6 +933,7 @@
       }
 
       updateNavAuth();
+      if (token) scheduleTokenRefresh();
 
       // Check for payment return
       const params = new URLSearchParams(window.location.search);
