@@ -248,14 +248,177 @@
     .footer-links { display: flex; gap: 32px; justify-content: center; margin-bottom: 24px; font-size: 14px; }
     .footer-copy { font-size: 13px; color: rgba(255,255,255,0.4); }
 
+    /* Auth Modal */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.hidden { display: none; }
+    .modal {
+      background: var(--white);
+      border-radius: 20px;
+      padding: 40px 32px;
+      width: 100%; max-width: 400px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      position: relative;
+    }
+    .modal-close {
+      position: absolute; top: 16px; right: 16px;
+      background: none; border: none;
+      font-size: 24px; color: var(--text-secondary);
+      cursor: pointer; line-height: 1;
+    }
+    .modal-title {
+      font-size: 24px; font-weight: 800;
+      text-align: center; margin-bottom: 4px;
+    }
+    .modal-sub {
+      font-size: 14px; color: var(--text-secondary);
+      text-align: center; margin-bottom: 24px;
+    }
+    .modal-input {
+      display: block; width: 100%;
+      padding: 12px 16px; margin-bottom: 12px;
+      border: 1px solid rgba(0,0,0,0.12);
+      border-radius: 10px; font-size: 15px;
+      font-family: inherit; background: var(--bg);
+      color: var(--text);
+    }
+    .modal-input:focus { outline: none; border-color: var(--purple); }
+    .modal-btn {
+      display: block; width: 100%;
+      padding: 13px; margin-top: 4px;
+      background: linear-gradient(135deg, var(--purple), var(--blue));
+      color: white; border: none; border-radius: 10px;
+      font-size: 16px; font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 3px 14px rgba(124,58,237,0.3);
+    }
+    .modal-btn:hover { transform: translateY(-1px); }
+    .modal-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .modal-toggle {
+      text-align: center; margin-top: 16px;
+      font-size: 13px; color: var(--text-secondary);
+    }
+    .modal-toggle button {
+      background: none; border: none;
+      color: var(--purple); font-weight: 600;
+      cursor: pointer; font-size: 13px;
+    }
+    .modal-error {
+      background: #fef2f2; border: 1px solid #fecaca;
+      color: #dc2626; padding: 10px 14px;
+      border-radius: 10px; font-size: 13px;
+      margin-bottom: 12px; text-align: center;
+    }
+    .modal-error.hidden { display: none; }
+    .modal-success {
+      background: #f0fdf4; border: 1px solid #bbf7d0;
+      color: #16a34a; padding: 10px 14px;
+      border-radius: 10px; font-size: 13px;
+      margin-bottom: 12px; text-align: center;
+    }
+    .modal-success.hidden { display: none; }
+
+    /* Logged-in nav state */
+    .nav-user {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .nav-user-email {
+      font-size: 13px; color: var(--text-secondary);
+      max-width: 150px; overflow: hidden;
+      text-overflow: ellipsis; white-space: nowrap;
+    }
+    .nav-logout {
+      font-size: 12px; color: var(--text-secondary);
+      background: none; border: 1px solid rgba(0,0,0,0.1);
+      padding: 4px 12px; border-radius: 6px;
+      cursor: pointer;
+    }
+    .nav-user.hidden { display: none; }
+
+    .modal-logo { font-size: 32px; text-align: center; margin-bottom: 8px; }
+    .google-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 11px 16px;
+      background: #fff;
+      border: 1.5px solid #dadce0;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #3c4043;
+      cursor: pointer;
+      transition: background 0.2s, box-shadow 0.2s;
+      margin-bottom: 4px;
+    }
+    .google-btn:hover { background: #f8f9fa; box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
+    .modal-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 12px 0;
+      color: #94a3b8;
+      font-size: 12px;
+    }
+    .modal-divider::before, .modal-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #e2e8f0;
+    }
+    .password-wrap { position: relative; }
+    .password-strength {
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .strength-bar {
+      height: 4px;
+      border-radius: 2px;
+      transition: all 0.3s;
+      flex: 1;
+    }
+    .strength-label { font-size: 11px; color: #64748b; }
+    .modal-terms { font-size: 11px; color: #94a3b8; text-align: center; margin-top: 12px; }
+    .modal-terms a { color: #6366f1; text-decoration: none; }
+    .modal-verify { text-align: center; padding: 8px 0; }
+    .verify-icon { font-size: 48px; margin-bottom: 12px; }
+    .modal-verify h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: #1e293b; }
+    .modal-verify p { font-size: 14px; color: #64748b; margin-bottom: 6px; }
+    .verify-note { font-size: 12px !important; }
+    .modal-btn-secondary {
+      background: #f1f5f9;
+      color: #475569;
+      border: 1px solid #e2e8f0;
+      width: 100%;
+      padding: 11px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      margin-bottom: 8px;
+    }
+
     /* Mobile */
     @media (max-width: 768px) {
       nav { padding: 0 20px; }
       .nav-links a:not(.nav-cta) { display: none; }
+      .nav-user-email { display: none; }
       .hero { padding: 120px 20px 60px; }
       .section { padding: 60px 20px; }
       .hero-buttons { flex-direction: column; align-items: center; }
       .btn-hero { width: 100%; max-width: 300px; justify-content: center; }
+      .modal { padding: 32px 24px; }
     }
   </style>
 </head>
@@ -269,7 +432,11 @@
         <a href="#features">Features</a>
         <a href="#pricing">Pricing</a>
         <a href="#download">Download</a>
-        <a href="#download" class="nav-cta">Get Started Free</a>
+        <a href="javascript:void(0)" class="nav-cta" id="nav-cta-btn">Sign Up Free</a>
+      </div>
+      <div class="nav-user hidden" id="nav-user">
+        <span class="nav-user-email" id="nav-user-email"></span>
+        <button class="nav-logout" id="nav-logout">Sign Out</button>
       </div>
     </div>
   </nav>
@@ -278,10 +445,10 @@
   <section class="hero">
     <div class="hero-badge">Now available for Windows</div>
     <h1>Stop Typing. <span>Start Speaking.</span></h1>
-    <p>AI-powered voice typing for Windows, Mac, and Mobile. Speak naturally — your words appear in any app, 4x faster than typing. It even learns your vocabulary.</p>
+    <p>AI-powered voice typing for Windows. Speak naturally — your words appear in any app, 4x faster than typing. It even learns your vocabulary.</p>
     <div class="hero-buttons">
-      <a href="https://github.com/chrchevdj/volttype/releases/download/v1.0.0/VoltType.Setup.1.0.0.exe" class="btn-hero btn-primary">Download Free</a>
-      <a href="#pricing" class="btn-hero btn-secondary-hero">View Plans</a>
+      <a href="https://github.com/chrchevdj/volttype/releases/download/v1.0.0/VoltType.Setup.1.0.0.exe" class="btn-hero btn-primary">Download Free for Windows</a>
+      <a href="javascript:void(0)" class="btn-hero btn-secondary-hero" id="hero-signup-btn">Create Account</a>
     </div>
     <p class="hero-note">Free tier — 10 minutes/day. No credit card needed.</p>
   </section>
@@ -363,7 +530,7 @@
           <li>Personal vocabulary</li>
           <li>Word Bank (5 rules)</li>
         </ul>
-        <button class="btn-price btn-price-secondary">Get Started</button>
+        <button class="btn-price btn-price-secondary" onclick="handlePricing('free')">Get Started Free</button>
       </div>
       <div class="price-card popular">
         <div class="price-name">Basic</div>
@@ -376,7 +543,7 @@
           <li>Templates</li>
           <li>Correction learning</li>
         </ul>
-        <button class="btn-price btn-price-primary">Upgrade to Basic</button>
+        <button class="btn-price btn-price-primary" onclick="handlePricing('basic')">Upgrade to Basic</button>
       </div>
       <div class="price-card">
         <div class="price-name">Pro</div>
@@ -389,7 +556,7 @@
           <li>AI rewrite mode</li>
           <li>Priority support</li>
         </ul>
-        <button class="btn-price btn-price-secondary">Upgrade to Pro</button>
+        <button class="btn-price btn-price-primary" onclick="handlePricing('pro')">Upgrade to Pro</button>
       </div>
     </div>
   </section>
@@ -397,13 +564,65 @@
   <!-- Download -->
   <section class="section download-section" id="download">
     <h2 class="section-title">Download VoltType</h2>
-    <p class="section-sub">Available now for Windows. Mobile coming soon.</p>
+    <p class="section-sub">Download, create an account, and start voice typing.</p>
     <div class="download-buttons">
       <a href="https://github.com/chrchevdj/volttype/releases/download/v1.0.0/VoltType.Setup.1.0.0.exe" class="btn-hero btn-primary">Download for Windows</a>
-      <span class="badge-coming">Android — Coming Soon</span>
     </div>
-    <p class="hero-note">Windows 10/11 required. No credit card needed for free tier.</p>
+    <p class="hero-note">Windows 10/11 required. Free tier — no credit card needed.</p>
   </section>
+
+  <!-- Auth Modal -->
+  <div class="modal-overlay hidden" id="auth-modal">
+    <div class="modal">
+      <button class="modal-close" id="modal-close">&times;</button>
+      <div class="modal-logo">&#x26A1;</div>
+      <div class="modal-title" id="modal-title">Create Account</div>
+      <p class="modal-sub" id="modal-sub">Sign up to start voice typing for free</p>
+
+      <!-- Email verification state (hidden by default) -->
+      <div class="modal-verify hidden" id="modal-verify">
+        <div class="verify-icon">&#x2709;&#xFE0F;</div>
+        <h3>Check your email</h3>
+        <p id="verify-email-text">We sent a confirmation link to your email.</p>
+        <p class="verify-note">Click the link to activate your account, then come back to sign in.</p>
+        <button class="modal-btn modal-btn-secondary" onclick="resendVerification()">Resend email</button>
+        <button class="modal-btn" onclick="switchToSignin()">Back to Sign In</button>
+      </div>
+
+      <!-- Auth form (shown by default) -->
+      <div id="modal-form">
+        <!-- Google button -->
+        <button class="google-btn" id="google-signin-btn" onclick="signInWithGoogle()">
+          <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          Continue with Google
+        </button>
+
+        <div class="modal-divider"><span>or</span></div>
+
+        <div class="modal-error hidden" id="modal-error"></div>
+        <div class="modal-success hidden" id="modal-success"></div>
+
+        <input type="text" class="modal-input hidden" id="modal-name" placeholder="Full name" autocomplete="name">
+        <input type="email" class="modal-input" id="modal-email" placeholder="Email address" autocomplete="email">
+        <div class="password-wrap">
+          <input type="password" class="modal-input" id="modal-password" placeholder="Password (min 8 characters)" autocomplete="current-password">
+          <div class="password-strength hidden" id="password-strength">
+            <div class="strength-bar" id="strength-bar"></div>
+            <span class="strength-label" id="strength-label"></span>
+          </div>
+        </div>
+
+        <button class="modal-btn" id="modal-submit">Create Account</button>
+
+        <div class="modal-toggle">
+          <span id="modal-toggle-text">Already have an account?</span>
+          <button id="modal-toggle-btn" onclick="toggleAuthMode()">Sign in</button>
+        </div>
+
+        <p class="modal-terms">By signing up, you agree to our <a href="terms-of-service.html">Terms</a> and <a href="privacy-policy.html">Privacy Policy</a>.</p>
+      </div>
+    </div>
+  </div>
 
   <!-- Footer -->
   <footer>
@@ -415,5 +634,301 @@
     <p class="footer-copy">&copy; 2026 VoltType. All rights reserved.</p>
   </footer>
 
+  <script>
+    const API_URL = 'https://volttype-api.crcaway.workers.dev';
+    const SUPABASE_URL = 'https://ceuymixybyaxpldgggin.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNldXltaXh5YnlheHBsZGdnZ2luIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3ODgwNzYsImV4cCI6MjA4NzM2NDA3Nn0.OprbSZuB-wo2Q_aWnkhC0I7e7iPePT9lD8LT2BrlEWE';
+
+    let authMode = 'signup';
+    let token = localStorage.getItem('vt_token');
+    let pendingPlan = null;
+
+    function decodeJWT(t) {
+      try { return JSON.parse(atob(t.split('.')[1])); } catch { return null; }
+    }
+
+    // --- Show/hide modal ---
+    function showAuthModal(mode, plan) {
+      authMode = mode || 'signup';
+      pendingPlan = plan || null;
+      const modal = document.getElementById('auth-modal');
+      modal.classList.remove('hidden');
+      document.getElementById('modal-error').classList.add('hidden');
+      document.getElementById('modal-success').classList.add('hidden');
+      document.getElementById('modal-email').value = '';
+      document.getElementById('modal-password').value = '';
+      document.getElementById('modal-name').value = '';
+      // Reset to form view (hide verify screen)
+      document.getElementById('modal-form').classList.remove('hidden');
+      document.getElementById('modal-verify').classList.add('hidden');
+      // Hide strength bar
+      document.getElementById('password-strength').classList.add('hidden');
+      updateModalUI();
+    }
+
+    function hideAuthModal() {
+      document.getElementById('auth-modal').classList.add('hidden');
+      pendingPlan = null;
+    }
+
+    function updateModalUI() {
+      const nameField = document.getElementById('modal-name');
+      const strengthEl = document.getElementById('password-strength');
+      if (authMode === 'signup') {
+        document.getElementById('modal-title').textContent = 'Create Account';
+        document.getElementById('modal-sub').textContent = 'Join thousands of voice typers';
+        document.getElementById('modal-submit').textContent = 'Create Account';
+        document.getElementById('modal-toggle-text').textContent = 'Already have an account?';
+        document.getElementById('modal-toggle-btn').textContent = 'Sign in';
+        nameField.classList.remove('hidden');
+        document.getElementById('modal-password').placeholder = 'Password (min 8 characters)';
+        document.getElementById('modal-password').autocomplete = 'new-password';
+      } else {
+        document.getElementById('modal-title').textContent = 'Welcome Back';
+        document.getElementById('modal-sub').textContent = 'Sign in to your VoltType account';
+        document.getElementById('modal-submit').textContent = 'Sign In';
+        document.getElementById('modal-toggle-text').textContent = "Don't have an account?";
+        document.getElementById('modal-toggle-btn').textContent = 'Create one';
+        nameField.classList.add('hidden');
+        if (strengthEl) strengthEl.classList.add('hidden');
+        document.getElementById('modal-password').placeholder = 'Password';
+        document.getElementById('modal-password').autocomplete = 'current-password';
+      }
+    }
+
+    function toggleAuthMode() {
+      authMode = authMode === 'signup' ? 'login' : 'signup';
+      document.getElementById('modal-error').classList.add('hidden');
+      document.getElementById('modal-success').classList.add('hidden');
+      updateModalUI();
+    }
+
+    function switchToSignin() {
+      document.getElementById('modal-form').classList.remove('hidden');
+      document.getElementById('modal-verify').classList.add('hidden');
+      authMode = 'login';
+      updateModalUI();
+    }
+
+    async function resendVerification() {
+      const email = document.getElementById('modal-email').value.trim();
+      if (!email) return;
+      await fetch(`${SUPABASE_URL}/auth/v1/resend`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+        body: JSON.stringify({ type: 'signup', email })
+      });
+      alert('Verification email resent! Check your inbox.');
+    }
+
+    function signInWithGoogle() {
+      const origin = window.location.origin + window.location.pathname;
+      window.location.href = `${SUPABASE_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(origin)}`;
+    }
+
+    // --- Auth ---
+    async function submitAuth() {
+      const email = document.getElementById('modal-email').value.trim();
+      const password = document.getElementById('modal-password').value;
+      const errEl = document.getElementById('modal-error');
+      const successEl = document.getElementById('modal-success');
+      const btn = document.getElementById('modal-submit');
+
+      errEl.classList.add('hidden');
+      successEl.classList.add('hidden');
+
+      if (!email || !password) { errEl.textContent = 'Enter email and password'; errEl.classList.remove('hidden'); return; }
+
+      // Email format validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) { errEl.textContent = 'Please enter a valid email address'; errEl.classList.remove('hidden'); return; }
+
+      const minLen = authMode === 'signup' ? 8 : 6;
+      if (password.length < minLen) { errEl.textContent = `Password must be at least ${minLen} characters`; errEl.classList.remove('hidden'); return; }
+
+      btn.disabled = true;
+      btn.textContent = 'Please wait...';
+
+      try {
+        const endpoint = authMode === 'signup'
+          ? `${SUPABASE_URL}/auth/v1/signup`
+          : `${SUPABASE_URL}/auth/v1/token?grant_type=password`;
+
+        const bodyData = { email, password };
+        if (authMode === 'signup') {
+          const name = document.getElementById('modal-name').value.trim();
+          if (name) bodyData.data = { full_name: name };
+        }
+
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+          body: JSON.stringify(bodyData),
+        });
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error_description || data.msg || 'Authentication failed');
+
+        if (data.access_token) {
+          token = data.access_token;
+          localStorage.setItem('vt_token', data.access_token);
+          localStorage.setItem('vt_refresh', data.refresh_token);
+          updateNavAuth();
+
+          // If there's a pending paid plan, start checkout
+          if (pendingPlan && pendingPlan !== 'free') {
+            await startCheckout(pendingPlan);
+          } else {
+            successEl.textContent = 'Account created! Download VoltType and sign in with your email.';
+            successEl.classList.remove('hidden');
+            setTimeout(hideAuthModal, 3000);
+          }
+        } else {
+          // Signup with email confirmation required — show verification screen
+          document.getElementById('verify-email-text').textContent = `We sent a confirmation link to ${email}. Click it to activate your account.`;
+          document.getElementById('modal-form').classList.add('hidden');
+          document.getElementById('modal-verify').classList.remove('hidden');
+        }
+      } catch (err) {
+        errEl.textContent = err.message;
+        errEl.classList.remove('hidden');
+      }
+
+      btn.disabled = false;
+      updateModalUI();
+    }
+
+    // --- Checkout ---
+    async function startCheckout(plan) {
+      try {
+        const res = await fetch(`${API_URL}/v1/checkout`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ plan }),
+        });
+        const data = await res.json();
+        if (data.url) {
+          window.location.href = data.url;
+        } else {
+          const errEl = document.getElementById('modal-error');
+          errEl.textContent = data.error || 'Could not start payment. Please try again.';
+          errEl.classList.remove('hidden');
+        }
+      } catch (err) {
+        const errEl = document.getElementById('modal-error');
+        errEl.textContent = 'Payment error: ' + err.message;
+        errEl.classList.remove('hidden');
+      }
+    }
+
+    // --- Pricing button handler ---
+    function handlePricing(plan) {
+      if (plan === 'free') {
+        if (token) {
+          // Already signed in — just scroll to download
+          document.getElementById('download').scrollIntoView({ behavior: 'smooth' });
+        } else {
+          showAuthModal('signup', 'free');
+        }
+        return;
+      }
+
+      // Paid plan
+      if (token) {
+        // Already logged in — go straight to Stripe
+        startCheckout(plan);
+      } else {
+        // Need to sign up first, then checkout
+        showAuthModal('signup', plan);
+      }
+    }
+
+    // --- Nav auth state ---
+    function updateNavAuth() {
+      const ctaBtn = document.getElementById('nav-cta-btn');
+      const userEl = document.getElementById('nav-user');
+
+      if (token) {
+        const payload = decodeJWT(token);
+        ctaBtn.style.display = 'none';
+        userEl.classList.remove('hidden');
+        document.getElementById('nav-user-email').textContent = payload?.email || 'Account';
+      } else {
+        ctaBtn.style.display = '';
+        userEl.classList.add('hidden');
+      }
+    }
+
+    function signOut() {
+      token = null;
+      localStorage.removeItem('vt_token');
+      localStorage.removeItem('vt_refresh');
+      updateNavAuth();
+    }
+
+    // --- Init ---
+    document.addEventListener('DOMContentLoaded', () => {
+      // Handle OAuth callback (Google sign-in redirect)
+      const hashParams = new URLSearchParams(window.location.hash.replace('#', '?'));
+      const accessToken = hashParams.get('access_token');
+      if (accessToken) {
+        localStorage.setItem('vt_token', accessToken);
+        const refreshToken = hashParams.get('refresh_token');
+        if (refreshToken) localStorage.setItem('vt_refresh', refreshToken);
+        token = accessToken;
+        // Clean URL
+        history.replaceState(null, '', window.location.pathname);
+      }
+
+      updateNavAuth();
+
+      // Check for payment return
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('payment') === 'success') {
+        alert('Payment successful! Your plan has been upgraded. Download VoltType and sign in to use your new plan.');
+        window.history.replaceState({}, '', '/');
+      }
+
+      // Nav CTA
+      document.getElementById('nav-cta-btn').addEventListener('click', () => showAuthModal('signup'));
+      document.getElementById('hero-signup-btn').addEventListener('click', () => showAuthModal('signup'));
+
+      // Modal
+      document.getElementById('modal-close').addEventListener('click', hideAuthModal);
+      document.getElementById('auth-modal').addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) hideAuthModal();
+      });
+      document.getElementById('modal-submit').addEventListener('click', submitAuth);
+      document.getElementById('modal-password').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') submitAuth();
+      });
+
+      // Password strength indicator
+      document.getElementById('modal-password').addEventListener('input', function() {
+        if (authMode !== 'signup') return;
+        const val = this.value;
+        const strengthEl = document.getElementById('password-strength');
+        const bar = document.getElementById('strength-bar');
+        const label = document.getElementById('strength-label');
+        if (!val) { strengthEl.classList.add('hidden'); return; }
+        strengthEl.classList.remove('hidden');
+        const hasNumber = /\d/.test(val);
+        const hasSpecial = /[!@#$%^&*]/.test(val);
+        if (val.length < 8) {
+          bar.style.width = '33%'; bar.style.background = '#ef4444'; label.textContent = 'Too short';
+        } else if (!hasNumber && !hasSpecial) {
+          bar.style.width = '66%'; bar.style.background = '#f59e0b'; label.textContent = 'Fair \u2014 add a number';
+        } else {
+          bar.style.width = '100%'; bar.style.background = '#22c55e'; label.textContent = 'Strong \u2713';
+        }
+      });
+
+      // Sign out
+      document.getElementById('nav-logout').addEventListener('click', signOut);
+    });
+  </script>
 </body>
 </html>
