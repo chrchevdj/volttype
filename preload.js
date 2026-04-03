@@ -65,4 +65,9 @@ contextBridge.exposeInMainWorld('volttype', {
 
   // App info
   getAppInfo: () => ipcRenderer.invoke('get-app-info'),
+
+  // Auto-updater
+  onUpdateAvailable: (callback) => ipcRenderer.on('update-available', (_, data) => callback(data)),
+  onUpdateDownloaded: (callback) => ipcRenderer.on('update-downloaded', (_, data) => callback(data)),
+  installUpdate: () => ipcRenderer.send('install-update'),
 });

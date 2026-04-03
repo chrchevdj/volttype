@@ -6,6 +6,7 @@
  */
 const { app, BrowserWindow, globalShortcut, ipcMain, session, Tray, Menu, nativeImage } = require('electron');
 const path = require('path');
+const { autoUpdater } = require('electron-updater');
 const Settings = require('./src/settings');
 const History = require('./src/history');
 const Dictionary = require('./src/dictionary');
@@ -91,6 +92,25 @@ app.whenReady().then(() => {
   createOverlay();
   createTray();
   registerHotkeys();
+
+  // Auto-update: check GitHub releases silently
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+  autoUpdater.checkForUpdatesAndNotify().catch(err => {
+    console.log('[UPDATE] Check failed (no internet or no release):', err.message);
+  });
+  autoUpdater.on('update-available', (info) => {
+    console.log('[UPDATE] Update available:', info.version);
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('update-available', { version: info.version });
+    }
+  });
+  autoUpdater.on('update-downloaded', (info) => {
+    console.log('[UPDATE] Update downloaded:', info.version);
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('update-downloaded', { version: info.version });
+    }
+  });
 
   // Ensure overlay is hidden on startup (prevents stuck overlay from previous crash)
   hideOverlay();
@@ -737,3 +757,8 @@ ipcMain.handle('get-app-info', () => ({
   platform: process.platform,
   isAutoStartEnabled: getAutoStartEnabled(),
 }));
+
+// Install downloaded update
+ipcMain.on('install-update', () => {
+  autoUpdater.quitAndInstall();
+});

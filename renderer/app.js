@@ -60,7 +60,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadDictionary();
   await loadSnippets();
   await loadVocabStats();
+  await loadUsageStats();
   updateQuickStart();
+  initOnboarding();
 
   // Setup all event handlers
   setupHomeHandlers();
@@ -116,17 +118,203 @@ function playTone(freq, duration, type = 'sine') {
   } catch {}
 }
 
-// ---- Live audio level visualization ----
+// ---- Live audio level visualization (canvas waveform) ----
+const waveformState = {
+  history: new Float32Array(128).fill(0), // rolling level history
+  historyIdx: 0,
+  smoothLevel: 0,
+  animFrame: null,
+  startTime: 0,
+  timerInterval: null,
+};
+
 function updateAudioLevel(level) {
-  const bars = document.getElementById('audio-bars');
-  if (!bars) return;
-  // Update each bar height based on audio level + random variation for organic feel
-  const barEls = bars.children;
-  for (let i = 0; i < barEls.length; i++) {
-    const variation = Math.random() * 15;
-    const height = Math.max(4, Math.min(32, (level + variation) * 0.4));
-    barEls[i].style.height = height + 'px';
+  // Store in rolling history buffer
+  waveformState.history[waveformState.historyIdx % waveformState.history.length] = level;
+  waveformState.historyIdx++;
+  // Smooth the current level for glow effects
+  waveformState.smoothLevel += (level - waveformState.smoothLevel) * 0.3;
+}
+
+function startWaveformAnimation() {
+  const canvas = document.getElementById('waveform-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  // Start timer
+  waveformState.startTime = Date.now();
+  waveformState.timerInterval = setInterval(updateRecordingTimer, 1000);
+  updateRecordingTimer();
+
+  // Reset history
+  waveformState.history.fill(0);
+  waveformState.historyIdx = 0;
+  waveformState.smoothLevel = 0;
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+    const W = rect.width;
+    const H = rect.height;
+
+    ctx.clearRect(0, 0, W, H);
+
+    const hist = waveformState.history;
+    const len = hist.length;
+    const idx = waveformState.historyIdx;
+    const now = performance.now() / 1000;
+    const smoothLevel = waveformState.smoothLevel;
+    const normalizedLevel = Math.min(smoothLevel / 80, 1); // Normalize 0-80 range
+
+    // -- Draw mirrored waveform with gradient fill --
+    const midY = H / 2;
+    const maxAmp = H * 0.42;
+
+    // Create gradient for the wave fill
+    const grad = ctx.createLinearGradient(0, 0, W, 0);
+    grad.addColorStop(0, `rgba(56,189,156,${0.02 + normalizedLevel * 0.08})`);
+    grad.addColorStop(0.3, `rgba(56,189,156,${0.08 + normalizedLevel * 0.2})`);
+    grad.addColorStop(0.6, `rgba(59,130,246,${0.06 + normalizedLevel * 0.15})`);
+    grad.addColorStop(1, `rgba(139,92,246,${0.03 + normalizedLevel * 0.1})`);
+
+    // Stroke gradient
+    const strokeGrad = ctx.createLinearGradient(0, 0, W, 0);
+    strokeGrad.addColorStop(0, `rgba(56,189,156,${0.3 + normalizedLevel * 0.5})`);
+    strokeGrad.addColorStop(0.5, `rgba(59,130,246,${0.3 + normalizedLevel * 0.4})`);
+    strokeGrad.addColorStop(1, `rgba(139,92,246,${0.2 + normalizedLevel * 0.3})`);
+
+    // Build upper wave path from history
+    const points = [];
+    for (let i = 0; i < len; i++) {
+      const dataIdx = (idx - len + i + len * 2) % len;
+      const rawVal = hist[dataIdx] / 80; // normalize
+      // Add a subtle sine wave even at zero for visual interest
+      const ambient = Math.sin(now * 2 + i * 0.15) * 0.03 + Math.sin(now * 3.7 + i * 0.08) * 0.02;
+      const val = Math.min(rawVal + ambient, 1);
+      const x = (i / (len - 1)) * W;
+      const amp = val * maxAmp;
+      points.push({ x, amp });
+    }
+
+    // Draw filled wave (upper half)
+    ctx.beginPath();
+    ctx.moveTo(0, midY);
+    for (let i = 0; i < points.length; i++) {
+      const p = points[i];
+      if (i === 0) {
+        ctx.lineTo(p.x, midY - p.amp);
+      } else {
+        // Smooth curve between points
+        const prev = points[i - 1];
+        const cpx = (prev.x + p.x) / 2;
+        ctx.quadraticCurveTo(prev.x, midY - prev.amp, cpx, midY - (prev.amp + p.amp) / 2);
+        if (i === points.length - 1) {
+          ctx.quadraticCurveTo(p.x, midY - p.amp, p.x, midY - p.amp);
+        }
+      }
+    }
+    // Close by mirroring down
+    for (let i = points.length - 1; i >= 0; i--) {
+      const p = points[i];
+      if (i === points.length - 1) {
+        ctx.lineTo(p.x, midY + p.amp);
+      } else {
+        const next = points[i + 1];
+        const cpx = (next.x + p.x) / 2;
+        ctx.quadraticCurveTo(next.x, midY + next.amp, cpx, midY + (next.amp + p.amp) / 2);
+        if (i === 0) {
+          ctx.quadraticCurveTo(p.x, midY + p.amp, p.x, midY + p.amp);
+        }
+      }
+    }
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Draw upper stroke line
+    ctx.beginPath();
+    ctx.moveTo(0, midY);
+    for (let i = 0; i < points.length; i++) {
+      const p = points[i];
+      if (i === 0) {
+        ctx.lineTo(p.x, midY - p.amp);
+      } else {
+        const prev = points[i - 1];
+        const cpx = (prev.x + p.x) / 2;
+        ctx.quadraticCurveTo(prev.x, midY - prev.amp, cpx, midY - (prev.amp + p.amp) / 2);
+        if (i === points.length - 1) {
+          ctx.quadraticCurveTo(p.x, midY - p.amp, p.x, midY - p.amp);
+        }
+      }
+    }
+    ctx.strokeStyle = strokeGrad;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Draw lower stroke line (mirror)
+    ctx.beginPath();
+    ctx.moveTo(0, midY);
+    for (let i = 0; i < points.length; i++) {
+      const p = points[i];
+      if (i === 0) {
+        ctx.lineTo(p.x, midY + p.amp);
+      } else {
+        const prev = points[i - 1];
+        const cpx = (prev.x + p.x) / 2;
+        ctx.quadraticCurveTo(prev.x, midY + prev.amp, cpx, midY + (prev.amp + p.amp) / 2);
+        if (i === points.length - 1) {
+          ctx.quadraticCurveTo(p.x, midY + p.amp, p.x, midY + p.amp);
+        }
+      }
+    }
+    ctx.strokeStyle = strokeGrad;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Center glow line
+    ctx.beginPath();
+    ctx.moveTo(0, midY);
+    ctx.lineTo(W, midY);
+    ctx.strokeStyle = `rgba(56,189,156,${0.08 + normalizedLevel * 0.12})`;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Glow effect at peak areas
+    if (normalizedLevel > 0.15) {
+      const glowGrad = ctx.createRadialGradient(W * 0.7, midY, 0, W * 0.7, midY, W * 0.35);
+      glowGrad.addColorStop(0, `rgba(56,189,156,${normalizedLevel * 0.12})`);
+      glowGrad.addColorStop(1, 'rgba(56,189,156,0)');
+      ctx.fillStyle = glowGrad;
+      ctx.fillRect(0, 0, W, H);
+    }
+
+    waveformState.animFrame = requestAnimationFrame(draw);
   }
+
+  draw();
+}
+
+function stopWaveformAnimation() {
+  if (waveformState.animFrame) {
+    cancelAnimationFrame(waveformState.animFrame);
+    waveformState.animFrame = null;
+  }
+  if (waveformState.timerInterval) {
+    clearInterval(waveformState.timerInterval);
+    waveformState.timerInterval = null;
+  }
+}
+
+function updateRecordingTimer() {
+  const el = document.getElementById('recording-timer');
+  if (!el) return;
+  const elapsed = Math.floor((Date.now() - waveformState.startTime) / 1000);
+  const mins = Math.floor(elapsed / 60);
+  const secs = elapsed % 60;
+  el.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
 function playStartSound() { playTone(880, 0.12); } // High short beep
@@ -156,10 +344,16 @@ async function _handleRecordingState({ recording, skip, mode }) {
     audio.setVADEnabled(mode === 'toggle');
 
     banner.classList.remove('hidden');
+    startWaveformAnimation();
     status.className = 'status-recording';
     status.querySelector('.status-text').textContent = mode === 'hold'
       ? 'Recording... (release keys to stop)'
       : 'Recording... (auto-stops when you pause)';
+    // Update sublabel based on mode
+    const sublabel = banner.querySelector('.recording-sublabel');
+    if (sublabel) {
+      sublabel.textContent = mode === 'hold' ? 'Release keys to stop' : 'Auto-stops when you pause';
+    }
     try {
       await audio.startRecording();
       playStartSound();
@@ -167,6 +361,7 @@ async function _handleRecordingState({ recording, skip, mode }) {
     } catch (err) {
       console.error('[APP] Audio start failed:', err);
       playErrorSound();
+      stopWaveformAnimation();
       banner.classList.add('hidden');
       status.className = 'status-error';
       status.querySelector('.status-text').textContent = 'Mic Error';
@@ -177,6 +372,7 @@ async function _handleRecordingState({ recording, skip, mode }) {
     }
   } else {
     // -- STOP RECORDING --
+    stopWaveformAnimation();
     banner.classList.add('hidden');
 
     if (skip) {
@@ -276,10 +472,16 @@ function handleTranscriptionError({ message }) {
 
 // ---- Home page ----
 function setupHomeHandlers() {
+  const installBtn = document.getElementById('btn-install-update');
+  if (installBtn) {
+    installBtn.addEventListener('click', () => vf.installUpdate());
+  }
+
   document.getElementById('btn-clear-history').addEventListener('click', async () => {
     if (confirm('Clear all dictation history?')) {
       await vf.clearHistory();
       await loadHistory();
+      await loadUsageStats();
     }
   });
 }
@@ -805,4 +1007,76 @@ function showAuthError(msg) {
   const el = document.getElementById('auth-error');
   el.textContent = msg;
   el.classList.remove('hidden');
+}
+
+// ---- Onboarding ----
+function initOnboarding() {
+  // Show on first run only (check localStorage)
+  if (localStorage.getItem('vt_onboarding_done')) return;
+
+  const overlay = document.getElementById('onboarding-overlay');
+  overlay.classList.remove('hidden');
+
+  let currentStep = 1;
+
+  function showStep(n) {
+    for (let i = 1; i <= 3; i++) {
+      document.getElementById(`ob-step-${i}`).classList.toggle('hidden', i !== n);
+      document.getElementById(`ob-dot-${i}`).classList.toggle('active', i === n);
+    }
+    currentStep = n;
+  }
+
+  document.getElementById('ob-next-1').addEventListener('click', () => showStep(2));
+  document.getElementById('ob-next-2').addEventListener('click', () => showStep(3));
+  document.getElementById('ob-finish').addEventListener('click', () => {
+    localStorage.setItem('vt_onboarding_done', '1');
+    overlay.classList.add('hidden');
+  });
+
+  // Open Groq link in browser
+  document.getElementById('ob-groq-link').addEventListener('click', (e) => {
+    e.preventDefault();
+    window.open('https://console.groq.com', '_blank');
+  });
+}
+
+// ---- Usage stats ----
+async function loadUsageStats() {
+  const all = await vf.getHistory();
+  if (!all || all.length === 0) return;
+
+  const totalWords = all.reduce((sum, entry) => {
+    return sum + (entry.text ? entry.text.trim().split(/\s+/).filter(Boolean).length : 0);
+  }, 0);
+  const totalSeconds = all.reduce((sum, entry) => sum + (entry.duration || 0), 0);
+  const minutesSaved = Math.round(totalSeconds / 60 * 3); // ~3x faster than typing
+
+  const wordsEl = document.getElementById('stat-total-words');
+  const minsEl = document.getElementById('stat-minutes-saved');
+  const sessionsEl = document.getElementById('stat-total-sessions');
+  if (wordsEl) wordsEl.textContent = totalWords.toLocaleString();
+  if (minsEl) minsEl.textContent = minutesSaved;
+  if (sessionsEl) sessionsEl.textContent = all.length;
+}
+
+// ---- Auto-update banner ----
+if (window.volttype?.onUpdateAvailable) {
+  window.volttype.onUpdateAvailable(({ version }) => {
+    const banner = document.getElementById('update-banner');
+    const versionEl = document.getElementById('update-version');
+    if (banner) { banner.classList.remove('hidden'); }
+    if (versionEl) { versionEl.textContent = version; }
+  });
+}
+if (window.volttype?.onUpdateDownloaded) {
+  window.volttype.onUpdateDownloaded(({ version }) => {
+    const banner = document.getElementById('update-banner');
+    const installBtn = document.getElementById('btn-install-update');
+    if (banner) { banner.classList.remove('hidden'); }
+    if (installBtn) {
+      installBtn.textContent = `Install v${version} & Restart`;
+      installBtn.classList.remove('hidden');
+    }
+  });
 }

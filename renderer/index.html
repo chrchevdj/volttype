@@ -71,6 +71,12 @@
           <p class="subtitle">AI-powered voice typing that learns your style</p>
         </div>
 
+        <!-- Update banner -->
+        <div id="update-banner" class="update-banner hidden">
+          <span>🎉 A new version of VoltType is available — <span id="update-version"></span></span>
+          <button id="btn-install-update" class="btn-primary btn-small hidden">Install & Restart</button>
+        </div>
+
         <!-- Status cards -->
         <div class="card-grid">
           <div class="status-card" id="card-hotkey">
@@ -128,19 +134,17 @@
 
         <!-- Recording indicator -->
         <div id="recording-banner" class="hidden">
-          <div class="recording-pulse"></div>
-          <div id="audio-bars" class="audio-bars">
-            <div class="audio-bar"></div>
-            <div class="audio-bar"></div>
-            <div class="audio-bar"></div>
-            <div class="audio-bar"></div>
-            <div class="audio-bar"></div>
-            <div class="audio-bar"></div>
-            <div class="audio-bar"></div>
-            <div class="audio-bar"></div>
-            <div class="audio-bar"></div>
+          <div class="recording-left">
+            <div class="recording-pulse-ring">
+              <div class="recording-pulse"></div>
+            </div>
+            <div class="recording-info">
+              <span class="recording-label">Listening</span>
+              <span class="recording-sublabel">Auto-stops when you pause</span>
+            </div>
           </div>
-          <span>Listening... (auto-stops when you pause)</span>
+          <canvas id="waveform-canvas" width="400" height="64"></canvas>
+          <div class="recording-timer" id="recording-timer">0:00</div>
         </div>
 
         <!-- Quick start -->
@@ -207,6 +211,34 @@
             <button class="btn-primary btn-small" id="btn-add-term">Add</button>
           </div>
           <div id="vocab-terms-list" class="vocab-terms-list"></div>
+        </div>
+
+        <!-- Usage stats -->
+        <div class="section" id="usage-stats-section">
+          <h2>Your Stats</h2>
+          <div class="card-grid" style="margin-top:12px">
+            <div class="status-card">
+              <div class="card-icon">💬</div>
+              <div class="card-info">
+                <div class="card-label">Words Typed by Voice</div>
+                <div class="card-value" id="stat-total-words">0</div>
+              </div>
+            </div>
+            <div class="status-card">
+              <div class="card-icon">⏱️</div>
+              <div class="card-info">
+                <div class="card-label">Minutes Saved</div>
+                <div class="card-value" id="stat-minutes-saved">0</div>
+              </div>
+            </div>
+            <div class="status-card">
+              <div class="card-icon">🎙️</div>
+              <div class="card-info">
+                <div class="card-label">Total Sessions</div>
+                <div class="card-value" id="stat-total-sessions">0</div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Recent history -->
@@ -409,6 +441,46 @@
         </div>
       </div>
     </main>
+  </div>
+
+  <!-- First-run onboarding modal -->
+  <div id="onboarding-overlay" class="onboarding-overlay hidden">
+    <div class="onboarding-card">
+      <div class="onboarding-step" id="ob-step-1">
+        <div class="ob-icon">⚡</div>
+        <h2>Welcome to VoltType</h2>
+        <p>AI-powered voice typing that types for you — <strong>4x faster</strong> than keyboard.</p>
+        <p class="ob-sub">Let's get you set up in 2 minutes.</p>
+        <button class="ob-btn-primary" id="ob-next-1">Get Started →</button>
+      </div>
+      <div class="onboarding-step hidden" id="ob-step-2">
+        <div class="ob-icon">🔑</div>
+        <h2>Connect your free API key</h2>
+        <p>VoltType uses <strong>Groq</strong> for super-fast transcription. It's <strong>completely free</strong>.</p>
+        <ol class="ob-steps-list">
+          <li>Go to <a href="#" id="ob-groq-link" class="ob-link">console.groq.com</a> and sign up free</li>
+          <li>Create an API key and copy it</li>
+          <li>Paste it in Settings → Groq API Key</li>
+        </ol>
+        <p class="ob-sub">Or create a free VoltType account and we handle the API for you.</p>
+        <button class="ob-btn-primary" id="ob-next-2">Got it →</button>
+      </div>
+      <div class="onboarding-step hidden" id="ob-step-3">
+        <div class="ob-icon">🎤</div>
+        <h2>You're all set!</h2>
+        <p>Click anywhere, then <strong>hold Ctrl+Space</strong> and start speaking.</p>
+        <p class="ob-sub">Your words appear instantly in any app — email, browser, Word, anywhere.</p>
+        <div class="ob-hotkey-demo">
+          <kbd>Hold Ctrl + Space</kbd> → speak → release → text appears ✓
+        </div>
+        <button class="ob-btn-primary" id="ob-finish">Start Voice Typing →</button>
+      </div>
+      <div class="ob-dots">
+        <span class="ob-dot active" id="ob-dot-1"></span>
+        <span class="ob-dot" id="ob-dot-2"></span>
+        <span class="ob-dot" id="ob-dot-3"></span>
+      </div>
+    </div>
   </div>
 
   <!-- Auth modal -->

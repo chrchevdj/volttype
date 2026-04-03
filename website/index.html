@@ -23,6 +23,8 @@
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
   <meta name="theme-color" content="#7c3aed">
+  <!-- Apply dark mode before render to prevent flash -->
+  <script>if(localStorage.getItem('vt_dark')==='1')document.documentElement.classList.add('dark');</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
@@ -38,6 +40,19 @@
       --bg: #f8f9fc;
       --white: #ffffff;
       --radius: 16px;
+      --card-bg: #ffffff;
+      --nav-bg: rgba(255,255,255,0.85);
+      --nav-border: rgba(0,0,0,0.06);
+    }
+    .dark {
+      --text: #e2e8f0;
+      --text-secondary: #94a3b8;
+      --bg: #0f172a;
+      --white: #1e293b;
+      --card-bg: #1e293b;
+      --nav-bg: rgba(15,23,42,0.90);
+      --nav-border: rgba(255,255,255,0.06);
+      --purple-light: rgba(124,58,237,0.15);
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -45,16 +60,18 @@
       background: var(--bg);
       color: var(--text);
       line-height: 1.6;
+      transition: background 0.3s, color 0.3s;
     }
     a { text-decoration: none; color: inherit; }
 
     /* Nav */
     nav {
       position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      background: rgba(255,255,255,0.85);
+      background: var(--nav-bg);
       backdrop-filter: blur(20px);
-      border-bottom: 1px solid rgba(0,0,0,0.06);
+      border-bottom: 1px solid var(--nav-border);
       padding: 0 40px;
+      transition: background 0.3s;
     }
     .nav-inner {
       max-width: 1200px; margin: 0 auto;
@@ -77,6 +94,17 @@
       transition: all 0.2s;
     }
     .nav-cta:hover { transform: translateY(-1px); box-shadow: 0 4px 18px rgba(124,58,237,0.4); }
+
+    /* Dark mode toggle */
+    .dark-toggle {
+      background: none; border: 1px solid rgba(128,128,128,0.25);
+      border-radius: 8px; padding: 6px 10px;
+      cursor: pointer; font-size: 16px;
+      color: var(--text-secondary);
+      transition: all 0.2s;
+      display: flex; align-items: center;
+    }
+    .dark-toggle:hover { border-color: var(--purple); color: var(--purple); }
 
     /* Mobile hamburger */
     .nav-hamburger {
@@ -103,9 +131,9 @@
       top: 64px;
       left: 0;
       right: 0;
-      background: rgba(255,255,255,0.97);
+      background: var(--nav-bg);
       backdrop-filter: blur(20px);
-      border-bottom: 1px solid rgba(0,0,0,0.08);
+      border-bottom: 1px solid var(--nav-border);
       padding: 16px 24px 20px;
       flex-direction: column;
       gap: 4px;
@@ -221,8 +249,8 @@
       gap: 24px;
     }
     .step-card {
-      background: var(--white);
-      border: 1px solid rgba(0,0,0,0.06);
+      background: var(--card-bg);
+      border: 1px solid rgba(128,128,128,0.12);
       border-radius: var(--radius);
       padding: 32px;
       text-align: center;
@@ -241,7 +269,7 @@
     .step-card p { font-size: 14px; color: var(--text-secondary); }
 
     /* Features */
-    .features-bg { background: var(--white); }
+    .features-bg { background: var(--card-bg); }
     .features-grid {
       display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
       gap: 24px;
@@ -540,6 +568,7 @@
         <span class="nav-user-email" id="nav-user-email"></span>
         <button class="nav-logout" id="nav-logout">Sign Out</button>
       </div>
+      <button class="dark-toggle" id="dark-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">🌙</button>
       <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu">
         <span></span>
         <span></span>
@@ -1373,6 +1402,22 @@
 
       // Sign out
       document.getElementById('nav-logout').addEventListener('click', signOut);
+
+      // Dark mode toggle
+      const darkToggleBtn = document.getElementById('dark-toggle');
+      function applyDarkMode(dark) {
+        document.documentElement.classList.toggle('dark', dark);
+        if (darkToggleBtn) darkToggleBtn.textContent = dark ? '☀️' : '🌙';
+      }
+      const savedDark = localStorage.getItem('vt_dark') === '1';
+      applyDarkMode(savedDark);
+      if (darkToggleBtn) {
+        darkToggleBtn.addEventListener('click', () => {
+          const isDark = document.documentElement.classList.toggle('dark');
+          localStorage.setItem('vt_dark', isDark ? '1' : '0');
+          darkToggleBtn.textContent = isDark ? '☀️' : '🌙';
+        });
+      }
 
       // Mobile hamburger menu
       const hamburger = document.getElementById('nav-hamburger');
