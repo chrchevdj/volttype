@@ -5,8 +5,22 @@ compatibility_date = "2024-12-01"
 [vars]
 ENVIRONMENT = "production"
 
-# Secrets (set via `wrangler secret put`):
-# GROQ_API_KEY - Paid Groq API key
-# SUPABASE_URL - Supabase project URL
-# SUPABASE_SERVICE_KEY - Supabase service role key
-# SUPABASE_JWT_SECRET - For verifying user JWTs
+# Secrets (set via `wrangler secret put <NAME>`):
+# GROQ_API_KEY          - Paid Groq API key for STT transcription
+# SUPABASE_URL          - https://ceuymixybyaxpldgggin.supabase.co
+# SUPABASE_SERVICE_KEY  - Supabase service role key (from Supabase dashboard)
+# SUPABASE_JWT_SECRET   - For verifying user JWTs (from Supabase dashboard)
+# STRIPE_SECRET_KEY     - sk_live_... from Stripe (see .env.master)
+# STRIPE_PRICE_BASIC    - price_... Basic plan ($4.99/mo) - create in Stripe dashboard
+# STRIPE_PRICE_PRO      - price_... Pro plan ($8.99/mo) - create in Stripe dashboard
+#
+# To set: wrangler secret put STRIPE_SECRET_KEY
+# Then paste your sk_live_... key from .env.master or Stripe dashboard
+#
+# TODO for Stripe (#6):
+# 1. Go to stripe.com/dashboard → Products → Add Product
+# 2. Create "VoltType Basic" - $4.99/month recurring → copy price ID → set as STRIPE_PRICE_BASIC
+# 3. Create "VoltType Pro" - $8.99/month recurring → copy price ID → set as STRIPE_PRICE_PRO
+# 4. Run: wrangler secret put STRIPE_SECRET_KEY (paste sk_live key)
+# 5. Run: wrangler secret put STRIPE_PRICE_BASIC (paste price_xxx)
+# 6. Run: wrangler secret put STRIPE_PRICE_PRO (paste price_xxx)
