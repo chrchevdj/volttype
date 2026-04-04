@@ -23,6 +23,24 @@
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
   <meta name="theme-color" content="#7c3aed">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "VoltType",
+    "url": "https://volttype.com",
+    "operatingSystem": "Windows 10, Windows 11",
+    "applicationCategory": "ProductivityApplication",
+    "description": "AI-powered voice typing for Windows. Speak naturally and your words appear in any app, 4x faster than typing.",
+    "offers": [
+      { "@type": "Offer", "price": "0", "priceCurrency": "USD", "name": "Free", "description": "10 minutes per day" },
+      { "@type": "Offer", "price": "4.99", "priceCurrency": "USD", "name": "Basic", "description": "30 minutes per day" },
+      { "@type": "Offer", "price": "8.99", "priceCurrency": "USD", "name": "Pro", "description": "Unlimited dictation" }
+    ],
+    "downloadUrl": "https://volttype.com",
+    "softwareVersion": "1.0.0"
+  }
+  </script>
   <!-- Apply dark mode before render to prevent flash -->
   <script>if(localStorage.getItem('vt_dark')==='1')document.documentElement.classList.add('dark');</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -596,14 +614,13 @@
     <p class="hero-note">Free tier — 10 minutes/day. No credit card needed.</p>
     <div class="hero-social-proof">
       <div class="proof-item">
-        <span>⬇️</span>
-        <strong id="download-count">500+</strong>
-        <span>downloads</span>
+        <span>🎙️</span>
+        <span>4x faster than typing</span>
       </div>
       <span class="proof-dot"></span>
       <div class="proof-item">
-        <span class="proof-stars">★★★★★</span>
-        <span>4.9 / 5</span>
+        <span>🧠</span>
+        <span>Learns your vocabulary</span>
       </div>
       <span class="proof-dot"></span>
       <div class="proof-item">
@@ -1201,27 +1218,26 @@
           localStorage.setItem('vt_refresh', data.refresh_token);
           updateNavAuth();
 
-          // Manually create profile row — ignore errors (trigger may or may not exist)
+          // Upsert volttype_profiles row — trigger also creates one, but this sets display_name
           if (authMode === 'signup') {
             const nameInput = document.getElementById('modal-name').value.trim();
             try {
-              await fetch(SUPABASE_URL + '/rest/v1/profiles', {
+              await fetch(SUPABASE_URL + '/rest/v1/volttype_profiles', {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
                   'apikey': SUPABASE_KEY,
                   'Authorization': 'Bearer ' + data.access_token,
-                  'Prefer': 'return=minimal'
+                  'Prefer': 'resolution=merge-duplicates,return=minimal'
                 },
                 body: JSON.stringify({
                   id: data.user.id,
                   email: data.user.email,
-                  full_name: nameInput,
-                  plan: 'free',
-                  created_at: new Date().toISOString()
+                  display_name: nameInput,
+                  plan: 'free'
                 })
               });
-            } catch(e) { /* ignore — trigger may handle this */ }
+            } catch(e) { /* ignore — trigger handles base row */ }
           }
 
           // If there's a pending paid plan, start checkout
@@ -1320,27 +1336,6 @@
     }
 
     // --- GitHub download counter ---
-    async function fetchDownloadCount() {
-      try {
-        const res = await fetch('https://api.github.com/repos/chrchevdj/volttype-releases/releases', {
-          headers: { 'Accept': 'application/vnd.github.v3+json' }
-        });
-        if (!res.ok) return;
-        const releases = await res.json();
-        const total = releases.reduce((sum, release) => {
-          return sum + (release.assets || []).reduce((s, a) => s + (a.download_count || 0), 0);
-        }, 0);
-        const el = document.getElementById('download-count');
-        if (el && total > 0) {
-          el.textContent = total >= 1000
-            ? (total / 1000).toFixed(1).replace('.0', '') + 'k+'
-            : total + '+';
-        }
-      } catch (e) {
-        // Keep the static fallback "500+" — no visible error
-      }
-    }
-    fetchDownloadCount();
 
     // --- Init ---
     document.addEventListener('DOMContentLoaded', () => {

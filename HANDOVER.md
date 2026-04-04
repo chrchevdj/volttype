@@ -1,48 +1,60 @@
 # VoltType — Handover Document
 
-**Last Updated:** 2026-04-01  
-**Status:** Landing page live, desktop app in development, auth needs fixing
+**Last Updated:** 2026-04-04
+**Status:** Launch-ready. Desktop app live, website deployed, Stripe configured, Android app needs APK build.
 
 ## Project Overview
 - **Name:** VoltType
 - **Website:** https://volttype.com
-- **What it does:** AI-powered desktop dictation app. Speak into your microphone, VoltType transcribes in real-time with AI enhancement.
-- **Tech Stack:** 
+- **What it does:** AI-powered desktop dictation app. Speak into your microphone, VoltType transcribes in real-time with AI enhancement. Learns your vocabulary over time.
+- **Tech Stack:**
   - Electron (desktop app, Windows builds working)
-  - HTML/CSS/JS landing page
-  - Supabase auth (ceuymixybyaxpldgggin)
+  - HTML/CSS/JS landing page (Cloudflare Pages)
+  - Expo/React Native (Android app)
+  - Supabase auth + database (ceuymixybyaxpldgggin)
   - Cloudflare Workers API (volttype-api.crcaway.workers.dev)
-  - Cloudflare Pages hosting
 - **GitHub:** chrchevdj/volttype (private)
-- **Current Status:** Landing page deployed, auth flow broken, needs SEO and visuals
+- **Releases:** chrchevdj/volttype-releases (public, hosts .exe)
 
 ## Project Structure
 ```
-Speaker Project/
+VoltType/
 ├── main.js                      ← Electron main process
 ├── preload.js                   ← Electron preload script
 ├── start.js                     ← Start script
 ├── package.json                 ← Dependencies (electron, electron-builder)
 ├── dist/                        ← Built Electron app (Windows .exe files)
+├── build/                       ← App icons (icon.png, icon.svg, icon.ico)
 ├── src/                         ← Core app modules
-│   ├── auth.js                  ← Supabase auth logic (BROKEN)
+│   ├── auth.js                  ← Supabase auth (working)
 │   ├── hotkey.js                ← Global hotkey handler
 │   ├── stt-groq.js              ← Speech-to-text via Groq API
-│   ├── text-cleaner.js          ← Post-processing logic
+│   ├── text-cleaner.js          ← LLM post-processing
+│   ├── vocab-learner.js         ← Learns from corrections
 │   ├── history.js               ← Transcript history storage
-│   └── [other modules]
+│   ├── dictionary.js            ← Word bank / custom corrections
+│   ├── snippets.js              ← Text templates
+│   ├── settings.js              ← Settings manager
+│   ├── startup.js               ← Auto-start on Windows boot
+│   ├── injector.js              ← Text injection into focused app
+│   ├── icons.js                 ← Tray icon generation
+│   └── png-utils.js             ← PNG helper
 ├── renderer/                    ← Electron renderer (app UI)
 │   ├── index.html
 │   ├── app.js
 │   ├── audio.js                 ← Microphone recording
 │   └── styles.css
-├── website/                     ← Landing page (DEPLOYED)
+├── website/                     ← Landing page (DEPLOYED to volttype.com)
 │   ├── index.html               ← Main landing page
 │   ├── privacy-policy.html
 │   ├── terms-of-service.html
+│   ├── manifest.json            ← PWA manifest
+│   ├── sw.js                    ← Service worker (volttype-v2 cache)
+│   ├── og-image.png             ← OpenGraph image
 │   ├── sitemap.xml
-│   └── robots.txt
-├── pwa/                         ← PWA assets
+│   ├── robots.txt
+│   └── icons/                   ← PWA icons (192px, 512px)
+├── pwa/                         ← PWA assets (alternate)
 │   ├── manifest.json
 │   ├── icon-192.png
 │   └── icon-512.png
@@ -50,170 +62,104 @@ Speaker Project/
 │   └── cloudflare-worker/       ← API worker
 │       ├── wrangler.toml
 │       └── src/
-├── android/                     ← Android/React Native version (separate app)
-├── HANDOVER.md                  ← This file
-└── AUDIT-REPORT.md              ← Full audit findings
+│           ├── index.js         ← Main router (transcribe, clean, usage, checkout)
+│           ├── auth.js          ← JWT verification
+│           ├── cors.js          ← CORS for volttype.com + Electron
+│           ├── groq-proxy.js    ← Proxies to Groq Whisper + LLM
+│           └── usage.js         ← Usage tracking via Supabase RPC
+├── android/                     ← Android app (Expo/React Native)
+│   ├── App.js                   ← Navigation (Login → Home → Settings)
+│   ├── app.json                 ← Expo config (com.volttype.app)
+│   ├── package.json
+│   └── src/
+│       ├── screens/             ← LoginScreen, HomeScreen, SettingsScreen
+│       └── services/            ← auth.js, api.js
+├── .github/workflows/build.yml  ← CI: builds Windows + macOS on push
+└── HANDOVER.md                  ← This file
 ```
 
-## Current State (2026-04-03) — SALE-READY CHECKLIST
+## Current State (2026-04-04)
 
-### ✅ Fully Working (ready)
-1. **Auth flow** — Supabase email/password login + signup working. Profile upsert after signup. ✅
-2. **Dictation** — Hold Ctrl+Space, speak, release → Groq Whisper transcribes, injects text. ✅
-3. **Settings** — Groq API key, language, hotkey dropdown, output style, start minimized, autostart. ✅
-4. **Word Bank / Dictionary** — Custom corrections applied post-transcription. ✅
-5. **Templates / Snippets** — Save and inject text blocks with hotkey. ✅
-6. **Notebook** — Scratchpad for testing dictation. ✅
-7. **History** — Last 200 sessions with edit/delete. ✅
-8. **Vocab Learning** — App learns from corrections, improves Whisper prompts. ✅
-9. **First-run onboarding** — 3-step welcome modal (localStorage gated). ✅
-10. **Usage stats** — Words typed by voice, minutes saved, total sessions. ✅
-11. **Pricing** — Free (10 min/day), Basic $4.99/mo (30 min/day), Pro $8.99/mo (unlimited). ✅
-12. **Installer** — VoltType.Setup.1.0.0.exe on GitHub releases. ✅
-13. **Auto-update** — electron-updater checks GitHub releases, downloads silently, shows update banner. ✅
-14. **Hotkey config** — Ctrl+Shift+D (default), Ctrl+Alt+D, F9, F10 via dropdown. ✅
-15. **Language selector** — EN, RO, DA, MK, EL, DE, FR, ES in settings. ✅
-16. **Mobile hamburger** — Website responsive, hamburger menu on mobile. ✅
-17. **Favicon** — Set on both website and app. ✅
-18. **Dark mode** — Website toggle (☀️/🌙) saves to localStorage. ✅
-19. **Stripe checkout** — Worker code complete, reads STRIPE_SECRET_KEY + STRIPE_PRICE_BASIC/PRO from env. ✅ (needs price IDs set)
-20. **Tray icon** — Stays in Windows tray, minimize to tray on close. ✅
+### ✅ Fully Working
+1. **Auth flow** — Supabase email/password login + signup. Trigger `volttype_handle_new_user()` auto-creates profile. Website + desktop both write to `volttype_profiles`.
+2. **Dictation** — Hold Ctrl+Space (hold-to-talk) or Ctrl+Shift+D (toggle). Groq Whisper transcribes, injects text into focused app.
+3. **LLM cleanup** — Post-transcription grammar/punctuation cleanup via Groq LLM (llama-3.3-70b).
+4. **Settings** — Groq API key, language (8 langs), hotkey dropdown, output style, start minimized, autostart.
+5. **Word Bank / Dictionary** — Custom corrections applied post-transcription.
+6. **Templates / Snippets** — Save and inject text blocks.
+7. **Notebook** — Scratchpad for testing dictation.
+8. **History** — Last 200 sessions with edit/delete. Edits feed into vocab learning.
+9. **Vocab Learning** — App learns from corrections, improves Whisper prompts over time.
+10. **First-run onboarding** — 3-step welcome modal (localStorage gated).
+11. **Usage stats** — Words typed by voice, minutes saved, total sessions.
+12. **Pricing plans** — Free (10 min/day), Basic $4.99/mo (30 min/day), Pro $8.99/mo (unlimited).
+13. **Stripe checkout** — Worker endpoint creates Stripe Checkout sessions. All secrets set.
+14. **Installer** — VoltType.Setup.1.0.0.exe on GitHub releases (chrchevdj/volttype-releases).
+15. **Auto-update** — electron-updater checks GitHub releases, downloads silently, shows update banner.
+16. **Hotkey config** — Ctrl+Shift+D (default), Ctrl+Alt+D, F9, F10 via dropdown.
+17. **Language selector** — EN, RO, DA, MK, EL, DE, FR, ES in settings.
+18. **Tray icon** — Stays in Windows tray, minimize to tray on close. Icon changes for recording/processing.
+19. **Website** — SEO (title, meta, OG tags, JSON-LD), dark mode toggle, mobile hamburger menu, PWA manifest + service worker, privacy policy, terms of service.
+20. **GitHub Actions CI** — Builds Windows .exe + macOS .dmg on push to master.
+21. **Google OAuth** — Website supports Google sign-in redirect via Supabase.
 
-### ⚠️ Needs Manual Steps Before Launching
-- **Stripe prices** — Create VoltType Basic + Pro products in Stripe, then run:
-  ```
-  wrangler secret put STRIPE_SECRET_KEY
-  wrangler secret put STRIPE_PRICE_BASIC  (paste price_xxx)
-  wrangler secret put STRIPE_PRICE_PRO    (paste price_xxx)
-  ```
-- **Demo GIF/video** — Screen record dictation in action, add to website hero section
+### ✅ Cloudflare Worker Secrets (all set)
+- `GROQ_API_KEY` — Groq API key for STT + LLM
+- `SUPABASE_URL` — ceuymixybyaxpldgggin.supabase.co (set as var in wrangler.toml)
+- `SUPABASE_SERVICE_KEY` — Service role key
+- `SUPABASE_JWT_SECRET` — For verifying user JWTs
+- `STRIPE_SECRET_KEY` — Live Stripe key
+- `STRIPE_PRICE_BASIC` — Price ID for Basic plan ($4.99/mo)
+- `STRIPE_PRICE_PRO` — Price ID for Pro plan ($8.99/mo)
 
-### ❌ Not Needed for Sale (documented for future)
-- Demo video (#4) — can ship without, add as enhancement
-- Stripe activation (#6) — needs real Stripe price IDs
+### ✅ Supabase Database
+- `volttype_profiles` — User profiles (id, email, display_name, plan, stripe_customer_id)
+- `volttype_usage` — Daily usage tracking
+- `volttype_subscriptions` — Stripe subscription records
+- Trigger: `on_volttype_user_created` → `volttype_handle_new_user()` auto-creates profile on signup
+- RPC functions: `volttype_get_plan`, `volttype_get_daily_usage`, `volttype_log_usage`
+- RLS enabled on all VoltType tables
 
-## Key Files & Credentials
+### ⚠️ In Progress
+- **Android APK** — Expo app scaffolded with auth, dictation, settings. Needs EAS build config and APK generation.
 
-### Landing Page (website/)
-- **File:** website/index.html
-- **Deployment:** Cloudflare Pages → volttype.com
-- **Build:** Static HTML (no build step needed)
-- **Deploy Command:** Manual push to GitHub or direct to Cloudflare
+### 📋 Nice to Have (Not Blocking Launch)
+- **Demo video/GIF** — Screen record dictation in action for website hero
+- **macOS .dmg** — CI builds it but not tested or published
 
-### Desktop App (Electron)
-- **Entry:** main.js (Electron main process)
-- **Renderer:** renderer/index.html (app UI)
-- **Build:** `npm run build` → creates dist/VoltType*.exe
-- **Auth Module:** src/auth.js (BROKEN — needs fix)
+## Key Credentials & URLs
+- **Website:** https://volttype.com (Cloudflare Pages, auto-deploys from GitHub)
+- **API:** https://volttype-api.crcaway.workers.dev
+- **Supabase:** ceuymixybyaxpldgggin (shared instance)
+- **GitHub:** chrchevdj/volttype (code), chrchevdj/volttype-releases (releases)
+- **All credentials:** `.env.master` at `C:\Users\crcaw\Desktop\Freelancing\.env.master`
 
-### Backend API
-- **URL:** https://volttype-api.crcaway.workers.dev
-- **Location:** backend/cloudflare-worker/
-- **Type:** Cloudflare Worker (serverless)
-- **Deploy:** `npx wrangler deploy`
-
-### Auth & Database
-- **Provider:** Supabase
-- **Project ID:** ceuymixybyaxpldgggin
-- **Auth Type:** Email/password with email confirmation
-- **Status:** Login flow not working — likely email confirmation or API connectivity issue
-
-### Credentials
-- All credentials in `.env.master` at `/Desktop/Freelancing/.env.master`
-- Sync with: `node sync-env.js` from project root
-- **Never commit .env files to Git**
-
-## What Needs to Happen Next (Priority)
-
-### Critical (Blocks everything)
-1. **Fix auth flow** — Debug why Supabase login doesn't work
-   - Check email confirmation flow
-   - Verify API endpoint connectivity
-   - Test auth.js with real credentials
-2. **Add SEO** — Title, meta description, OG tags, JSON-LD
-3. **Add app screenshots** — 3-4 images showing VoltType in action
-4. **Fix navigation anchors** — Ensure #features, #pricing, #download work
-
-### High Priority
-5. **Create privacy/terms pages** — Real HTML pages (not links to nothing)
-6. **Add security headers** — CSP, X-Frame-Options, X-Content-Type-Options, HSTS
-7. **Replace emoji icons** — Use Lucide React icons instead of ⚡🧠✎
-8. **Add favicon** — favicon.ico + apple-touch-icon
-
-### Nice to Have
-9. **Add social links** — GitHub, Twitter/X in footer
-10. **Create demo video** — Show dictation in action (GIF or MP4)
-11. **Mobile app roadmap** — Document Android/iOS plans
-
-## Deployment Checklist
+## Deployment
 
 ### Landing Page (volttype.com)
 ```bash
-# 1. Make changes to website/ folder
-# 2. Commit to Git
 git add website/
-git commit -m "Update landing page: add SEO, screenshots, etc"
+git commit -m "Update landing page"
 git push
-
-# 3. Cloudflare Pages auto-deploys from GitHub
-# Check deployment at: https://dash.cloudflare.com/
+# Cloudflare Pages auto-deploys from GitHub
 ```
 
 ### Desktop App
 ```bash
-# 1. Fix code in src/, renderer/, main.js, etc
-# 2. Build locally
-npm run build
-
-# 3. Test .exe in dist/
-dist/VoltType\ Setup\ 1.0.0.exe
-
-# 4. Commit and push
-git add .
-git commit -m "Fix auth flow and improve security"
-git push
-
-# 5. Create GitHub release with dist/*.exe files
+npm run build                    # Creates dist/VoltType*.exe
+# Then create GitHub release at chrchevdj/volttype-releases with the .exe
 ```
 
-### Backend API (Cloudflare Worker)
+### Backend API
 ```bash
 cd backend/cloudflare-worker/
 npx wrangler deploy
 ```
 
-## Known Issues & Notes
-
-1. **Email Confirmation Flow** — Users may not be getting confirmation emails. Check Supabase email settings.
-2. **API Connectivity** — volttype-api.crcaway.workers.dev may have CORS issues. Add proper CORS headers.
-3. **Exposed Infrastructure** — API endpoint URL is public. Consider hiding behind Cloudflare tunnel if sensitive.
-4. **Android Version** — Separate React Native app in android/ folder. Not yet integrated with main desktop app.
-5. **GitHub Workflows** — .github/workflows/build.yml exists but may need updating for production builds.
-
-## Audit & Next Steps
-
-See **AUDIT-REPORT.md** for full audit findings. Current grade: **C+**
-
-To reach B grade (~7 hours of work):
-1. Fix auth (1-2 hours)
-2. Add SEO + OG tags (30 min)
-3. Add screenshots + demo (1-2 hours)
-4. Fix navigation + security (1 hour)
-5. Polish UI (icons, favicon, links) (1-2 hours)
-
-## Resources
-
-- **Landing Page:** https://volttype.com
-- **GitHub:** https://github.com/chrchevdj/volttype
-- **Supabase Dashboard:** https://supabase.com/dashboard
-- **Cloudflare Dashboard:** https://dash.cloudflare.com/
-- **n8n (if automations needed):** https://ideaforge.jobalarm.dk
-- **Hetzner VPS:** 46.225.221.32 (shared infrastructure)
-
-## Next Session Checklist
-- [ ] Read this HANDOVER.md and AUDIT-REPORT.md
-- [ ] Test login flow — does auth actually work?
-- [ ] Check Supabase email settings — why no confirmation emails?
-- [ ] Review website/index.html — what SEO tags are missing?
-- [ ] Take 3-4 screenshots of VoltType app in action
-- [ ] Plan sprint: fix auth, add SEO, add visuals
+### Android App
+```bash
+cd android/
+npm install
+npx eas build --platform android --profile production
+# Download APK from EAS dashboard
+```

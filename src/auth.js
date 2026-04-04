@@ -101,22 +101,21 @@ class Auth {
       this._save();
       this._scheduleRefresh();
 
-      // Upsert profile row so the user exists in profiles table
+      // Upsert volttype_profiles row (trigger also creates one, this ensures it exists)
       if (data.user?.id) {
         try {
-          await net.fetch(`${SUPABASE_URL}/rest/v1/profiles`, {
+          await net.fetch(`${SUPABASE_URL}/rest/v1/volttype_profiles`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'apikey': SUPABASE_ANON_KEY,
               'Authorization': `Bearer ${data.access_token}`,
-              'Prefer': 'resolution=ignore-duplicates',
+              'Prefer': 'resolution=merge-duplicates',
             },
             body: JSON.stringify({
               id: data.user.id,
               email: data.user.email,
               plan: 'free',
-              created_at: new Date().toISOString(),
             }),
           });
           console.log('[AUTH] Profile upserted for', data.user.email);
