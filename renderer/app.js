@@ -423,11 +423,23 @@ async function _handleRecordingState({ recording, skip, mode }) {
   }
 }
 
-function handleTranscriptionResult({ text, duration, apiLatency }) {
+function handleTranscriptionResult({ text, duration, apiLatency, voiceCommand, voiceCommandLabel }) {
   const status = document.getElementById('sidebar-status');
-  status.className = 'status-idle';
-  status.querySelector('.status-text').textContent = 'Ready';
-  playSuccessSound();
+
+  if (voiceCommand) {
+    // Voice command was executed — show special feedback
+    status.className = 'status-idle';
+    status.querySelector('.status-text').textContent = voiceCommandLabel || 'Command done';
+    playSuccessSound();
+    // Show a brief command notification
+    setTimeout(() => {
+      status.querySelector('.status-text').textContent = 'Ready';
+    }, 2500);
+  } else {
+    status.className = 'status-idle';
+    status.querySelector('.status-text').textContent = 'Ready';
+    playSuccessSound();
+  }
 
   // Refresh history and vocab
   loadHistory();
@@ -439,7 +451,12 @@ function handleTranscriptionResult({ text, duration, apiLatency }) {
   // If on scratchpad, append text
   if (currentPage === 'notebook') {
     const editor = document.getElementById('scratchpad-editor');
-    editor.value += (editor.value ? ' ' : '') + text;
+    if (voiceCommand) {
+      // Voice command rewrites the last text — replace last portion
+      editor.value = text;
+    } else {
+      editor.value += (editor.value ? ' ' : '') + text;
+    }
   }
 }
 

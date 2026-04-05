@@ -7,10 +7,30 @@
  *  - Correct misheard words based on context
  *  - Remove filler words (um, uh, like)
  *  - Keep the speaker's intent and meaning intact
+ *  - Detect and execute AI voice commands
  *
  * Uses Groq's free LLM API (same key as Whisper).
  */
 const { net } = require('electron');
+
+// Voice command patterns — user says these to trigger AI processing
+const VOICE_COMMANDS = [
+  { pattern: /^(?:make (?:it |this )?)?(?:more )?formal$/i,          command: 'formal',      label: 'Making formal' },
+  { pattern: /^(?:make (?:it |this )?)?(?:more )?professional$/i,    command: 'professional', label: 'Making professional' },
+  { pattern: /^(?:make (?:it |this )?)?(?:more )?casual$/i,          command: 'casual',      label: 'Making casual' },
+  { pattern: /^(?:make (?:it |this )?)?shorter$/i,                   command: 'shorter',     label: 'Making shorter' },
+  { pattern: /^(?:make (?:it |this )?)?longer$/i,                    command: 'longer',      label: 'Making longer' },
+  { pattern: /^(?:fix (?:the )?)?grammar$/i,                         command: 'grammar',     label: 'Fixing grammar' },
+  { pattern: /^(?:fix (?:the )?)?spelling$/i,                        command: 'spelling',    label: 'Fixing spelling' },
+  { pattern: /^summarize(?:\s+(?:it|this))?$/i,                      command: 'summarize',   label: 'Summarizing' },
+  { pattern: /^(?:make (?:it |this )?)?(?:into )?(?:a )?bullet ?points?$/i, command: 'bullets', label: 'Converting to bullets' },
+  { pattern: /^(?:make (?:it |this )?)?(?:into )?(?:a )?(?:numbered |ordered )?list$/i, command: 'list', label: 'Converting to list' },
+  { pattern: /^translate (?:(?:it |this )?(?:to |into ))?(.+)$/i,    command: 'translate',   label: 'Translating' },
+  { pattern: /^(?:rewrite|rephrase)(?: (?:it|this))?$/i,             command: 'rewrite',     label: 'Rewriting' },
+  { pattern: /^(?:make (?:it |this )?)?(?:more )?friendly$/i,        command: 'friendly',    label: 'Making friendly' },
+  { pattern: /^(?:make (?:it |this )?)?(?:more )?concise$/i,         command: 'concise',     label: 'Making concise' },
+  { pattern: /^expand(?: on)?(?:\s+(?:it|this))?$/i,                 command: 'expand',      label: 'Expanding' },
+];
 
 class TextCleaner {
   constructor(apiKey) {
@@ -20,6 +40,84 @@ class TextCleaner {
 
   setApiKey(key) {
     this._apiKey = key;
+  }
+
+  /**
+   * Detect if transcribed text is a voice command.
+   * @param {string} text - Transcribed text to check
+   * @returns {{ isCommand: boolean, command: string|null, label: string|null, extra: string|null }}
+   */
+  detectCommand(text) {
+    if (!text || text.trim().length === 0) return { isCommand: false };
+
+    const trimmed = text.trim().replace(/[.!?,;:]+$/g, ''); // Strip trailing punctuation
+
+    for (const vc of VOICE_COMMANDS) {
+      const match = trimmed.match(vc.pattern);
+      if (match) {
+        return {
+          isCommand: true,
+          command: vc.command,
+          label: vc.label,
+          extra: match[1] ? match[1].trim() : null, // e.g. language name for translate
+        };
+      }
+    }
+
+    return { isCommand: false };
+  }
+
+  /**
+   * Execute a voice command on the given text using LLM.
+   * @param {string} command - Command name (e.g. 'formal', 'translate')
+   * @param {string} targetText - The text to transform
+   * @param {string} extra - Extra parameter (e.g. language for translate)
+   * @returns {Promise<string>} Transformed text
+   */
+  async executeCommand(command, targetText, extra = '') {
+    if (!targetText || targetText.trim().length === 0) return targetText;
+    if (!this._apiKey) return targetText;
+
+    const systemPrompt = this._getCommandPrompt(command, extra);
+    if (!systemPrompt) return targetText;
+
+    try {
+      const startTime = Date.now();
+
+      const response = await net.fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this._apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: this._model,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: targetText },
+          ],
+          temperature: 0,
+          max_tokens: 2048,
+        }),
+      });
+
+      const elapsed = Date.now() - startTime;
+      const data = await response.json();
+
+      if (!response.ok) {
+        const errMsg = data?.error?.message || `HTTP ${response.status}`;
+        console.error('[COMMAND] LLM error:', errMsg);
+        return targetText;
+      }
+
+      const result = data.choices?.[0]?.message?.content?.trim();
+      console.log(`[COMMAND] ${command} in ${elapsed}ms: "${targetText.slice(0, 40)}..." -> "${(result || '').slice(0, 40)}..."`);
+
+      return result || targetText;
+    } catch (err) {
+      console.error('[COMMAND] Error:', err.message);
+      return targetText;
+    }
   }
 
   /**
@@ -78,6 +176,30 @@ class TextCleaner {
       console.error('[CLEANER] Error:', err.message);
       return rawText; // Never fail — always return something
     }
+  }
+
+  _getCommandPrompt(command, extra) {
+    const prompts = {
+      formal: `Rewrite the following text in a formal, professional tone. Keep all the original ideas and meaning. Output ONLY the rewritten text, nothing else.`,
+      professional: `Rewrite the following text to sound professional and polished, suitable for business communication. Keep all original ideas. Output ONLY the rewritten text.`,
+      casual: `Rewrite the following text in a casual, friendly tone. Keep all the original ideas. Output ONLY the rewritten text.`,
+      friendly: `Rewrite the following text in a warm, friendly tone. Keep all the original ideas. Output ONLY the rewritten text.`,
+      shorter: `Make the following text significantly shorter while keeping all key points. Be concise. Output ONLY the shortened text.`,
+      longer: `Expand the following text with more detail and explanation while keeping the same meaning. Output ONLY the expanded text.`,
+      grammar: `Fix all grammar and spelling errors in the following text. Do not change the meaning or tone. Output ONLY the corrected text.`,
+      spelling: `Fix all spelling errors in the following text. Do not change anything else. Output ONLY the corrected text.`,
+      summarize: `Summarize the following text in 1-3 concise sentences. Output ONLY the summary.`,
+      bullets: `Convert the following text into clear, concise bullet points. Output ONLY the bullet points, one per line, starting each with "- ".`,
+      list: `Convert the following text into a numbered list. Output ONLY the numbered items, one per line.`,
+      rewrite: `Rewrite the following text to be clearer and better-structured while preserving the exact same meaning. Output ONLY the rewritten text.`,
+      concise: `Make the following text more concise without losing any important information. Output ONLY the concise version.`,
+      expand: `Expand on the following text, adding more detail and context while keeping the same meaning and direction. Output ONLY the expanded text.`,
+      translate: extra
+        ? `Translate the following text into ${extra}. Output ONLY the translation, nothing else.`
+        : null,
+    };
+
+    return prompts[command] || null;
   }
 
   _getSystemPrompt(style) {

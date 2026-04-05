@@ -528,6 +528,66 @@ ipcMain.handle('audio-captured', async (event, { audioBase64, mimeType }) => {
       return { success: true, text: '' };
     }
 
+    // --- AI Voice Command Detection ---
+    const cmdResult = textCleaner.detectCommand(text);
+    if (cmdResult.isCommand) {
+      console.log(`[COMMAND] Detected voice command: "${cmdResult.command}" (${cmdResult.label})`);
+
+      // Get the last transcription from history to apply the command to
+      const lastEntry = history.getRecent(1)?.[0];
+      if (lastEntry && lastEntry.text) {
+        // Show command indicator in overlay
+        if (overlayWindow && !overlayWindow.isDestroyed()) {
+          overlayWindow.webContents.executeJavaScript(`
+            document.getElementById('pill').className = 'pill processing';
+            document.getElementById('label').textContent = '${cmdResult.label}...';
+          `).catch(() => {});
+          overlayWindow.showInactive();
+        }
+
+        // Execute the command on the previous text
+        const transformed = await textCleaner.executeCommand(
+          cmdResult.command,
+          lastEntry.text,
+          cmdResult.extra || ''
+        );
+
+        if (transformed && transformed !== lastEntry.text) {
+          console.log(`[COMMAND] Transformed: "${lastEntry.text.slice(0, 40)}..." -> "${transformed.slice(0, 40)}..."`);
+
+          // Update history with the transformed text
+          history.update(lastEntry.id, transformed);
+
+          // Inject the transformed text
+          hideOverlay();
+          await injectText(transformed);
+
+          updateTrayState('idle');
+          isTranscribing = false;
+
+          if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send('transcription-result', {
+              text: transformed,
+              duration,
+              apiLatency: result.apiLatency,
+              voiceCommand: cmdResult.command,
+              voiceCommandLabel: cmdResult.label,
+            });
+          }
+
+          return { success: true, text: transformed, voiceCommand: cmdResult.command };
+        }
+      } else {
+        console.log('[COMMAND] No previous text to apply command to');
+      }
+
+      // If no previous text or transform failed, fall through to normal processing
+      hideOverlay();
+      updateTrayState('idle');
+      isTranscribing = false;
+      return { success: true, text: '', voiceCommand: cmdResult.command, noTarget: true };
+    }
+
     // LLM post-processing — clean up grammar, punctuation, filler words
     const outputStyle = settings.get('outputStyle') || 'cleaned';
     const rawText = text; // Keep raw for learning comparison

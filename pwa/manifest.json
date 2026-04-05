@@ -1,21 +1,31 @@
 {
-  "name": "VoltType",
+  "name": "VoltType — AI Voice Typing",
   "short_name": "VoltType",
-  "description": "AI-powered voice typing that learns your style",
+  "description": "AI-powered voice typing. Tap to speak, text appears. With AI voice commands.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0c1222",
   "theme_color": "#38bd9c",
+  "orientation": "portrait",
   "icons": [
     {
       "src": "icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Start Voice Typing",
+      "url": "/",
+      "description": "Open VoltType and start dictating"
     }
   ]
 }

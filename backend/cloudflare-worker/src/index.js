@@ -12,7 +12,7 @@
 import { corsHeaders, handleOptions } from './cors.js';
 import { verifyToken } from './auth.js';
 import { checkUsageLimit, logUsage } from './usage.js';
-import { proxyTranscribe, proxyClean } from './groq-proxy.js';
+import { proxyTranscribe, proxyClean, proxyCommand } from './groq-proxy.js';
 
 export default {
   async fetch(request, env) {
@@ -29,10 +29,17 @@ export default {
       return json({ status: 'ok', service: 'volttype-api' }, 200, request);
     }
 
+    try {
     // All other endpoints require auth
     const user = await verifyToken(request, env);
     if (!user) {
       return json({ error: 'Unauthorized — invalid or expired token' }, 401, request);
+    }
+
+    // --- Request size limit (10MB max for audio) ---
+    const contentLength = parseInt(request.headers.get('Content-Length') || '0', 10);
+    if (contentLength > 10 * 1024 * 1024) {
+      return json({ error: 'Request too large. Maximum 10MB.' }, 413, request);
     }
 
     // --- POST /v1/transcribe ---
@@ -79,6 +86,19 @@ export default {
       await logUsage(user.userId, 0, 'llama-3.3-70b', 'clean', env);
 
       return json({ text: result.cleaned }, 200, request);
+    }
+
+    // --- POST /v1/command ---
+    // AI voice command: transform text (make formal, fix grammar, translate, etc.)
+    if (path === '/v1/command' && request.method === 'POST') {
+      const result = await proxyCommand(request, env);
+      if (result.error) {
+        return json({ error: result.error }, result.status, request);
+      }
+
+      await logUsage(user.userId, 0, 'llama-3.3-70b', 'command', env);
+
+      return json({ text: result.text, command: result.command }, 200, request);
     }
 
     // --- GET /v1/usage ---
@@ -133,6 +153,11 @@ export default {
     }
 
     return json({ error: 'Not found' }, 404, request);
+    } catch (err) {
+      // Global error handler — never let the Worker crash silently
+      console.error('[WORKER] Unhandled error:', err.message, err.stack);
+      return json({ error: 'Internal server error' }, 500, request);
+    }
   },
 };
 

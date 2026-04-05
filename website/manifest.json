@@ -1,7 +1,7 @@
 {
   "name": "VoltType — AI Voice Typing",
   "short_name": "VoltType",
-  "description": "AI-powered voice dictation for Windows. Speak naturally, type 4x faster.",
+  "description": "AI-powered voice typing for Windows. Speak naturally, type 4x faster. With AI voice commands.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f0f23",
@@ -26,6 +26,11 @@
       "name": "Download VoltType",
       "url": "/#download",
       "description": "Download VoltType for Windows"
+    },
+    {
+      "name": "Compare Plans",
+      "url": "/#pricing",
+      "description": "View pricing and plans"
     },
     {
       "name": "Sign Up Free",

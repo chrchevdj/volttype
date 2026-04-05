@@ -1,7 +1,7 @@
 # VoltType — Handover Document
 
-**Last Updated:** 2026-04-04
-**Status:** Launch-ready. Desktop app live, website deployed, Stripe configured, Android app needs APK build.
+**Last Updated:** 2026-04-05
+**Status:** Launch-ready. AI voice commands added. Desktop app live, website enhanced with comparison table/changelog/shortcuts. PWA improved with offline support. API hardened. Android app needs APK build (low priority).
 
 ## Project Overview
 - **Name:** VoltType
@@ -78,30 +78,33 @@ VoltType/
 └── HANDOVER.md                  ← This file
 ```
 
-## Current State (2026-04-04)
+## Current State (2026-04-05)
 
 ### ✅ Fully Working
 1. **Auth flow** — Supabase email/password login + signup. Trigger `volttype_handle_new_user()` auto-creates profile. Website + desktop both write to `volttype_profiles`.
 2. **Dictation** — Hold Ctrl+Space (hold-to-talk) or Ctrl+Shift+D (toggle). Groq Whisper transcribes, injects text into focused app.
 3. **LLM cleanup** — Post-transcription grammar/punctuation cleanup via Groq LLM (llama-3.3-70b).
-4. **Settings** — Groq API key, language (8 langs), hotkey dropdown, output style, start minimized, autostart.
-5. **Word Bank / Dictionary** — Custom corrections applied post-transcription.
-6. **Templates / Snippets** — Save and inject text blocks.
-7. **Notebook** — Scratchpad for testing dictation.
-8. **History** — Last 200 sessions with edit/delete. Edits feed into vocab learning.
-9. **Vocab Learning** — App learns from corrections, improves Whisper prompts over time.
-10. **First-run onboarding** — 3-step welcome modal (localStorage gated).
-11. **Usage stats** — Words typed by voice, minutes saved, total sessions.
-12. **Pricing plans** — Free (10 min/day), Basic $4.99/mo (30 min/day), Pro $8.99/mo (unlimited).
-13. **Stripe checkout** — Worker endpoint creates Stripe Checkout sessions. All secrets set.
-14. **Installer** — VoltType.Setup.1.0.0.exe on GitHub releases (chrchevdj/volttype-releases).
-15. **Auto-update** — electron-updater checks GitHub releases, downloads silently, shows update banner.
-16. **Hotkey config** — Ctrl+Shift+D (default), Ctrl+Alt+D, F9, F10 via dropdown.
-17. **Language selector** — EN, RO, DA, MK, EL, DE, FR, ES in settings.
-18. **Tray icon** — Stays in Windows tray, minimize to tray on close. Icon changes for recording/processing.
-19. **Website** — SEO (title, meta, OG tags, JSON-LD), dark mode toggle, mobile hamburger menu, PWA manifest + service worker, privacy policy, terms of service.
-20. **GitHub Actions CI** — Builds Windows .exe + macOS .dmg on push to master.
-21. **Google OAuth** — Website supports Google sign-in redirect via Supabase.
+4. **AI Voice Commands** — Say "make formal", "fix grammar", "translate to [language]", "make shorter", "make bullet points", "summarize", "rewrite", etc. after dictating. Detected in text-cleaner.js, executed via Groq LLM, replaces last dictation in history + re-injects.
+5. **Settings** — Groq API key, language (8 langs), hotkey dropdown, output style, start minimized, autostart.
+6. **Word Bank / Dictionary** — Custom corrections applied post-transcription.
+7. **Templates / Snippets** — Save and inject text blocks.
+8. **Notebook** — Scratchpad for testing dictation.
+9. **History** — Last 200 sessions with edit/delete. Edits feed into vocab learning.
+10. **Vocab Learning** — App learns from corrections, improves Whisper prompts over time.
+11. **First-run onboarding** — 3-step welcome modal (localStorage gated).
+12. **Usage stats** — Words typed by voice, minutes saved, total sessions.
+13. **Pricing plans** — Free (10 min/day), Basic $4.99/mo (30 min/day), Pro $8.99/mo (unlimited).
+14. **Stripe checkout** — Worker endpoint creates Stripe Checkout sessions. All secrets set.
+15. **Installer** — VoltType.Setup.1.0.0.exe on GitHub releases (chrchevdj/volttype-releases).
+16. **Auto-update** — electron-updater checks GitHub releases, downloads silently, shows update banner.
+17. **Hotkey config** — Ctrl+Shift+D (default), Ctrl+Alt+D, F9, F10 via dropdown.
+18. **Language selector** — EN, RO, DA, MK, EL, DE, FR, ES in settings.
+19. **Tray icon** — Stays in Windows tray, minimize to tray on close. Icon changes for recording/processing.
+20. **Website** — SEO (title, meta, OG tags, JSON-LD), dark mode toggle, mobile hamburger menu, PWA manifest + service worker, privacy policy, terms of service. Dynamic download link from GitHub releases. Competitor comparison table. AI voice commands showcase. Keyboard shortcuts reference. Changelog section. Credibility/builder section.
+21. **GitHub Actions CI** — Builds Windows .exe + macOS .dmg on push to master.
+22. **Google OAuth** — Website supports Google sign-in redirect via Supabase.
+23. **PWA** — Both website/ and pwa/ have proper service workers with offline fallback pages, updated manifests with all required fields.
+24. **API** — Cloudflare Worker with global error handling, request size limits, CORS for app.volttype.com, and /v1/command endpoint for AI voice commands.
 
 ### ✅ Cloudflare Worker Secrets (all set)
 - `GROQ_API_KEY` — Groq API key for STT + LLM

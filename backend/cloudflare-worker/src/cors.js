@@ -8,6 +8,7 @@ const ALLOWED_ORIGINS = [
   'file://',
   'https://volttype.com',
   'https://www.volttype.com',
+  'https://app.volttype.com',
 ];
 
 // React Native / mobile apps send no Origin or a null origin

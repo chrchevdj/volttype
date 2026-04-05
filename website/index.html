@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VoltType — Stop Typing. Start Speaking. AI Voice Typing</title>
-  <meta name="description" content="AI-powered voice typing for Windows, Mac, and Mobile. Speak naturally — your words appear in any app, 4x faster than typing. Free to start.">
+  <meta name="description" content="AI-powered voice typing for Windows. Speak naturally — your words appear in any app, 4x faster than typing. Free to start.">
   <meta name="keywords" content="voice typing, speech to text, dictation software, voice to text, AI typing, hands free typing, VoltType">
   <meta name="author" content="VoltType">
   <meta property="og:title" content="VoltType — Stop Typing. Start Speaking.">
@@ -31,7 +31,7 @@
     "url": "https://volttype.com",
     "operatingSystem": "Windows 10, Windows 11",
     "applicationCategory": "ProductivityApplication",
-    "description": "AI-powered voice typing for Windows. Speak naturally and your words appear in any app, 4x faster than typing.",
+    "description": "AI-powered voice typing for Windows with AI voice commands. Speak naturally and your words appear in any app, 4x faster than typing. Say 'make formal' or 'fix grammar' to rewrite with AI.",
     "offers": [
       { "@type": "Offer", "price": "0", "priceCurrency": "USD", "name": "Free", "description": "10 minutes per day" },
       { "@type": "Offer", "price": "4.99", "priceCurrency": "USD", "name": "Basic", "description": "30 minutes per day" },
@@ -249,7 +249,6 @@
     }
     .proof-item strong { color: var(--text); font-weight: 700; }
     .proof-dot { width: 3px; height: 3px; background: var(--text-secondary); border-radius: 50%; opacity: 0.35; }
-    .proof-stars { color: #f59e0b; font-size: 12px; letter-spacing: 1px; }
 
     /* How it works */
     .section { padding: 80px 40px; max-width: 1200px; margin: 0 auto; }
@@ -604,27 +603,30 @@
 
   <!-- Hero -->
   <section class="hero">
-    <div class="hero-badge">Now available for Windows</div>
+    <div class="hero-badge">AI Voice Commands — say "make formal" or "fix grammar"</div>
     <h1>Stop Typing. <span>Start Speaking.</span></h1>
-    <p>AI-powered voice typing for Windows. Speak naturally — your words appear in any app, 4x faster than typing. It even learns your vocabulary.</p>
+    <p>AI-powered voice typing for Windows. Speak naturally — your words appear in any app, 4x faster than typing. It even learns your vocabulary and follows voice commands.</p>
     <div class="hero-buttons">
-      <a href="https://github.com/chrchevdj/volttype-releases/releases/download/v1.0.0/VoltType.Setup.1.0.0.exe" class="btn-hero btn-primary">Download Free for Windows</a>
+      <a href="https://github.com/chrchevdj/volttype-releases/releases/latest" class="btn-hero btn-primary" id="download-btn" style="font-size: 18px; padding: 16px 36px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download Free for Windows
+      </a>
       <a href="javascript:void(0)" class="btn-hero btn-secondary-hero" id="hero-signup-btn">Create Account</a>
     </div>
-    <p class="hero-note">Free tier — 10 minutes/day. No credit card needed.</p>
+    <p class="hero-note">Free tier — 10 minutes/day. No credit card needed. <span id="download-version"></span></p>
     <div class="hero-social-proof">
       <div class="proof-item">
-        <span>🎙️</span>
+        <span>&#x1F399;</span>
         <span>4x faster than typing</span>
       </div>
       <span class="proof-dot"></span>
       <div class="proof-item">
-        <span>🧠</span>
-        <span>Learns your vocabulary</span>
+        <span>&#x1F9E0;</span>
+        <span>AI voice commands</span>
       </div>
       <span class="proof-dot"></span>
       <div class="proof-item">
-        <span>🪟</span>
+        <span>&#x1FA9F;</span>
         <span>Windows 10 &amp; 11</span>
       </div>
     </div>
@@ -735,13 +737,13 @@
           <text x="130" y="95" font-family="Arial" font-size="8.5" fill="#94a3b8">WORD / PHRASE</text>
           <text x="310" y="95" font-family="Arial" font-size="8.5" fill="#94a3b8">USES</text>
           <rect x="120" y="104" width="288" height="22" rx="4" fill="#312e81" opacity="0.3"/>
-          <text x="130" y="119" font-family="Arial" font-size="9" fill="#e2e8f0">Supabase</text><text x="310" y="119" font-family="Arial" font-size="9" fill="#64748b">47×</text>
+          <text x="130" y="119" font-family="Arial" font-size="9" fill="#e2e8f0">Kubernetes</text><text x="310" y="119" font-family="Arial" font-size="9" fill="#64748b">47×</text>
           <rect x="120" y="128" width="288" height="22" rx="4" fill="#0f172a"/>
-          <text x="130" y="143" font-family="Arial" font-size="9" fill="#e2e8f0">chrchevdj</text><text x="310" y="143" font-family="Arial" font-size="9" fill="#64748b">31×</text>
+          <text x="130" y="143" font-family="Arial" font-size="9" fill="#e2e8f0">Dr. Johansson</text><text x="310" y="143" font-family="Arial" font-size="9" fill="#64748b">31×</text>
           <rect x="120" y="152" width="288" height="22" rx="4" fill="#0f172a"/>
-          <text x="130" y="167" font-family="Arial" font-size="9" fill="#e2e8f0">Cloudflare Workers</text><text x="310" y="167" font-family="Arial" font-size="9" fill="#64748b">28×</text>
+          <text x="130" y="167" font-family="Arial" font-size="9" fill="#e2e8f0">PostgreSQL</text><text x="310" y="167" font-family="Arial" font-size="9" fill="#64748b">28×</text>
           <rect x="120" y="176" width="288" height="22" rx="4" fill="#0f172a"/>
-          <text x="130" y="191" font-family="Arial" font-size="9" fill="#e2e8f0">n8n automation</text><text x="310" y="191" font-family="Arial" font-size="9" fill="#64748b">19×</text>
+          <text x="130" y="191" font-family="Arial" font-size="9" fill="#e2e8f0">TechCorp Inc.</text><text x="310" y="191" font-family="Arial" font-size="9" fill="#64748b">19×</text>
           <!-- Add button -->
           <rect x="300" y="210" width="108" height="22" rx="6" fill="#4f46e5"/>
           <text x="354" y="225" font-family="Arial" font-size="9" fill="#fff" text-anchor="middle">+ Add Word</text>
@@ -839,6 +841,11 @@
         <div class="feature-icon" style="background: linear-gradient(135deg, #eff6ff, #dbeafe);">&#x270E;</div>
         <h3>Smart Punctuation</h3>
         <p>Automatically adds periods, commas, and question marks. Your exact words, just properly formatted.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background: linear-gradient(135deg, #faf5ff, #ede9fe);">&#x2728;</div>
+        <h3>AI Voice Commands</h3>
+        <p>Say "make formal", "fix grammar", "translate to Spanish", or "make shorter" — VoltType rewrites your text instantly using AI.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon" style="background: linear-gradient(135deg, #fdf2f8, #fce7f3);">&#x1F3A4;</div>
@@ -965,14 +972,181 @@
     </div>
   </section>
 
+  <!-- Comparison Table -->
+  <section class="section" id="compare" style="padding-bottom: 40px;">
+    <h2 class="section-title">How VoltType Compares</h2>
+    <p class="section-sub">The best voice typing at a fraction of the cost.</p>
+    <div style="max-width: 800px; margin: 0 auto; overflow-x: auto;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+        <thead>
+          <tr style="border-bottom: 2px solid rgba(124,58,237,0.3);">
+            <th style="text-align: left; padding: 12px 16px; color: var(--text-secondary); font-weight: 600;">Feature</th>
+            <th style="text-align: center; padding: 12px 16px; background: linear-gradient(135deg, rgba(124,58,237,0.1), rgba(59,130,246,0.1)); border-radius: 12px 12px 0 0; font-weight: 800; color: var(--purple);">VoltType</th>
+            <th style="text-align: center; padding: 12px 16px; color: var(--text-secondary); font-weight: 600;">Dragon</th>
+            <th style="text-align: center; padding: 12px 16px; color: var(--text-secondary); font-weight: 600;">Wispr Flow</th>
+            <th style="text-align: center; padding: 12px 16px; color: var(--text-secondary); font-weight: 600;">Voicy</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom: 1px solid rgba(128,128,128,0.1);">
+            <td style="padding: 12px 16px; font-weight: 500;">Price</td>
+            <td style="padding: 12px 16px; text-align: center; background: rgba(124,58,237,0.05); font-weight: 700; color: var(--green);">$4.99/mo</td>
+            <td style="padding: 12px 16px; text-align: center; color: var(--text-secondary);">~$700 one-time</td>
+            <td style="padding: 12px 16px; text-align: center; color: var(--text-secondary);">$12-15/mo</td>
+            <td style="padding: 12px 16px; text-align: center; color: var(--text-secondary);">$8.49/mo</td>
+          </tr>
+          <tr style="border-bottom: 1px solid rgba(128,128,128,0.1);">
+            <td style="padding: 12px 16px; font-weight: 500;">Free Tier</td>
+            <td style="padding: 12px 16px; text-align: center; background: rgba(124,58,237,0.05); color: var(--green);">&#x2713; 10 min/day</td>
+            <td style="padding: 12px 16px; text-align: center; color: var(--text-secondary);">&#x2717;</td>
+            <td style="padding: 12px 16px; text-align: center; color: var(--text-secondary);">2k words/week</td>
+            <td style="padding: 12px 16px; text-align: center; color: var(--text-secondary);">40 min trial</td>
+          </tr>
+          <tr style="border-bottom: 1px solid rgba(128,128,128,0.1);">
+            <td style="padding: 12px 16px; font-weight: 500;">AI Voice Commands</td>
+            <td style="padding: 12px 16px; text-align: center; background: rgba(124,58,237,0.05); color: var(--green);">&#x2713;</td>
+            <td style="padding: 12px 16px; text-align: center; color: var(--text-secondary);">&#x2717;</td>
+            <td style="padding: 12px 16px; text-align: center; color: var(--green);">&#x2713;</td>
+            <td style="padding: 12px 16px; text-align: center; color: var(--green);">&#x2713;</td>
+          </tr>
+          <tr style="border-bottom: 1px solid rgba(128,128,128,0.1);">
+            <td style="padding: 12px 16px; font-weight: 500;">Vocabulary Learning</td>
+            <td style="padding: 12px 16px; text-align: center; background: rgba(124,58,237,0.05); color: var(--green);">&#x2713;</td>
+            <td style="padding: 12px 16px; text-align: center; color: var(--text-secondary);">Training needed</td>
+            <td style="padding: 12px 16px; text-align: center; color: var(--green);">&#x2713;</td>
+            <td style="padding: 12px 16px; text-align: center; color: var(--text-secondary);">&#x2717;</td>
+          </tr>
+          <tr style="border-bottom: 1px solid rgba(128,128,128,0.1);">
+            <td style="padding: 12px 16px; font-weight: 500;">Word Bank / Custom Rules</td>
+            <td style="padding: 12px 16px; text-align: center; background: rgba(124,58,237,0.05); color: var(--green);">&#x2713;</td>
+            <td style="padding: 12px 16px; text-align: center; color: var(--green);">&#x2713;</td>
+            <td style="padding: 12px 16px; text-align: center; color: var(--text-secondary);">&#x2717;</td>
+            <td style="padding: 12px 16px; text-align: center; color: var(--text-secondary);">&#x2717;</td>
+          </tr>
+          <tr style="border-bottom: 1px solid rgba(128,128,128,0.1);">
+            <td style="padding: 12px 16px; font-weight: 500;">Works in Any App</td>
+            <td style="padding: 12px 16px; text-align: center; background: rgba(124,58,237,0.05); color: var(--green);">&#x2713;</td>
+            <td style="padding: 12px 16px; text-align: center; color: var(--green);">&#x2713;</td>
+            <td style="padding: 12px 16px; text-align: center; color: var(--green);">&#x2713;</td>
+            <td style="padding: 12px 16px; text-align: center; color: var(--green);">&#x2713;</td>
+          </tr>
+          <tr>
+            <td style="padding: 12px 16px; font-weight: 500;">Own API Key Option</td>
+            <td style="padding: 12px 16px; text-align: center; background: rgba(124,58,237,0.05); border-radius: 0 0 12px 12px; color: var(--green);">&#x2713;</td>
+            <td style="padding: 12px 16px; text-align: center; color: var(--text-secondary);">&#x2717;</td>
+            <td style="padding: 12px 16px; text-align: center; color: var(--text-secondary);">&#x2717;</td>
+            <td style="padding: 12px 16px; text-align: center; color: var(--text-secondary);">&#x2717;</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Voice Commands Showcase -->
+  <section class="section" style="padding-top: 20px;">
+    <h2 class="section-title">AI Voice Commands</h2>
+    <p class="section-sub">Speak a command after dictating — VoltType rewrites your text with AI.</p>
+    <div class="steps-grid" style="max-width: 960px; margin: 0 auto;">
+      <div class="step-card">
+        <div class="step-num" style="background: linear-gradient(135deg, #ede9fe, #ddd6fe); color: #7c3aed;">&#x270E;</div>
+        <h3>"Make formal"</h3>
+        <p>Transforms casual text into professional, business-ready language.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num" style="background: linear-gradient(135deg, #ecfdf5, #d1fae5); color: #059669;">&#x2713;</div>
+        <h3>"Fix grammar"</h3>
+        <p>Corrects grammar, spelling, and punctuation errors instantly.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num" style="background: linear-gradient(135deg, #eff6ff, #dbeafe); color: #2563eb;">&#x1F310;</div>
+        <h3>"Translate to Spanish"</h3>
+        <p>Translates your text into any language with a single voice command.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num" style="background: linear-gradient(135deg, #fff7ed, #fed7aa); color: #ea580c;">&#x2702;</div>
+        <h3>"Make shorter"</h3>
+        <p>Condenses your text while keeping all key points intact.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num" style="background: linear-gradient(135deg, #fdf2f8, #fce7f3); color: #db2777;">&#x1F4CB;</div>
+        <h3>"Make bullet points"</h3>
+        <p>Converts paragraphs into clean, organized bullet-point lists.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num" style="background: linear-gradient(135deg, #fffbeb, #fef3c7); color: #d97706;">&#x1F504;</div>
+        <h3>"Rewrite"</h3>
+        <p>Rephrases your text for better clarity and readability.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Keyboard Shortcuts -->
+  <section class="section" style="padding-top: 20px; padding-bottom: 20px;">
+    <h2 class="section-title">Keyboard Shortcuts</h2>
+    <p class="section-sub">Fast controls. No mouse needed.</p>
+    <div style="max-width: 500px; margin: 0 auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid rgba(128,128,128,0.1);">
+        <span style="font-weight: 600;">Hold-to-talk</span>
+        <span style="background: var(--purple-light); color: var(--purple); padding: 4px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; font-family: monospace;">Ctrl + Space</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid rgba(128,128,128,0.1);">
+        <span style="font-weight: 600;">Toggle dictation</span>
+        <span style="background: var(--purple-light); color: var(--purple); padding: 4px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; font-family: monospace;">Ctrl + Shift + D</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid rgba(128,128,128,0.1);">
+        <span style="font-weight: 600;">Alternative toggle</span>
+        <span style="background: var(--purple-light); color: var(--purple); padding: 4px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; font-family: monospace;">F9</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 0;">
+        <span style="font-weight: 600;">Voice command</span>
+        <span style="font-size: 13px; color: var(--text-secondary);">Dictate, then say "make formal" etc.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Changelog / What's New -->
+  <section class="section" style="padding-top: 20px; padding-bottom: 20px;">
+    <h2 class="section-title">What's New</h2>
+    <p class="section-sub">Latest updates and improvements.</p>
+    <div style="max-width: 600px; margin: 0 auto;">
+      <div style="border-left: 3px solid var(--purple); padding-left: 20px; margin-bottom: 24px;">
+        <div style="font-size: 12px; color: var(--purple); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">April 2026</div>
+        <h3 style="font-size: 16px; margin-bottom: 6px;">AI Voice Commands</h3>
+        <p style="font-size: 14px; color: var(--text-secondary);">Say "make formal", "fix grammar", "translate to Spanish", "make shorter", or "make bullet points" after dictating. VoltType uses AI to rewrite your text instantly.</p>
+      </div>
+      <div style="border-left: 3px solid rgba(128,128,128,0.2); padding-left: 20px; margin-bottom: 24px;">
+        <div style="font-size: 12px; color: var(--text-secondary); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">March 2026</div>
+        <h3 style="font-size: 16px; margin-bottom: 6px;">Word Bank &amp; Vocabulary Learning</h3>
+        <p style="font-size: 14px; color: var(--text-secondary);">Custom word corrections and automatic vocabulary learning from your corrections. VoltType gets smarter the more you use it.</p>
+      </div>
+      <div style="border-left: 3px solid rgba(128,128,128,0.2); padding-left: 20px; margin-bottom: 24px;">
+        <div style="font-size: 12px; color: var(--text-secondary); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">March 2026</div>
+        <h3 style="font-size: 16px; margin-bottom: 6px;">Launch &mdash; v1.0</h3>
+        <p style="font-size: 14px; color: var(--text-secondary);">Windows desktop app with hold-to-talk, toggle mode, LLM text cleanup, templates, history, auto-update, and system tray integration.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Built by / Credibility -->
+  <section style="padding: 48px 40px; text-align: center; background: var(--card-bg);">
+    <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">Built by <strong style="color: var(--text);">Djoko</strong> at <a href="https://myclienta.com" style="color: var(--purple); font-weight: 600;" target="_blank">MyClienta</a></p>
+    <p style="font-size: 13px; color: var(--text-secondary);">AI automation tools for people who hate repetitive work. VoltType is powered by Groq Whisper + Llama 3.3.</p>
+  </section>
+
   <!-- Download -->
   <section class="section download-section" id="download">
     <h2 class="section-title">Download VoltType</h2>
     <p class="section-sub">Download, create an account, and start voice typing.</p>
     <div class="download-buttons">
-      <a href="https://github.com/chrchevdj/volttype-releases/releases/download/v1.0.0/VoltType.Setup.1.0.0.exe" class="btn-hero btn-primary">Download for Windows</a>
+      <a href="https://github.com/chrchevdj/volttype-releases/releases/latest" class="btn-hero btn-primary" id="download-btn-2" style="font-size: 18px; padding: 16px 36px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download for Windows
+      </a>
     </div>
     <p class="hero-note">Windows 10/11 required. Free tier — no credit card needed.</p>
+    <div style="margin-top: 16px;">
+      <span class="badge-coming">Mac &amp; Linux — coming soon</span>
+    </div>
   </section>
 
   <!-- Auth Modal -->
@@ -1031,11 +1205,15 @@
   <!-- Footer -->
   <footer>
     <div class="footer-links">
-      <a href="privacy-policy.html">Privacy Policy</a>
-      <a href="terms-of-service.html">Terms of Service</a>
+      <a href="#features">Features</a>
+      <a href="#compare">Compare</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#download">Download</a>
+      <a href="privacy-policy.html">Privacy</a>
+      <a href="terms-of-service.html">Terms</a>
       <a href="mailto:support@volttype.com">Contact</a>
     </div>
-    <p class="footer-copy">&copy; 2026 VoltType. All rights reserved.</p>
+    <p class="footer-copy">&copy; 2026 VoltType by <a href="https://myclienta.com" target="_blank">MyClienta</a>. All rights reserved.</p>
   </footer>
 
   <script>
@@ -1118,7 +1296,7 @@
       const strengthEl = document.getElementById('password-strength');
       if (authMode === 'signup') {
         document.getElementById('modal-title').textContent = 'Create Account';
-        document.getElementById('modal-sub').textContent = 'Join thousands of voice typers';
+        document.getElementById('modal-sub').textContent = 'Start voice typing for free';
         document.getElementById('modal-submit').textContent = 'Create Account';
         document.getElementById('modal-toggle-text').textContent = 'Already have an account?';
         document.getElementById('modal-toggle-btn').textContent = 'Sign in';
@@ -1335,10 +1513,31 @@
       updateNavAuth();
     }
 
-    // --- GitHub download counter ---
+    // --- Dynamic download link from GitHub releases ---
+    async function updateDownloadLink() {
+      try {
+        const res = await fetch('https://api.github.com/repos/chrchevdj/volttype-releases/releases/latest');
+        if (!res.ok) return;
+        const data = await res.json();
+        const exeAsset = data.assets?.find(a => a.name.endsWith('.exe'));
+        if (exeAsset) {
+          // Update all download buttons to point to latest .exe
+          document.querySelectorAll('#download-btn, #download-btn-2').forEach(btn => {
+            btn.href = exeAsset.browser_download_url;
+          });
+          // Show version number
+          const versionEl = document.getElementById('download-version');
+          if (versionEl) {
+            versionEl.textContent = 'v' + (data.tag_name || '').replace(/^v/, '');
+          }
+        }
+      } catch { /* fallback to /releases/latest redirect */ }
+    }
 
     // --- Init ---
     document.addEventListener('DOMContentLoaded', () => {
+      // Fetch latest download link
+      updateDownloadLink();
       // Handle OAuth callback (Google sign-in redirect)
       const hashParams = new URLSearchParams(window.location.hash.replace('#', '?'));
       const accessToken = hashParams.get('access_token');

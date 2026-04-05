@@ -91,6 +91,84 @@ export async function proxyClean(request, env) {
   };
 }
 
+/**
+ * Proxy AI voice command to Groq LLM.
+ * Transforms text based on command (formal, shorter, translate, etc.)
+ */
+export async function proxyCommand(request, env) {
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return { error: 'Invalid JSON body', status: 400 };
+  }
+
+  const { text, command, extra } = body;
+  if (!text) {
+    return { error: 'Missing "text" field', status: 400 };
+  }
+  if (!command) {
+    return { error: 'Missing "command" field', status: 400 };
+  }
+
+  const COMMAND_PROMPTS = {
+    formal: 'Rewrite the following text in a formal, professional tone. Keep all original ideas. Output ONLY the rewritten text.',
+    professional: 'Rewrite the following text to sound professional and polished. Keep all original ideas. Output ONLY the rewritten text.',
+    casual: 'Rewrite the following text in a casual, friendly tone. Keep all original ideas. Output ONLY the rewritten text.',
+    friendly: 'Rewrite the following text in a warm, friendly tone. Keep all original ideas. Output ONLY the rewritten text.',
+    shorter: 'Make the following text significantly shorter while keeping all key points. Output ONLY the shortened text.',
+    longer: 'Expand the following text with more detail while keeping the same meaning. Output ONLY the expanded text.',
+    grammar: 'Fix all grammar and spelling errors. Do not change meaning or tone. Output ONLY the corrected text.',
+    spelling: 'Fix all spelling errors. Do not change anything else. Output ONLY the corrected text.',
+    summarize: 'Summarize the following text in 1-3 concise sentences. Output ONLY the summary.',
+    bullets: 'Convert into clear bullet points. Output ONLY the bullet points, starting each with "- ".',
+    list: 'Convert into a numbered list. Output ONLY the numbered items.',
+    rewrite: 'Rewrite for clarity and better structure while preserving meaning. Output ONLY the rewritten text.',
+    concise: 'Make more concise without losing important information. Output ONLY the concise version.',
+    expand: 'Expand with more detail and context while keeping the same direction. Output ONLY the expanded text.',
+  };
+
+  let systemPrompt = COMMAND_PROMPTS[command];
+  if (!systemPrompt && command === 'translate' && extra) {
+    systemPrompt = `Translate the following text into ${extra}. Output ONLY the translation.`;
+  }
+  if (!systemPrompt) {
+    return { error: `Unknown command: ${command}`, status: 400 };
+  }
+
+  const groqRes = await fetch(GROQ_CHAT_URL, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${env.GROQ_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'llama-3.3-70b-versatile',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: text },
+      ],
+      temperature: 0,
+      max_tokens: 2048,
+    }),
+  });
+
+  const data = await groqRes.json();
+
+  if (!groqRes.ok) {
+    return {
+      error: data?.error?.message || `Groq API error ${groqRes.status}`,
+      status: groqRes.status,
+    };
+  }
+
+  return {
+    text: data.choices?.[0]?.message?.content?.trim() || text,
+    command,
+    status: 200,
+  };
+}
+
 function getCleanerPrompt(style, userContext) {
   let prompt;
   if (style === 'punctuated') {

@@ -765,6 +765,13 @@
       }
     }
 
+    // Register service worker for PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+      });
+    }
+
     // --- Init ---
     document.addEventListener('DOMContentLoaded', () => {
       // Check auth
@@ -832,8 +839,8 @@
             await signup(email, password);
           }
           document.getElementById('auth-overlay').classList.add('hidden');
-          const email = getUserEmail();
-          if (email) document.getElementById('user-email').textContent = email;
+          const userEmail = getUserEmail();
+          if (userEmail) document.getElementById('user-email').textContent = userEmail;
           document.getElementById('user-bar').classList.remove('hidden');
           fetchUsage();
         } catch (err) {
