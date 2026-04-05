@@ -10,22 +10,12 @@ const ALLOWED_ORIGINS = [
   'https://www.volttype.com',
 ];
 
-// React Native / mobile apps send no Origin or a null origin
-const MOBILE_USER_AGENTS = ['okhttp', 'expo', 'react-native', 'dalvik'];
-
 export function corsHeaders(request) {
   const origin = request.headers.get('Origin') || '';
-  const userAgent = (request.headers.get('User-Agent') || '').toLowerCase();
-
-  // Allow known web origins
-  const webAllowed = ALLOWED_ORIGINS.some(o => origin.startsWith(o));
-  // Allow mobile apps (no origin, or mobile user-agent)
-  const mobileAllowed = origin === '' || MOBILE_USER_AGENTS.some(ua => userAgent.includes(ua));
-
-  const allowed = webAllowed || mobileAllowed;
+  const allowed = ALLOWED_ORIGINS.some(o => origin.startsWith(o)) || origin === '';
 
   return {
-    'Access-Control-Allow-Origin': allowed ? (origin || '*') : '',
+    'Access-Control-Allow-Origin': allowed ? origin || '*' : '',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Max-Age': '86400',

@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0c1222">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="manifest.json">
+  <title>VoltType</title>
+  <style>
+    :root {
+      --bg: #0c1222;
+      --card: rgba(22,33,55,0.85);
+      --accent: #38bd9c;
+      --accent2: #3b82f6;
+      --text: #e2e8f0;
+      --text2: #94a3b8;
+      --text3: #64748b;
+      --red: #f87171;
+      --border: rgba(255,255,255,0.08);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+    body::before {
+      content: '';
+      position: fixed; top: -50%; left: -50%; width: 200%; height: 200%;
+      background:
+        radial-gradient(ellipse at 30% 30%, rgba(56,189,156,0.07) 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 60%, rgba(59,130,246,0.05) 0%, transparent 50%);
+      z-index: 0;
+    }
+
+    /* Header */
+    .header {
+      padding: 20px 24px 12px;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+    .logo {
+      font-size: 24px;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .tagline {
+      font-size: 13px;
+      color: var(--text3);
+      margin-top: 4px;
+    }
+
+    /* Status */
+    .status-bar {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      padding: 12px 24px;
+      position: relative;
+      z-index: 1;
+    }
+    .stat {
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .stat-label {
+      font-size: 10px;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Main content area */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Mic button */
+    .mic-container {
+      position: relative;
+      margin-bottom: 32px;
+    }
+    .mic-ring {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      border: 3px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      position: relative;
+    }
+    .mic-ring.recording {
+      border-color: var(--red);
+      box-shadow: 0 0 30px rgba(248,113,113,0.3);
+      animation: pulse-ring 1.5s infinite;
+    }
+    .mic-ring.processing {
+      border-color: var(--accent);
+      box-shadow: 0 0 30px rgba(56,189,156,0.3);
+    }
+    @keyframes pulse-ring {
+      0%, 100% { box-shadow: 0 0 20px rgba(248,113,113,0.2); }
+      50% { box-shadow: 0 0 40px rgba(248,113,113,0.4); }
+    }
+    .mic-btn {
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      border: none;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: white;
+      font-size: 40px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 24px rgba(56,189,156,0.35);
+      transition: all 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .mic-btn:active {
+      transform: scale(0.95);
+    }
+    .mic-btn.recording {
+      background: linear-gradient(135deg, var(--red), #ef4444);
+      box-shadow: 0 6px 24px rgba(248,113,113,0.35);
+    }
+    .mic-btn.processing {
+      opacity: 0.7;
+    }
+    .mic-label {
+      text-align: center;
+      font-size: 14px;
+      color: var(--text2);
+      margin-bottom: 24px;
+    }
+
+    /* Audio bars */
+    .audio-bars {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      height: 40px;
+      margin-bottom: 20px;
+    }
+    .audio-bar {
+      width: 4px;
+      height: 6px;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: height 0.08s ease-out;
+    }
+
+    /* Result area */
+    .result-area {
+      width: 100%;
+      max-width: 500px;
+      position: relative;
+      z-index: 1;
+    }
+    .result-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      min-height: 80px;
+      backdrop-filter: blur(10px);
+    }
+    .result-text {
+      font-size: 16px;
+      line-height: 1.7;
+      color: var(--text);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .result-placeholder {
+      color: var(--text3);
+      font-size: 14px;
+      text-align: center;
+    }
+    .result-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .result-btn {
+      flex: 1;
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-copy {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: white;
+      box-shadow: 0 2px 10px rgba(56,189,156,0.25);
+    }
+    .btn-clear {
+      background: rgba(255,255,255,0.05);
+      color: var(--text2);
+      border: 1px solid var(--border);
+    }
+    .btn-share {
+      background: rgba(59,130,246,0.15);
+      color: var(--accent2);
+    }
+    .copied-toast {
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent);
+      color: white;
+      padding: 10px 24px;
+      border-radius: 24px;
+      font-size: 14px;
+      font-weight: 600;
+      box-shadow: 0 4px 20px rgba(56,189,156,0.4);
+      opacity: 0;
+      transition: opacity 0.3s;
+      z-index: 100;
+    }
+    .copied-toast.show { opacity: 1; }
+
+    /* Auth overlay */
+    .auth-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .auth-overlay.hidden { display: none; }
+    .auth-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 36px 28px;
+      width: 100%;
+      max-width: 360px;
+      text-align: center;
+      backdrop-filter: blur(20px);
+    }
+    .auth-title {
+      font-size: 28px;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 6px;
+    }
+    .auth-sub { font-size: 14px; color: var(--text3); margin-bottom: 24px; }
+    .auth-input {
+      display: block;
+      width: 100%;
+      padding: 12px 16px;
+      margin-bottom: 12px;
+      background: rgba(12,18,34,0.8);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 15px;
+      font-family: inherit;
+    }
+    .auth-input:focus { outline: none; border-color: var(--accent); }
+    .auth-submit {
+      display: block;
+      width: 100%;
+      padding: 13px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-bottom: 12px;
+      box-shadow: 0 3px 14px rgba(56,189,156,0.3);
+    }
+    .auth-toggle {
+      font-size: 13px;
+      color: var(--text3);
+    }
+    .auth-toggle button {
+      background: none;
+      border: none;
+      color: var(--accent);
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .auth-error {
+      background: rgba(248,113,113,0.12);
+      border: 1px solid rgba(248,113,113,0.3);
+      color: var(--red);
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+    .auth-error.hidden { display: none; }
+
+    /* Upgrade banner */
+    .upgrade-banner {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: linear-gradient(135deg, rgba(56,189,156,0.15), rgba(59,130,246,0.1));
+      border-top: 1px solid rgba(56,189,156,0.2);
+      padding: 16px 20px;
+      text-align: center;
+      z-index: 50;
+      backdrop-filter: blur(10px);
+    }
+    .upgrade-banner.hidden { display: none; }
+    .upgrade-banner p { font-size: 13px; color: var(--text2); margin-bottom: 10px; }
+    .upgrade-btns { display: flex; gap: 10px; justify-content: center; }
+    .upgrade-btn {
+      padding: 10px 24px;
+      border-radius: 10px;
+      border: none;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .upgrade-basic { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+    .upgrade-pro { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; }
+
+    .hidden { display: none !important; }
+
+    /* User bar */
+    .user-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 20px;
+      position: relative;
+      z-index: 1;
+    }
+    .user-email {
+      font-size: 12px;
+      color: var(--text3);
+      max-width: 180px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .user-plan {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: rgba(56,189,156,0.15);
+      color: var(--accent);
+    }
+    .btn-signout {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text3);
+      font-size: 11px;
+      padding: 4px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Auth -->
+  <div class="auth-overlay" id="auth-overlay">
+    <div class="auth-card">
+      <div class="auth-title">VoltType</div>
+      <p class="auth-sub">AI-powered voice typing</p>
+      <div class="auth-error hidden" id="pwa-auth-error"></div>
+      <input type="email" class="auth-input" id="pwa-email" placeholder="Email address">
+      <input type="password" class="auth-input" id="pwa-password" placeholder="Password">
+      <button class="auth-submit" id="pwa-auth-submit">Sign In</button>
+      <div class="auth-toggle">
+        <span id="pwa-toggle-text">Don't have an account?</span>
+        <button id="pwa-toggle-btn">Create one</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">VoltType</div>
+    <div class="tagline">Tap to speak. Text appears.</div>
+  </div>
+
+  <!-- User bar -->
+  <div class="user-bar hidden" id="user-bar">
+    <span class="user-email" id="user-email"></span>
+    <span class="user-plan" id="user-plan">Free</span>
+    <button class="btn-signout" id="btn-signout">Sign Out</button>
+  </div>
+
+  <!-- Status -->
+  <div class="status-bar">
+    <div class="stat">
+      <div class="stat-value" id="remaining">10:00</div>
+      <div class="stat-label">Remaining</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="sessions">0</div>
+      <div class="stat-label">Sessions</div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <!-- Audio visualization -->
+    <div class="audio-bars hidden" id="audio-bars">
+      <div class="audio-bar"></div><div class="audio-bar"></div><div class="audio-bar"></div>
+      <div class="audio-bar"></div><div class="audio-bar"></div><div class="audio-bar"></div>
+      <div class="audio-bar"></div><div class="audio-bar"></div><div class="audio-bar"></div>
+      <div class="audio-bar"></div><div class="audio-bar"></div>
+    </div>
+
+    <!-- Mic button -->
+    <div class="mic-container">
+      <div class="mic-ring" id="mic-ring">
+        <button class="mic-btn" id="mic-btn">&#x1F399;</button>
+      </div>
+    </div>
+    <div class="mic-label" id="mic-label">Tap to start voice typing</div>
+
+    <!-- Result -->
+    <div class="result-area">
+      <div class="result-card">
+        <div class="result-text" id="result-text">
+          <span class="result-placeholder">Your text will appear here</span>
+        </div>
+        <div class="result-actions hidden" id="result-actions">
+          <button class="result-btn btn-copy" id="btn-copy">Copy</button>
+          <button class="result-btn btn-share" id="btn-share">Share</button>
+          <button class="result-btn btn-clear" id="btn-clear">Clear</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upgrade banner -->
+  <div class="upgrade-banner hidden" id="upgrade-banner">
+    <p>Daily limit reached. Upgrade for more minutes.</p>
+    <div class="upgrade-btns">
+      <button class="upgrade-btn upgrade-basic" id="pwa-upgrade-basic">Basic $4.99/mo</button>
+      <button class="upgrade-btn upgrade-pro" id="pwa-upgrade-pro">Pro $8.99/mo</button>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="copied-toast" id="copied-toast">Copied to clipboard!</div>
+
+  <script>
+    const API_URL = 'https://volttype-api.crcaway.workers.dev';
+    const SUPABASE_URL = 'https://ceuymixybyaxpldgggin.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNldXltaXh5YnlheHBsZGdnZ2luIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3ODgwNzYsImV4cCI6MjA4NzM2NDA3Nn0.OprbSZuB-wo2Q_aWnkhC0I7e7iPePT9lD8LT2BrlEWE';
+
+    let state = {
+      token: localStorage.getItem('volttype_token'),
+      refreshToken: localStorage.getItem('volttype_refresh'),
+      recording: false,
+      processing: false,
+      mediaRecorder: null,
+      chunks: [],
+      stream: null,
+      sessionCount: 0,
+      allText: '',
+      authMode: 'login',
+    };
+
+    // --- Token decode helper ---
+    function decodeJWT(token) {
+      try {
+        const payload = token.split('.')[1];
+        return JSON.parse(atob(payload));
+      } catch { return null; }
+    }
+
+    function getUserEmail() {
+      if (!state.token) return null;
+      const payload = decodeJWT(state.token);
+      return payload?.email || null;
+    }
+
+    // --- Refresh token ---
+    async function refreshAuth() {
+      if (!state.refreshToken) return false;
+      try {
+        const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
+          body: JSON.stringify({ refresh_token: state.refreshToken }),
+        });
+        const data = await res.json();
+        if (!res.ok) return false;
+        state.token = data.access_token;
+        state.refreshToken = data.refresh_token;
+        localStorage.setItem('volttype_token', data.access_token);
+        localStorage.setItem('volttype_refresh', data.refresh_token);
+        return true;
+      } catch { return false; }
+    }
+
+    // --- Sign out ---
+    function signOut() {
+      state.token = null;
+      state.refreshToken = null;
+      localStorage.removeItem('volttype_token');
+      localStorage.removeItem('volttype_refresh');
+      document.getElementById('user-bar').classList.add('hidden');
+      document.getElementById('auth-overlay').classList.remove('hidden');
+    }
+
+    // --- Fetch usage ---
+    async function fetchUsage() {
+      if (!state.token) return;
+      try {
+        const res = await fetch(`${API_URL}/v1/usage`, {
+          headers: { 'Authorization': `Bearer ${state.token}` },
+        });
+        if (res.status === 401) {
+          const refreshed = await refreshAuth();
+          if (refreshed) return fetchUsage();
+          signOut();
+          return;
+        }
+        const data = await res.json();
+        const remaining = Math.max(0, data.remainingSeconds || 0);
+        const mins = Math.floor(remaining / 60);
+        const secs = remaining % 60;
+        document.getElementById('remaining').textContent = `${mins}:${String(Math.floor(secs)).padStart(2, '0')}`;
+        document.getElementById('user-plan').textContent = data.plan || 'Free';
+      } catch {}
+    }
+
+    // --- Checkout ---
+    async function checkout(plan) {
+      if (!state.token) {
+        document.getElementById('auth-overlay').classList.remove('hidden');
+        return;
+      }
+      try {
+        const res = await fetch(`${API_URL}/v1/checkout`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${state.token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ plan }),
+        });
+        const data = await res.json();
+        if (data.url) {
+          window.open(data.url, '_blank');
+        } else {
+          alert(data.error || 'Payment setup failed');
+        }
+      } catch (err) {
+        alert('Could not start checkout: ' + err.message);
+      }
+    }
+
+    // --- Auth ---
+    async function login(email, password) {
+      const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error_description || data.msg || 'Login failed');
+      localStorage.setItem('volttype_token', data.access_token);
+      localStorage.setItem('volttype_refresh', data.refresh_token);
+      state.token = data.access_token;
+      return data;
+    }
+
+    async function signup(email, password) {
+      const res = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error_description || data.msg || 'Signup failed');
+      if (data.access_token) {
+        localStorage.setItem('volttype_token', data.access_token);
+        localStorage.setItem('volttype_refresh', data.refresh_token);
+        state.token = data.access_token;
+      }
+      return data;
+    }
+
+    // --- Recording ---
+    async function startRecording() {
+      try {
+        state.stream = await navigator.mediaDevices.getUserMedia({
+          audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+        });
+        state.chunks = [];
+        const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm';
+        state.mediaRecorder = new MediaRecorder(state.stream, { mimeType, audioBitsPerSecond: 192000 });
+        state.mediaRecorder.ondataavailable = e => { if (e.data.size > 0) state.chunks.push(e.data); };
+        state.mediaRecorder.start(200);
+        state.recording = true;
+        updateUI();
+        startAudioViz();
+      } catch (err) {
+        alert('Microphone access denied. Please allow mic access.');
+      }
+    }
+
+    async function stopRecording() {
+      if (!state.recording || !state.mediaRecorder) return;
+      state.recording = false;
+      state.processing = true;
+      updateUI();
+      stopAudioViz();
+
+      await new Promise(resolve => {
+        state.mediaRecorder.onstop = resolve;
+        state.mediaRecorder.requestData();
+        state.mediaRecorder.stop();
+      });
+
+      const blob = new Blob(state.chunks, { type: state.mediaRecorder.mimeType });
+      state.stream.getTracks().forEach(t => t.stop());
+
+      if (blob.size < 5000) {
+        state.processing = false;
+        updateUI();
+        return;
+      }
+
+      // Send to API
+      try {
+        const formData = new FormData();
+        formData.append('file', blob, 'audio.webm');
+        formData.append('model', 'whisper-large-v3-turbo');
+        formData.append('language', 'en');
+        formData.append('response_format', 'verbose_json');
+        formData.append('temperature', '0.0');
+
+        const res = await fetch(`${API_URL}/v1/transcribe`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${state.token}` },
+          body: formData,
+        });
+
+        const data = await res.json();
+
+        if (res.status === 429) {
+          document.getElementById('upgrade-banner').classList.remove('hidden');
+          state.processing = false;
+          updateUI();
+          return;
+        }
+
+        if (data.text) {
+          state.allText += (state.allText ? ' ' : '') + data.text;
+          state.sessionCount++;
+          document.getElementById('result-text').textContent = state.allText;
+          document.getElementById('result-actions').classList.remove('hidden');
+          document.getElementById('sessions').textContent = state.sessionCount;
+        }
+      } catch (err) {
+        console.error('Transcription error:', err);
+      }
+
+      state.processing = false;
+      updateUI();
+    }
+
+    // --- Audio visualization ---
+    let vizInterval = null;
+    let audioCtx = null;
+    let analyser = null;
+
+    function startAudioViz() {
+      document.getElementById('audio-bars').classList.remove('hidden');
+      try {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const source = audioCtx.createMediaStreamSource(state.stream);
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 512;
+        source.connect(analyser);
+        const data = new Uint8Array(analyser.fftSize);
+
+        vizInterval = setInterval(() => {
+          analyser.getByteTimeDomainData(data);
+          let sum = 0;
+          for (let i = 0; i < data.length; i++) sum += (data[i] - 128) ** 2;
+          const rms = Math.sqrt(sum / data.length);
+          const bars = document.querySelectorAll('.audio-bar');
+          bars.forEach((bar, i) => {
+            const h = Math.max(6, Math.min(36, (rms + Math.random() * 10) * 0.5));
+            bar.style.height = h + 'px';
+          });
+        }, 60);
+      } catch {}
+    }
+
+    function stopAudioViz() {
+      if (vizInterval) clearInterval(vizInterval);
+      if (audioCtx) audioCtx.close();
+      document.getElementById('audio-bars').classList.add('hidden');
+    }
+
+    // --- UI ---
+    function updateUI() {
+      const btn = document.getElementById('mic-btn');
+      const ring = document.getElementById('mic-ring');
+      const label = document.getElementById('mic-label');
+
+      if (state.processing) {
+        btn.className = 'mic-btn processing';
+        ring.className = 'mic-ring processing';
+        btn.innerHTML = '&#x23F3;';
+        label.textContent = 'Transcribing...';
+      } else if (state.recording) {
+        btn.className = 'mic-btn recording';
+        ring.className = 'mic-ring recording';
+        btn.innerHTML = '&#x23F9;';
+        label.textContent = 'Tap to stop';
+      } else {
+        btn.className = 'mic-btn';
+        ring.className = 'mic-ring';
+        btn.innerHTML = '&#x1F399;';
+        label.textContent = 'Tap to start voice typing';
+      }
+    }
+
+    // --- Init ---
+    document.addEventListener('DOMContentLoaded', () => {
+      // Check auth
+      if (!state.token) {
+        document.getElementById('auth-overlay').classList.remove('hidden');
+      } else {
+        document.getElementById('auth-overlay').classList.add('hidden');
+        // Show user bar
+        const email = getUserEmail();
+        if (email) document.getElementById('user-email').textContent = email;
+        document.getElementById('user-bar').classList.remove('hidden');
+        fetchUsage();
+      }
+
+      // Mic button
+      document.getElementById('mic-btn').addEventListener('click', () => {
+        if (state.processing) return;
+        if (state.recording) {
+          stopRecording();
+        } else {
+          startRecording();
+        }
+      });
+
+      // Copy
+      document.getElementById('btn-copy').addEventListener('click', () => {
+        navigator.clipboard.writeText(state.allText);
+        const toast = document.getElementById('copied-toast');
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+      });
+
+      // Share
+      document.getElementById('btn-share').addEventListener('click', () => {
+        if (navigator.share) {
+          navigator.share({ text: state.allText });
+        } else {
+          navigator.clipboard.writeText(state.allText);
+          const toast = document.getElementById('copied-toast');
+          toast.classList.add('show');
+          setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+      });
+
+      // Clear
+      document.getElementById('btn-clear').addEventListener('click', () => {
+        state.allText = '';
+        document.getElementById('result-text').innerHTML = '<span class="result-placeholder">Your text will appear here</span>';
+        document.getElementById('result-actions').classList.add('hidden');
+      });
+
+      // Auth submit
+      document.getElementById('pwa-auth-submit').addEventListener('click', async () => {
+        const email = document.getElementById('pwa-email').value.trim();
+        const password = document.getElementById('pwa-password').value;
+        const errEl = document.getElementById('pwa-auth-error');
+
+        if (!email || !password) { errEl.textContent = 'Enter email and password'; errEl.classList.remove('hidden'); return; }
+        if (password.length < 6) { errEl.textContent = 'Password must be at least 6 characters'; errEl.classList.remove('hidden'); return; }
+
+        try {
+          if (state.authMode === 'login') {
+            await login(email, password);
+          } else {
+            await signup(email, password);
+          }
+          document.getElementById('auth-overlay').classList.add('hidden');
+          const email = getUserEmail();
+          if (email) document.getElementById('user-email').textContent = email;
+          document.getElementById('user-bar').classList.remove('hidden');
+          fetchUsage();
+        } catch (err) {
+          errEl.textContent = err.message;
+          errEl.classList.remove('hidden');
+        }
+      });
+
+      // Auth toggle
+      document.getElementById('pwa-toggle-btn').addEventListener('click', () => {
+        state.authMode = state.authMode === 'login' ? 'signup' : 'login';
+        document.getElementById('pwa-auth-submit').textContent = state.authMode === 'login' ? 'Sign In' : 'Create Account';
+        document.getElementById('pwa-toggle-text').textContent = state.authMode === 'login' ? "Don't have an account?" : 'Already have an account?';
+        document.getElementById('pwa-toggle-btn').textContent = state.authMode === 'login' ? 'Create one' : 'Sign in';
+      });
+
+      // Upgrade buttons — create Stripe checkout
+      document.getElementById('pwa-upgrade-basic').addEventListener('click', () => checkout('basic'));
+      document.getElementById('pwa-upgrade-pro').addEventListener('click', () => checkout('pro'));
+
+      // Sign out
+      document.getElementById('btn-signout').addEventListener('click', signOut);
+    });
+  </script>
+</body>
+</html>

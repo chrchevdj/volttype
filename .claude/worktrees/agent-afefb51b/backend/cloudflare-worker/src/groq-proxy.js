@@ -52,12 +52,12 @@ export async function proxyClean(request, env) {
     return { error: 'Invalid JSON body', status: 400 };
   }
 
-  const { text, style, outputStyle, userContext } = body;
+  const { text, outputStyle, userContext } = body;
   if (!text) {
     return { error: 'Missing "text" field', status: 400 };
   }
 
-  const systemPrompt = getCleanerPrompt(style || outputStyle || 'punctuated', userContext || '');
+  const systemPrompt = getCleanerPrompt(outputStyle || 'punctuated', userContext || '');
 
   const groqRes = await fetch(GROQ_CHAT_URL, {
     method: 'POST',

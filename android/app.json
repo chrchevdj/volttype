@@ -1,0 +1,50 @@
+{
+  "expo": {
+    "name": "VoltType",
+    "slug": "volttype",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": false,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0c1222"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.volttype.app"
+    },
+    "android": {
+      "package": "com.volttype.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0c1222"
+      },
+      "edgeToEdgeEnabled": false,
+      "permissions": [
+        "RECORD_AUDIO",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-av",
+        {
+          "microphonePermission": "VoltType needs microphone access for voice dictation."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "b3a8aa59-49b4-4240-852c-bf2e34c4edc0"
+      }
+    },
+    "owner": "djokochrchev"
+  }
+}
