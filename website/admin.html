@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VoltType Admin</title>
+  <meta name="robots" content="noindex, nofollow">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, 'Segoe UI', system-ui, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 24px;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+    }
+    .header h1 {
+      font-size: 24px;
+      font-weight: 900;
+      background: linear-gradient(135deg, #7c3aed, #3b82f6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .header a {
+      color: #94a3b8;
+      text-decoration: none;
+      font-size: 14px;
+    }
+    .header a:hover { color: #e2e8f0; }
+    .login-box {
+      max-width: 400px;
+      margin: 120px auto;
+      text-align: center;
+    }
+    .login-box h2 { font-size: 20px; margin-bottom: 8px; }
+    .login-box p { color: #94a3b8; font-size: 14px; margin-bottom: 24px; }
+    .login-box button {
+      padding: 12px 32px;
+      background: linear-gradient(135deg, #7c3aed, #3b82f6);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .stat-card {
+      background: rgba(22, 33, 55, 0.85);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 24px;
+    }
+    .stat-card .label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #64748b;
+      margin-bottom: 8px;
+    }
+    .stat-card .value {
+      font-size: 32px;
+      font-weight: 800;
+      color: #7c3aed;
+    }
+    .stat-card .sub {
+      font-size: 13px;
+      color: #94a3b8;
+      margin-top: 4px;
+    }
+    .section-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: #e2e8f0;
+    }
+    .plan-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+    .plan-chip {
+      background: rgba(22, 33, 55, 0.85);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 12px 20px;
+      text-align: center;
+      flex: 1;
+    }
+    .plan-chip .count {
+      font-size: 24px;
+      font-weight: 800;
+      color: #e2e8f0;
+    }
+    .plan-chip .name {
+      font-size: 12px;
+      color: #64748b;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+    .plan-chip.free .count { color: #94a3b8; }
+    .plan-chip.basic .count { color: #3b82f6; }
+    .plan-chip.pro .count { color: #7c3aed; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: rgba(22, 33, 55, 0.85);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    th {
+      text-align: left;
+      padding: 12px 16px;
+      font-size: 12px;
+      text-transform: uppercase;
+      color: #64748b;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    td {
+      padding: 12px 16px;
+      font-size: 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .badge.free { background: rgba(148,163,184,0.15); color: #94a3b8; }
+    .badge.basic { background: rgba(59,130,246,0.15); color: #3b82f6; }
+    .badge.pro { background: rgba(124,58,237,0.15); color: #7c3aed; }
+    .loading {
+      text-align: center;
+      padding: 60px;
+      color: #64748b;
+      font-size: 16px;
+    }
+    .error {
+      text-align: center;
+      padding: 60px;
+      color: #f87171;
+      font-size: 16px;
+    }
+    .refresh-btn {
+      padding: 8px 16px;
+      background: rgba(124,58,237,0.15);
+      color: #7c3aed;
+      border: 1px solid rgba(124,58,237,0.3);
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .refresh-btn:hover { background: rgba(124,58,237,0.25); }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>VoltType Admin</h1>
+    <div>
+      <button class="refresh-btn" onclick="loadStats()" id="refresh-btn" style="display:none;">Refresh</button>
+      <a href="/" style="margin-left:12px;">Back to site</a>
+    </div>
+  </div>
+
+  <div id="login-view" class="login-box" style="display:none;">
+    <h2>Admin Access</h2>
+    <p>Sign in with your admin account to view stats.</p>
+    <button onclick="window.location.href='/?action=signup'">Sign In</button>
+  </div>
+
+  <div id="loading" class="loading">Loading stats...</div>
+  <div id="error" class="error" style="display:none;"></div>
+  <div id="dashboard" style="display:none;">
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="label">Total Users</div>
+        <div class="value" id="s-users">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Downloads</div>
+        <div class="value" id="s-downloads">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Active Subscriptions</div>
+        <div class="value" id="s-subs">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Active Users (7d)</div>
+        <div class="value" id="s-active">0</div>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="label">Dictation Minutes (7d)</div>
+        <div class="value" id="s-minutes">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Sessions (7d)</div>
+        <div class="value" id="s-sessions">0</div>
+      </div>
+    </div>
+
+    <div class="section-title">Plans Breakdown</div>
+    <div class="plan-bar">
+      <div class="plan-chip free">
+        <div class="count" id="p-free">0</div>
+        <div class="name">Free</div>
+      </div>
+      <div class="plan-chip basic">
+        <div class="count" id="p-basic">0</div>
+        <div class="name">Basic ($4.99)</div>
+      </div>
+      <div class="plan-chip pro">
+        <div class="count" id="p-pro">0</div>
+        <div class="name">Pro ($8.99)</div>
+      </div>
+    </div>
+
+    <div class="section-title">Recent Users</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Plan</th>
+          <th>Joined</th>
+        </tr>
+      </thead>
+      <tbody id="users-table"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const API = 'https://volttype-api.crcaway.workers.dev/v1';
+    const SUPABASE_URL = 'https://ceuymixybyaxpldgggin.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNldXltaXh5YnlheHBsZGdnZ2luIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3ODgwNzYsImV4cCI6MjA4NzM2NDA3Nn0.OprbSZuB-wo2Q_aWnkhC0I7e7iPePT9lD8LT2BrlEWE';
+
+    let token = localStorage.getItem('vt_token');
+
+    async function refreshToken() {
+      const refresh = localStorage.getItem('vt_refresh');
+      if (!refresh) return null;
+      try {
+        const res = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=refresh_token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+          body: JSON.stringify({ refresh_token: refresh }),
+        });
+        const data = await res.json();
+        if (data.access_token) {
+          localStorage.setItem('vt_token', data.access_token);
+          localStorage.setItem('vt_refresh', data.refresh_token);
+          token = data.access_token;
+          return token;
+        }
+      } catch {}
+      return null;
+    }
+
+    async function loadStats() {
+      const loadingEl = document.getElementById('loading');
+      const errorEl = document.getElementById('error');
+      const dashEl = document.getElementById('dashboard');
+
+      if (!token) {
+        token = await refreshToken();
+        if (!token) {
+          loadingEl.style.display = 'none';
+          document.getElementById('login-view').style.display = 'block';
+          return;
+        }
+      }
+
+      loadingEl.style.display = 'block';
+      errorEl.style.display = 'none';
+      dashEl.style.display = 'none';
+
+      try {
+        let res = await fetch(API + '/admin/stats', {
+          headers: { 'Authorization': 'Bearer ' + token },
+        });
+
+        // Try refresh if 401
+        if (res.status === 401) {
+          token = await refreshToken();
+          if (!token) {
+            loadingEl.style.display = 'none';
+            document.getElementById('login-view').style.display = 'block';
+            return;
+          }
+          res = await fetch(API + '/admin/stats', {
+            headers: { 'Authorization': 'Bearer ' + token },
+          });
+        }
+
+        if (res.status === 403) {
+          loadingEl.style.display = 'none';
+          errorEl.textContent = 'Access denied. Admin only.';
+          errorEl.style.display = 'block';
+          return;
+        }
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed');
+
+        // Fill stats
+        document.getElementById('s-users').textContent = data.totalUsers;
+        document.getElementById('s-downloads').textContent = data.downloads;
+        document.getElementById('s-subs').textContent = data.activeSubscriptions;
+        document.getElementById('s-active').textContent = data.usage7d?.activeUsers || 0;
+        document.getElementById('s-minutes').textContent = data.usage7d?.totalMinutes || 0;
+        document.getElementById('s-sessions').textContent = data.usage7d?.sessions || 0;
+
+        document.getElementById('p-free').textContent = data.plans?.free || 0;
+        document.getElementById('p-basic').textContent = data.plans?.basic || 0;
+        document.getElementById('p-pro').textContent = data.plans?.pro || 0;
+
+        // Recent users table
+        const tbody = document.getElementById('users-table');
+        tbody.innerHTML = '';
+        (data.recentUsers || []).forEach(u => {
+          const tr = document.createElement('tr');
+          const date = new Date(u.joined).toLocaleDateString('en-GB', {
+            day: 'numeric', month: 'short', year: 'numeric'
+          });
+          tr.innerHTML = `
+            <td>${u.email}</td>
+            <td><span class="badge ${u.plan}">${u.plan}</span></td>
+            <td style="color:#64748b">${date}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        loadingEl.style.display = 'none';
+        dashEl.style.display = 'block';
+        document.getElementById('refresh-btn').style.display = 'inline-block';
+
+      } catch (err) {
+        loadingEl.style.display = 'none';
+        errorEl.textContent = 'Error: ' + err.message;
+        errorEl.style.display = 'block';
+      }
+    }
+
+    // Handle OAuth callback
+    const hashParams = new URLSearchParams(window.location.hash.replace('#', '?'));
+    const accessToken = hashParams.get('access_token');
+    if (accessToken) {
+      localStorage.setItem('vt_token', accessToken);
+      const rt = hashParams.get('refresh_token');
+      if (rt) localStorage.setItem('vt_refresh', rt);
+      token = accessToken;
+      history.replaceState(null, '', window.location.pathname);
+    }
+
+    loadStats();
+  </script>
+</body>
+</html>

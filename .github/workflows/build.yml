@@ -2,16 +2,12 @@ name: Build VoltType
 
 on:
   push:
-    branches: [master]
+    tags: ['v*']
   workflow_dispatch:
 
 jobs:
-  build:
-    strategy:
-      matrix:
-        os: [windows-latest, macos-latest]
-
-    runs-on: ${{ matrix.os }}
+  build-windows:
+    runs-on: windows-latest
 
     steps:
       - name: Checkout repository
@@ -29,30 +25,40 @@ jobs:
       - name: Rebuild native modules for Electron
         run: npx electron-rebuild
 
-      - name: Build Electron app (Windows)
-        if: matrix.os == 'windows-latest'
-        run: npm run build
-
-      - name: Build Electron app (macOS)
-        if: matrix.os == 'macos-latest'
+      - name: Build Electron app
         env:
-          CSC_IDENTITY_AUTO_DISCOVERY: "false"
-        run: npm run build:mac
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: npx electron-builder --win --publish never
 
-      - name: Upload Windows artifacts
-        if: matrix.os == 'windows-latest'
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: VoltType-Windows
           path: |
             dist/*.exe
+            dist/latest.yml
           if-no-files-found: error
 
-      - name: Upload macOS artifacts
-        if: matrix.os == 'macos-latest'
-        uses: actions/upload-artifact@v4
+  publish:
+    needs: build-windows
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
         with:
-          name: VoltType-macOS
-          path: |
-            dist/*.dmg
-          if-no-files-found: error
+          name: VoltType-Windows
+          path: dist/
+
+      - name: Create release on volttype-releases
+        uses: softprops/action-gh-release@v2
+        with:
+          repository: chrchevdj/volttype-releases
+          tag_name: ${{ github.ref_name }}
+          name: VoltType ${{ github.ref_name }}
+          files: |
+            dist/*.exe
+            dist/latest.yml
+          token: ${{ secrets.GH_TOKEN }}

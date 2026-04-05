@@ -657,7 +657,7 @@ ipcMain.handle('update-settings', (event, partial) => {
     textCleaner.setApiKey(partial.groqApiKey);
   }
   if (partial.hotkey !== undefined) {
-    registerHotkey();
+    registerHotkeys();
   }
   if (partial.startWithWindows !== undefined) {
     setAutoStart(partial.startWithWindows);

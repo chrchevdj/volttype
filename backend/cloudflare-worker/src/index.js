@@ -152,6 +152,95 @@ export default {
       }
     }
 
+    // --- GET /v1/admin/stats ---
+    // Admin-only: returns user/subscriber/usage stats
+    if (path === '/v1/admin/stats' && request.method === 'GET') {
+      const ADMIN_EMAIL = 'crcaway@gmail.com';
+      if (user.email !== ADMIN_EMAIL) {
+        return json({ error: 'Forbidden' }, 403, request);
+      }
+
+      try {
+        const supabaseHeaders = {
+          'Content-Type': 'application/json',
+          'apikey': env.SUPABASE_SERVICE_KEY,
+          'Authorization': `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+        };
+        const supabaseUrl = env.SUPABASE_URL;
+
+        // Fetch all stats in parallel
+        const [usersRes, profilesRes, subsRes, usageRes] = await Promise.all([
+          // Total auth users
+          fetch(`${supabaseUrl}/auth/v1/admin/users?per_page=1`, {
+            headers: { ...supabaseHeaders, 'Authorization': `Bearer ${env.SUPABASE_SERVICE_KEY}` },
+          }),
+          // Profiles with plans
+          fetch(`${supabaseUrl}/rest/v1/volttype_profiles?select=id,email,plan,created_at&order=created_at.desc`, {
+            headers: supabaseHeaders,
+          }),
+          // Active subscriptions
+          fetch(`${supabaseUrl}/rest/v1/volttype_subscriptions?select=*&status=eq.active`, {
+            headers: supabaseHeaders,
+          }),
+          // Usage last 7 days
+          fetch(`${supabaseUrl}/rest/v1/volttype_usage?select=user_id,audio_seconds,created_at&created_at=gte.${new Date(Date.now() - 7 * 86400000).toISOString()}&order=created_at.desc`, {
+            headers: supabaseHeaders,
+          }),
+        ]);
+
+        const profiles = await profilesRes.json();
+        const subs = subsRes.ok ? await subsRes.json() : [];
+        const usage = usageRes.ok ? await usageRes.json() : [];
+
+        // Download count from GitHub
+        let downloads = 0;
+        try {
+          const ghRes = await fetch('https://api.github.com/repos/chrchevdj/volttype-releases/releases', {
+            headers: { 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'volttype-api' },
+          });
+          if (ghRes.ok) {
+            const releases = await ghRes.json();
+            downloads = releases.reduce((sum, r) =>
+              sum + (r.assets || []).reduce((s, a) => s + (a.download_count || 0), 0), 0);
+          }
+        } catch { /* ignore */ }
+
+        // Compute stats
+        const totalUsers = Array.isArray(profiles) ? profiles.length : 0;
+        const planCounts = { free: 0, basic: 0, pro: 0 };
+        if (Array.isArray(profiles)) {
+          profiles.forEach(p => {
+            const plan = p.plan || 'free';
+            planCounts[plan] = (planCounts[plan] || 0) + 1;
+          });
+        }
+
+        const totalUsageSeconds = Array.isArray(usage)
+          ? usage.reduce((s, u) => s + (u.audio_seconds || 0), 0) : 0;
+        const activeUsers7d = Array.isArray(usage)
+          ? new Set(usage.map(u => u.user_id)).size : 0;
+
+        return json({
+          totalUsers,
+          plans: planCounts,
+          activeSubscriptions: Array.isArray(subs) ? subs.length : 0,
+          downloads,
+          usage7d: {
+            totalMinutes: Math.round(totalUsageSeconds / 60),
+            activeUsers: activeUsers7d,
+            sessions: Array.isArray(usage) ? usage.length : 0,
+          },
+          recentUsers: Array.isArray(profiles) ? profiles.slice(0, 10).map(p => ({
+            email: p.email,
+            plan: p.plan || 'free',
+            joined: p.created_at,
+          })) : [],
+        }, 200, request);
+      } catch (err) {
+        return json({ error: 'Failed to fetch stats: ' + err.message }, 500, request);
+      }
+    }
+
     return json({ error: 'Not found' }, 404, request);
     } catch (err) {
       // Global error handler — never let the Worker crash silently

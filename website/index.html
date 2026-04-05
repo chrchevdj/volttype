@@ -582,6 +582,7 @@
         <a href="javascript:void(0)" class="nav-cta" id="nav-cta-btn">Sign Up Free</a>
       </div>
       <div class="nav-user hidden" id="nav-user">
+        <a href="/admin.html" id="nav-admin-link" style="display:none;font-size:13px;color:#7c3aed;font-weight:600;text-decoration:none;">Admin</a>
         <span class="nav-user-email" id="nav-user-email"></span>
         <button class="nav-logout" id="nav-logout">Sign Out</button>
       </div>
@@ -1500,9 +1501,17 @@
         ctaBtn.style.display = 'none';
         userEl.classList.remove('hidden');
         document.getElementById('nav-user-email').textContent = payload?.email || 'Account';
+
+        // Show admin link for admin user
+        const adminLink = document.getElementById('nav-admin-link');
+        if (adminLink) {
+          adminLink.style.display = (payload?.email === 'crcaway@gmail.com') ? 'inline-block' : 'none';
+        }
       } else {
         ctaBtn.style.display = '';
         userEl.classList.add('hidden');
+        const adminLink = document.getElementById('nav-admin-link');
+        if (adminLink) adminLink.style.display = 'none';
       }
     }
 
