@@ -1,12 +1,13 @@
 # VoltType
 
-**AI-powered voice typing for Windows** — hold a key, speak, release. Your words appear in any app, with smart punctuation and vocabulary that learns your style.
+**Voice-first AI workspace for Windows** — hold a key, speak, and turn rough speech into writing, summaries, and notes that are ready to use.
 
 ## Features
 
 - **Hold-to-talk** — Hold `Ctrl+Space`, speak naturally, release to transcribe
 - **Toggle mode** — Press `Ctrl+Shift+D` to start, auto-stops when you pause
 - **Type anywhere** — Text gets pasted into whatever window is focused
+- **AI notes workflows** — Turn speech into summaries, bullets, and follow-ups
 - **Learns your words** — Builds your personal vocabulary over time
 - **Correction learning** — Edit a result, the app learns from your fix
 - **Word Bank** — Custom word replacements (names, acronyms, punctuation)
@@ -23,7 +24,7 @@ npm install
 npm start
 ```
 
-1. Open Settings, paste your free [Groq API key](https://console.groq.com)
+1. Create an account on the website or in the app
 2. Hold `Ctrl+Space` and speak
 3. Release — text appears in the focused app
 
@@ -31,10 +32,10 @@ npm start
 
 1. Hold `Ctrl+Space` — recording starts instantly (mic pre-warmed)
 2. Speak naturally — live waveform shows audio level
-3. Release — audio sent to Groq STT (~400ms)
+3. Release — audio sent to the backend for transcription
 4. Punctuation added automatically
-5. Text pasted into the focused app via clipboard
-6. App learns your vocabulary for better accuracy next time
+5. Text can be pasted into the focused app or cleaned into notes
+6. VoltType learns your vocabulary for better accuracy next time
 
 ## Voice Input Modes
 
@@ -53,18 +54,22 @@ npm start
 
 ## Data Storage
 
-All data stored locally in `%APPDATA%/volttype/`:
+Local app data is stored in `%APPDATA%/volttype/`:
 - `settings.json` — Configuration
 - `history.json` — Session history
 - `dictionary.json` — Word Bank rules
 - `snippets.json` — Templates
 - `vocab.json` — Learned vocabulary
 
-No cloud sync, no accounts, no tracking.
+User accounts, subscriptions, and usage tracking are handled through Supabase and the Cloudflare Worker backend. Local vocabulary, snippets, and settings remain on-device.
 
-## Cost
+## Pricing
 
-**$0** — Groq free tier. No subscriptions.
+- **Free** — 10 minutes/day
+- **Basic** — $4.99/month
+- **Pro** — $8.99/month
+
+Current launch posture: **Windows beta**. Card payments are live via Stripe. ACH Direct Debit and SEPA Direct Debit are planned as optional regional methods, not the default path.
 
 ## Tech Stack
 

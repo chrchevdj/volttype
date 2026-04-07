@@ -13,14 +13,27 @@ ENVIRONMENT = "production"
 # STRIPE_SECRET_KEY     - sk_live_... from Stripe (see .env.master)
 # STRIPE_PRICE_BASIC    - price_... Basic plan ($4.99/mo) - create in Stripe dashboard
 # STRIPE_PRICE_PRO      - price_... Pro plan ($8.99/mo) - create in Stripe dashboard
+# STRIPE_WEBHOOK_SECRET - whsec_... from Stripe webhook endpoint signing secret
+# Note: Checkout now uses Stripe's dashboard-configured payment methods.
+# Keep cards enabled by default. Add ACH Direct Debit for eligible US subscriptions
+# and SEPA Direct Debit only after creating compatible EUR pricing in Stripe.
 #
 # To set: wrangler secret put STRIPE_SECRET_KEY
 # Then paste your sk_live_... key from .env.master or Stripe dashboard
 #
-# TODO for Stripe (#6):
-# 1. Go to stripe.com/dashboard → Products → Add Product
-# 2. Create "VoltType Basic" - $4.99/month recurring → copy price ID → set as STRIPE_PRICE_BASIC
-# 3. Create "VoltType Pro" - $8.99/month recurring → copy price ID → set as STRIPE_PRICE_PRO
-# 4. Run: wrangler secret put STRIPE_SECRET_KEY (paste sk_live key)
-# 5. Run: wrangler secret put STRIPE_PRICE_BASIC (paste price_xxx)
-# 6. Run: wrangler secret put STRIPE_PRICE_PRO (paste price_xxx)
+# Stripe go-live notes:
+# 1. Verify VoltType Basic and VoltType Pro prices are active in Stripe.
+# 2. Keep card payments enabled for all customers.
+# 3. Enable ACH Direct Debit in Stripe for eligible US subscriptions if desired.
+# 4. Add EUR subscription prices before enabling SEPA Direct Debit for EU customers.
+# 5. Run: wrangler secret put STRIPE_SECRET_KEY
+# 6. Run: wrangler secret put STRIPE_PRICE_BASIC
+# 7. Run: wrangler secret put STRIPE_PRICE_PRO
+# 8. Run: wrangler secret put STRIPE_WEBHOOK_SECRET
+# 9. Register webhook events:
+#    checkout.session.completed
+#    customer.subscription.created
+#    customer.subscription.updated
+#    customer.subscription.deleted
+#    invoice.paid
+#    invoice.payment_failed

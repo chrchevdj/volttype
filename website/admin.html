@@ -6,6 +6,7 @@
   <title>VoltType Admin</title>
   <meta name="robots" content="noindex, nofollow">
   <style>
+    :root { color-scheme: dark; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: -apple-system, 'Segoe UI', system-ui, sans-serif;
@@ -166,6 +167,23 @@
       font-weight: 600;
     }
     .refresh-btn:hover { background: rgba(124,58,237,0.25); }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+    button:focus-visible,
+    input:focus-visible,
+    a:focus-visible {
+      outline: 2px solid #7c3aed;
+      outline-offset: 2px;
+    }
   </style>
 </head>
 <body>
@@ -173,7 +191,7 @@
   <div class="header">
     <h1>VoltType Admin</h1>
     <div>
-      <button class="refresh-btn" onclick="loadStats()" id="refresh-btn" style="display:none;">Refresh</button>
+      <button class="refresh-btn" id="refresh-btn" style="display:none;" type="button">Refresh</button>
       <a href="/" style="margin-left:12px;">Back to site</a>
     </div>
   </div>
@@ -181,11 +199,16 @@
   <div id="login-view" class="login-box" style="display:none;">
     <h2>Admin Access</h2>
     <p>Sign in with your admin account to view stats.</p>
-    <button onclick="window.location.href='/?action=signup'">Sign In</button>
+    <div id="login-error" style="color:#f87171;font-size:13px;margin-bottom:12px;display:none;" aria-live="polite"></div>
+    <label class="sr-only" for="admin-email">Admin email</label>
+    <input type="email" id="admin-email" name="email" autocomplete="email" spellcheck="false" placeholder="Email…" style="width:100%;padding:12px 16px;margin-bottom:10px;background:rgba(12,18,34,0.8);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#e2e8f0;font-size:15px;outline:none;" />
+    <label class="sr-only" for="admin-password">Admin password</label>
+    <input type="password" id="admin-password" name="password" autocomplete="current-password" placeholder="Password…" style="width:100%;padding:12px 16px;margin-bottom:16px;background:rgba(12,18,34,0.8);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#e2e8f0;font-size:15px;outline:none;" />
+    <button id="admin-login-btn" type="button">Sign In</button>
   </div>
 
-  <div id="loading" class="loading">Loading stats...</div>
-  <div id="error" class="error" style="display:none;"></div>
+  <div id="loading" class="loading" aria-live="polite">Loading stats…</div>
+  <div id="error" class="error" style="display:none;" aria-live="polite"></div>
   <div id="dashboard" style="display:none;">
 
     <div class="stats-grid">
@@ -251,6 +274,12 @@
     const API = 'https://volttype-api.crcaway.workers.dev/v1';
     const SUPABASE_URL = 'https://ceuymixybyaxpldgggin.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNldXltaXh5YnlheHBsZGdnZ2luIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3ODgwNzYsImV4cCI6MjA4NzM2NDA3Nn0.OprbSZuB-wo2Q_aWnkhC0I7e7iPePT9lD8LT2BrlEWE';
+    const dateFormatter = new Intl.DateTimeFormat(navigator.languages, {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+    const numberFormatter = new Intl.NumberFormat(navigator.languages);
 
     let token = localStorage.getItem('vt_token');
 
@@ -318,28 +347,33 @@
         }
 
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Failed');
+        if (!res.ok) {
+          if (res.status === 401) {
+            loadingEl.style.display = 'none';
+            document.getElementById('login-view').style.display = 'block';
+            return;
+          }
+          throw new Error(data.error || 'Failed');
+        }
 
         // Fill stats
-        document.getElementById('s-users').textContent = data.totalUsers;
-        document.getElementById('s-downloads').textContent = data.downloads;
-        document.getElementById('s-subs').textContent = data.activeSubscriptions;
-        document.getElementById('s-active').textContent = data.usage7d?.activeUsers || 0;
-        document.getElementById('s-minutes').textContent = data.usage7d?.totalMinutes || 0;
-        document.getElementById('s-sessions').textContent = data.usage7d?.sessions || 0;
+        document.getElementById('s-users').textContent = numberFormatter.format(data.totalUsers || 0);
+        document.getElementById('s-downloads').textContent = numberFormatter.format(data.downloads || 0);
+        document.getElementById('s-subs').textContent = numberFormatter.format(data.activeSubscriptions || 0);
+        document.getElementById('s-active').textContent = numberFormatter.format(data.usage7d?.activeUsers || 0);
+        document.getElementById('s-minutes').textContent = numberFormatter.format(data.usage7d?.totalMinutes || 0);
+        document.getElementById('s-sessions').textContent = numberFormatter.format(data.usage7d?.sessions || 0);
 
-        document.getElementById('p-free').textContent = data.plans?.free || 0;
-        document.getElementById('p-basic').textContent = data.plans?.basic || 0;
-        document.getElementById('p-pro').textContent = data.plans?.pro || 0;
+        document.getElementById('p-free').textContent = numberFormatter.format(data.plans?.free || 0);
+        document.getElementById('p-basic').textContent = numberFormatter.format(data.plans?.basic || 0);
+        document.getElementById('p-pro').textContent = numberFormatter.format(data.plans?.pro || 0);
 
         // Recent users table
         const tbody = document.getElementById('users-table');
         tbody.innerHTML = '';
         (data.recentUsers || []).forEach(u => {
           const tr = document.createElement('tr');
-          const date = new Date(u.joined).toLocaleDateString('en-GB', {
-            day: 'numeric', month: 'short', year: 'numeric'
-          });
+          const date = dateFormatter.format(new Date(u.joined));
           tr.innerHTML = `
             <td>${u.email}</td>
             <td><span class="badge ${u.plan}">${u.plan}</span></td>
@@ -359,6 +393,53 @@
       }
     }
 
+    async function adminLogin() {
+      const email = document.getElementById('admin-email').value.trim();
+      const password = document.getElementById('admin-password').value;
+      const errEl = document.getElementById('login-error');
+      const btn = document.getElementById('admin-login-btn');
+
+      if (!email || !password) {
+        errEl.textContent = 'Please enter email and password.';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Signing in…';
+      errEl.style.display = 'none';
+
+      try {
+        const res = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          errEl.textContent = data.error_description || data.msg || 'Login failed';
+          errEl.style.display = 'block';
+          btn.disabled = false;
+          btn.textContent = 'Sign In';
+          return;
+        }
+
+        localStorage.setItem('vt_token', data.access_token);
+        if (data.refresh_token) localStorage.setItem('vt_refresh', data.refresh_token);
+        token = data.access_token;
+
+        document.getElementById('login-view').style.display = 'none';
+        loadStats();
+      } catch (err) {
+        errEl.textContent = 'Network error: ' + err.message;
+        errEl.style.display = 'block';
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'Sign In';
+    }
+
     // Handle OAuth callback
     const hashParams = new URLSearchParams(window.location.hash.replace('#', '?'));
     const accessToken = hashParams.get('access_token');
@@ -369,6 +450,14 @@
       token = accessToken;
       history.replaceState(null, '', window.location.pathname);
     }
+
+    document.getElementById('refresh-btn').addEventListener('click', loadStats);
+    document.getElementById('admin-login-btn').addEventListener('click', adminLogin);
+    document.getElementById('admin-password').addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        adminLogin();
+      }
+    });
 
     loadStats();
   </script>

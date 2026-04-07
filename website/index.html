@@ -3,20 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VoltType — Stop Typing. Start Speaking. AI Voice Typing</title>
-  <meta name="description" content="AI-powered voice typing for Windows. Speak naturally — your words appear in any app, 4x faster than typing. Free to start.">
-  <meta name="keywords" content="voice typing, speech to text, dictation software, voice to text, AI typing, hands free typing, VoltType">
+  <title>VoltType — AI Voice Workspace for Windows</title>
+  <meta name="description" content="Voice typing, AI rewrite, and AI notes for Windows. Speak in any app, clean up your writing, and turn rough speech into polished notes and follow-ups.">
+  <meta name="keywords" content="AI voice typing for Windows, AI notes, speech to text, dictation software, voice to text, AI writing assistant, VoltType">
   <meta name="author" content="VoltType">
-  <meta property="og:title" content="VoltType — Stop Typing. Start Speaking.">
-  <meta property="og:description" content="AI-powered voice typing. Speak naturally — your words appear in any app, 4x faster than typing.">
+  <meta property="og:title" content="VoltType — AI Voice Workspace for Windows">
+  <meta property="og:description" content="Speak in any app, rewrite with AI, and turn rough speech into notes, summaries, and follow-ups.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://volttype.com">
   <meta property="og:image" content="https://volttype.com/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="VoltType — Stop Typing. Start Speaking.">
-  <meta name="twitter:description" content="AI-powered voice typing. 4x faster than keyboard. Free to start.">
+  <meta name="twitter:title" content="VoltType — AI Voice Workspace for Windows">
+  <meta name="twitter:description" content="Voice typing, AI rewrite, and AI notes for Windows. Free to start.">
   <meta name="twitter:image" content="https://volttype.com/og-image.png">
   <link rel="canonical" href="https://volttype.com">
   <link rel="icon" type="image/svg+xml" href="/icons/icon-192.svg">
@@ -31,11 +31,11 @@
     "url": "https://volttype.com",
     "operatingSystem": "Windows 10, Windows 11",
     "applicationCategory": "ProductivityApplication",
-    "description": "AI-powered voice typing for Windows with AI voice commands. Speak naturally and your words appear in any app, 4x faster than typing. Say 'make formal' or 'fix grammar' to rewrite with AI.",
+    "description": "Voice-first AI workspace for Windows with voice typing, AI rewrite, and AI notes. Speak naturally in any app, then turn rough speech into polished writing, summaries, and follow-ups.",
     "offers": [
       { "@type": "Offer", "price": "0", "priceCurrency": "USD", "name": "Free", "description": "10 minutes per day" },
       { "@type": "Offer", "price": "4.99", "priceCurrency": "USD", "name": "Basic", "description": "30 minutes per day" },
-      { "@type": "Offer", "price": "8.99", "priceCurrency": "USD", "name": "Pro", "description": "Unlimited dictation" }
+      { "@type": "Offer", "price": "8.99", "priceCurrency": "USD", "name": "Pro", "description": "Unlimited voice typing, AI rewrite, and AI notes workflows" }
     ],
     "downloadUrl": "https://volttype.com",
     "softwareVersion": "1.0.0"
@@ -631,9 +631,10 @@
     <div class="nav-inner">
       <a href="/" class="nav-brand">VoltType</a>
       <div class="nav-links">
-        <a href="#features">Features</a>
-        <a href="#pricing">Pricing</a>
-        <a href="#download">Download</a>
+      <a href="#features">Features</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#compare">Use Cases</a>
+      <a href="#download">Download</a>
         <button class="nav-cta" id="nav-cta-btn" type="button">Sign Up Free</button>
       </div>
       <div class="nav-user hidden" id="nav-user">
@@ -652,6 +653,7 @@
     <div class="nav-mobile-menu" id="nav-mobile-menu">
       <a href="#features" onclick="closeMobileMenu()">Features</a>
       <a href="#pricing" onclick="closeMobileMenu()">Pricing</a>
+      <a href="#compare" onclick="closeMobileMenu()">Use Cases</a>
       <a href="#download" onclick="closeMobileMenu()">Download</a>
       <button class="nav-mobile-cta" id="nav-mobile-cta-btn" type="button">Sign Up Free</button>
     </div>
@@ -662,9 +664,9 @@
   <main id="main-content">
   <!-- Hero -->
   <section class="hero">
-    <div class="hero-badge">AI Voice Commands — say "make formal" or "fix grammar"</div>
-    <h1>Stop Typing. <span>Start Speaking.</span></h1>
-    <p>AI-powered voice typing for Windows. Speak naturally — your words appear in any app, 4x faster than typing. It even learns your vocabulary and follows voice commands.</p>
+    <div class="hero-badge">Voice typing, AI rewrite, and AI notes in one Windows workspace</div>
+    <h1>Speak once. <span>Turn it into work.</span></h1>
+    <p>VoltType is the voice-first AI workspace for Windows. Dictate in any app, clean up your writing with voice commands, and turn rough speech into notes, summaries, and follow-ups.</p>
     <div class="hero-buttons">
       <a href="https://github.com/chrchevdj/volttype-releases/releases/latest" class="btn-hero btn-primary" id="download-btn" style="font-size: 18px; padding: 16px 36px;">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -672,16 +674,16 @@
       </a>
       <button class="btn-hero btn-secondary-hero" id="hero-signup-btn" type="button">Create Account</button>
     </div>
-    <p class="hero-note">Free tier — 10 minutes/day. No credit card needed. <span id="download-version"></span></p>
+    <p class="hero-note">Free tier — 10 minutes/day. No credit card needed. Windows beta available now. <span id="download-version"></span></p>
     <div class="hero-social-proof">
       <div class="proof-item">
         <span>&#x1F399;</span>
-        <span>4x faster than typing</span>
+        <span>Voice typing in any app</span>
       </div>
       <span class="proof-dot"></span>
       <div class="proof-item">
         <span>&#x1F9E0;</span>
-        <span>AI voice commands</span>
+        <span>AI rewrite + notes</span>
       </div>
       <span class="proof-dot"></span>
       <div class="proof-item">
@@ -861,7 +863,7 @@
   <!-- How it works -->
   <section class="section">
     <h2 class="section-title">How It Works</h2>
-    <p class="section-sub">Three steps. No setup headaches.</p>
+    <p class="section-sub">Capture the thought, clean it up, and keep moving.</p>
     <div class="steps-grid">
       <div class="step-card">
         <div class="step-num">1</div>
@@ -871,12 +873,12 @@
       <div class="step-card">
         <div class="step-num">2</div>
         <h3>Hold Ctrl+Space & Speak</h3>
-        <p>Hold the hotkey in any app — a text editor, email, chat, browser, anywhere.</p>
+        <p>Speak in email, chat, docs, or your own note workspace without switching tools.</p>
       </div>
       <div class="step-card">
         <div class="step-num">3</div>
-        <h3>Release — Text Appears</h3>
-        <p>Your words are transcribed and typed into the focused app. Punctuation added automatically.</p>
+        <h3>Rewrite or Turn It Into Notes</h3>
+        <p>Use voice commands to polish the writing, summarize it, or turn it into action items and shareable notes.</p>
       </div>
     </div>
   </section>
@@ -884,7 +886,7 @@
   <!-- Features -->
   <section class="section features-bg" id="features">
     <h2 class="section-title">Why VoltType?</h2>
-    <p class="section-sub">More than just dictation. It learns and adapts to you.</p>
+    <p class="section-sub">Built for people who want to capture ideas quickly and leave with clean output.</p>
     <div class="features-grid">
       <div class="feature-card">
         <div class="feature-icon" style="background: linear-gradient(135deg, #ede9fe, #e0e7ff);">&#x26A1;</div>
@@ -893,8 +895,8 @@
       </div>
       <div class="feature-card">
         <div class="feature-icon" style="background: linear-gradient(135deg, #ecfdf5, #d1fae5);">&#x1F9E0;</div>
-        <h3>Learns Your Words</h3>
-        <p>Builds a personal vocabulary from your dictations. Names, brands, and jargon get recognized better over time.</p>
+        <h3>AI Notes Workspace</h3>
+        <p>Capture rough thoughts, meeting recaps, and voice memos, then turn them into organized notes and follow-ups.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon" style="background: linear-gradient(135deg, #eff6ff, #dbeafe);">&#x270E;</div>
@@ -908,13 +910,13 @@
       </div>
       <div class="feature-card">
         <div class="feature-icon" style="background: linear-gradient(135deg, #fdf2f8, #fce7f3);">&#x1F3A4;</div>
-        <h3>Live Waveform</h3>
-        <p>See your voice in real-time with animated bars. You always know the app is listening.</p>
+        <h3>Learns Your Words</h3>
+        <p>Builds a personal vocabulary from your dictations. Names, brands, and jargon get recognized better over time.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon" style="background: linear-gradient(135deg, #fffbeb, #fef3c7);">&#x2705;</div>
-        <h3>Correction Learning</h3>
-        <p>Fix a mistake once, and VoltType remembers. It learns from your corrections and never makes the same error again.</p>
+        <h3>Templates & Follow-Ups</h3>
+        <p>Save reusable replies, summaries, and prompts so a quick thought can become a polished message in seconds.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon" style="background: linear-gradient(135deg, #f0fdf4, #dcfce7);">&#x1F512;</div>
@@ -927,9 +929,9 @@
   <!-- App Visual Section -->
   <section id="demo" style="padding: 80px 20px; background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%);">
     <div style="max-width: 900px; margin: 0 auto; text-align: center;">
-      <p style="color: #a5b4fc; font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px;">SEE IT IN ACTION</p>
-      <h2 style="color: white; font-size: clamp(28px, 5vw, 42px); font-weight: 800; margin-bottom: 16px;">Speak. It types.<br>That simple.</h2>
-      <p style="color: #a5b4fc; font-size: 17px; max-width: 500px; margin: 0 auto 48px;">Hold Ctrl+Space, speak naturally, and watch your words appear instantly in any app.</p>
+      <p style="color: #a5b4fc; font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px;">VOICE-FIRST WORKFLOW</p>
+      <h2 style="color: white; font-size: clamp(28px, 5vw, 42px); font-weight: 800; margin-bottom: 16px;">Capture the thought.<br>Shape the result.</h2>
+      <p style="color: #a5b4fc; font-size: 17px; max-width: 560px; margin: 0 auto 48px;">Use VoltType as your fast input layer for writing anywhere, then clean, summarize, and organize the output without losing momentum.</p>
 
       <!-- App window mockup -->
       <div style="background: #1a1a2e; border-radius: 16px; padding: 0; overflow: hidden; box-shadow: 0 40px 80px rgba(0,0,0,0.6); max-width: 700px; margin: 0 auto; border: 1px solid rgba(255,255,255,0.1);">
@@ -960,44 +962,44 @@
               </div>
             </div>
             <div style="background: rgba(255,255,255,0.05); border-radius: 8px; padding: 14px; color: #e2e8f0; font-size: 15px; line-height: 1.7; text-align: left; min-height: 80px;">
-              "Please schedule a meeting with the team for Friday at 3pm to review the quarterly results<span style="display:inline-block; width:2px; height:16px; background:#7c3aed; margin-left:2px; vertical-align:middle;"></span>"
+              "Meeting recap: product launch stays on the Windows beta track, add AI notes to the roadmap, and send follow-up tasks to the team<span style="display:inline-block; width:2px; height:16px; background:#7c3aed; margin-left:2px; vertical-align:middle;"></span>"
             </div>
           </div>
           <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
             <div style="background: rgba(255,255,255,0.05); border-radius: 10px; padding: 12px; text-align: center;">
-              <div style="color: #7c3aed; font-size: 22px; font-weight: 800;">4x</div>
-              <div style="color: #9ca3af; font-size: 11px;">faster than typing</div>
-            </div>
-            <div style="background: rgba(255,255,255,0.05); border-radius: 10px; padding: 12px; text-align: center;">
-              <div style="color: #7c3aed; font-size: 22px; font-weight: 800;">98%</div>
-              <div style="color: #9ca3af; font-size: 11px;">accuracy rate</div>
-            </div>
-            <div style="background: rgba(255,255,255,0.05); border-radius: 10px; padding: 12px; text-align: center;">
               <div style="color: #7c3aed; font-size: 22px; font-weight: 800;">Any</div>
-              <div style="color: #9ca3af; font-size: 11px;">app, anywhere</div>
+              <div style="color: #9ca3af; font-size: 11px;">app input</div>
+            </div>
+            <div style="background: rgba(255,255,255,0.05); border-radius: 10px; padding: 12px; text-align: center;">
+              <div style="color: #7c3aed; font-size: 22px; font-weight: 800;">AI</div>
+              <div style="color: #9ca3af; font-size: 11px;">rewrite commands</div>
+            </div>
+            <div style="background: rgba(255,255,255,0.05); border-radius: 10px; padding: 12px; text-align: center;">
+              <div style="color: #7c3aed; font-size: 22px; font-weight: 800;">Notes</div>
+              <div style="color: #9ca3af; font-size: 11px;">summaries + follow-ups</div>
             </div>
           </div>
         </div>
       </div>
 
-      <p style="color: #6b7280; font-size: 13px; margin-top: 24px;">Works in Gmail, Word, Slack, Chrome, Notepad — everywhere</p>
+      <p style="color: #6b7280; font-size: 13px; margin-top: 24px;">Works in Gmail, Word, Slack, Chrome, Notepad, and your own AI notes workflow</p>
     </div>
   </section>
 
   <!-- Pricing -->
   <section class="section" id="pricing">
     <h2 class="section-title">Simple Pricing</h2>
-    <p class="section-sub">Start free. Upgrade when you need more.</p>
+    <p class="section-sub">Start with cards for the fastest setup today. Bank debit can be enabled later for eligible regions and plans.</p>
     <div class="pricing-grid">
       <div class="price-card">
         <div class="price-name">Free Trial</div>
         <div class="price-amount">$0<span>/mo</span></div>
-        <div class="price-desc">Try it out — 10 min/day limit</div>
+        <div class="price-desc">Try voice typing and AI note capture</div>
         <ul class="price-features">
           <li>10 minutes/day limit</li>
           <li>Voice typing in any app</li>
           <li>Smart punctuation</li>
-          <li>Personal vocabulary</li>
+          <li>AI notes workspace</li>
           <li>Word Bank (5 rules)</li>
         </ul>
         <button class="btn-price btn-price-secondary" data-plan="free" type="button">Try Free</button>
@@ -1005,25 +1007,26 @@
       <div class="price-card popular">
         <div class="price-name">Basic</div>
         <div class="price-amount">$4.99<span>/mo</span></div>
-        <div class="price-desc">For daily voice typers</div>
+        <div class="price-desc">For daily writing, notes, and follow-ups</div>
         <ul class="price-features">
           <li>30 minutes/day</li>
           <li>Everything in Free</li>
           <li>Unlimited Word Bank rules</li>
           <li>Templates</li>
-          <li>Correction learning</li>
+          <li>AI note cleanup</li>
         </ul>
         <button class="btn-price btn-price-primary" data-plan="basic" type="button">Upgrade to Basic</button>
       </div>
       <div class="price-card">
         <div class="price-name">Pro</div>
         <div class="price-amount">$8.99<span>/mo</span></div>
-        <div class="price-desc">Unlimited, no limits</div>
+        <div class="price-desc">For power users and heavy note workflows</div>
         <ul class="price-features">
           <li>Unlimited minutes</li>
           <li>Everything in Basic</li>
           <li>Priority processing</li>
-          <li>AI rewrite mode</li>
+          <li>Advanced AI rewrite</li>
+          <li>Meeting recap workflows</li>
           <li>Priority support</li>
         </ul>
         <button class="btn-price btn-price-primary" data-plan="pro" type="button">Upgrade to Pro</button>
@@ -1031,69 +1034,49 @@
     </div>
   </section>
 
-  <!-- Comparison Table -->
+  <!-- Workflow Comparison -->
   <section class="section" id="compare" style="padding-bottom: 40px;">
-    <h2 class="section-title">How VoltType Compares</h2>
-    <p class="section-sub">The best voice typing at a fraction of the cost.</p>
+    <h2 class="section-title">Built for Real Work</h2>
+    <p class="section-sub">VoltType sits between raw dictation tools and slow manual note-taking.</p>
     <div style="max-width: 800px; margin: 0 auto; overflow-x: auto;">
       <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
         <thead>
           <tr style="border-bottom: 2px solid rgba(124,58,237,0.3);">
-            <th style="text-align: left; padding: 12px 16px; color: var(--text-secondary); font-weight: 600;">Feature</th>
+            <th style="text-align: left; padding: 12px 16px; color: var(--text-secondary); font-weight: 600;">Workflow</th>
             <th style="text-align: center; padding: 12px 16px; background: linear-gradient(135deg, rgba(124,58,237,0.1), rgba(59,130,246,0.1)); border-radius: 12px 12px 0 0; font-weight: 800; color: var(--purple);">VoltType</th>
-            <th style="text-align: center; padding: 12px 16px; color: var(--text-secondary); font-weight: 600;">Dragon</th>
-            <th style="text-align: center; padding: 12px 16px; color: var(--text-secondary); font-weight: 600;">Wispr Flow</th>
-            <th style="text-align: center; padding: 12px 16px; color: var(--text-secondary); font-weight: 600;">Voicy</th>
+            <th style="text-align: center; padding: 12px 16px; color: var(--text-secondary); font-weight: 600;">Basic Dictation Tools</th>
+            <th style="text-align: center; padding: 12px 16px; color: var(--text-secondary); font-weight: 600;">Manual Notes</th>
           </tr>
         </thead>
         <tbody>
           <tr style="border-bottom: 1px solid rgba(128,128,128,0.1);">
-            <td style="padding: 12px 16px; font-weight: 500;">Price</td>
-            <td style="padding: 12px 16px; text-align: center; background: rgba(124,58,237,0.05); font-weight: 700; color: var(--green);">$4.99/mo</td>
-            <td style="padding: 12px 16px; text-align: center; color: var(--text-secondary);">~$700 one-time</td>
-            <td style="padding: 12px 16px; text-align: center; color: var(--text-secondary);">$12-15/mo</td>
-            <td style="padding: 12px 16px; text-align: center; color: var(--text-secondary);">$8.49/mo</td>
-          </tr>
-          <tr style="border-bottom: 1px solid rgba(128,128,128,0.1);">
-            <td style="padding: 12px 16px; font-weight: 500;">Free Tier</td>
-            <td style="padding: 12px 16px; text-align: center; background: rgba(124,58,237,0.05); color: var(--green);">&#x2713; 10 min/day</td>
+            <td style="padding: 12px 16px; font-weight: 500;">Speak in any app</td>
+            <td style="padding: 12px 16px; text-align: center; background: rgba(124,58,237,0.05); font-weight: 700; color: var(--green);">&#x2713;</td>
+            <td style="padding: 12px 16px; text-align: center; color: var(--green);">&#x2713;</td>
             <td style="padding: 12px 16px; text-align: center; color: var(--text-secondary);">&#x2717;</td>
-            <td style="padding: 12px 16px; text-align: center; color: var(--text-secondary);">2k words/week</td>
-            <td style="padding: 12px 16px; text-align: center; color: var(--text-secondary);">40 min trial</td>
           </tr>
           <tr style="border-bottom: 1px solid rgba(128,128,128,0.1);">
-            <td style="padding: 12px 16px; font-weight: 500;">AI Voice Commands</td>
+            <td style="padding: 12px 16px; font-weight: 500;">Rewrite with AI commands</td>
+            <td style="padding: 12px 16px; text-align: center; background: rgba(124,58,237,0.05); color: var(--green);">&#x2713;</td>
+            <td style="padding: 12px 16px; text-align: center; color: var(--text-secondary);">Limited</td>
+            <td style="padding: 12px 16px; text-align: center; color: var(--text-secondary);">&#x2717;</td>
+          </tr>
+          <tr style="border-bottom: 1px solid rgba(128,128,128,0.1);">
+            <td style="padding: 12px 16px; font-weight: 500;">Turn speech into notes and follow-ups</td>
             <td style="padding: 12px 16px; text-align: center; background: rgba(124,58,237,0.05); color: var(--green);">&#x2713;</td>
             <td style="padding: 12px 16px; text-align: center; color: var(--text-secondary);">&#x2717;</td>
-            <td style="padding: 12px 16px; text-align: center; color: var(--green);">&#x2713;</td>
-            <td style="padding: 12px 16px; text-align: center; color: var(--green);">&#x2713;</td>
+            <td style="padding: 12px 16px; text-align: center; color: var(--text-secondary);">Manual</td>
           </tr>
           <tr style="border-bottom: 1px solid rgba(128,128,128,0.1);">
-            <td style="padding: 12px 16px; font-weight: 500;">Vocabulary Learning</td>
+            <td style="padding: 12px 16px; font-weight: 500;">Personal vocabulary memory</td>
             <td style="padding: 12px 16px; text-align: center; background: rgba(124,58,237,0.05); color: var(--green);">&#x2713;</td>
-            <td style="padding: 12px 16px; text-align: center; color: var(--text-secondary);">Training needed</td>
-            <td style="padding: 12px 16px; text-align: center; color: var(--green);">&#x2713;</td>
+            <td style="padding: 12px 16px; text-align: center; color: var(--text-secondary);">Sometimes</td>
             <td style="padding: 12px 16px; text-align: center; color: var(--text-secondary);">&#x2717;</td>
-          </tr>
-          <tr style="border-bottom: 1px solid rgba(128,128,128,0.1);">
-            <td style="padding: 12px 16px; font-weight: 500;">Word Bank / Custom Rules</td>
-            <td style="padding: 12px 16px; text-align: center; background: rgba(124,58,237,0.05); color: var(--green);">&#x2713;</td>
-            <td style="padding: 12px 16px; text-align: center; color: var(--green);">&#x2713;</td>
-            <td style="padding: 12px 16px; text-align: center; color: var(--text-secondary);">&#x2717;</td>
-            <td style="padding: 12px 16px; text-align: center; color: var(--text-secondary);">&#x2717;</td>
-          </tr>
-          <tr style="border-bottom: 1px solid rgba(128,128,128,0.1);">
-            <td style="padding: 12px 16px; font-weight: 500;">Works in Any App</td>
-            <td style="padding: 12px 16px; text-align: center; background: rgba(124,58,237,0.05); color: var(--green);">&#x2713;</td>
-            <td style="padding: 12px 16px; text-align: center; color: var(--green);">&#x2713;</td>
-            <td style="padding: 12px 16px; text-align: center; color: var(--green);">&#x2713;</td>
-            <td style="padding: 12px 16px; text-align: center; color: var(--green);">&#x2713;</td>
           </tr>
           <tr>
-            <td style="padding: 12px 16px; font-weight: 500;">Own API Key Option</td>
+            <td style="padding: 12px 16px; font-weight: 500;">Downloadable Windows app</td>
             <td style="padding: 12px 16px; text-align: center; background: rgba(124,58,237,0.05); border-radius: 0 0 12px 12px; color: var(--green);">&#x2713;</td>
-            <td style="padding: 12px 16px; text-align: center; color: var(--text-secondary);">&#x2717;</td>
-            <td style="padding: 12px 16px; text-align: center; color: var(--text-secondary);">&#x2717;</td>
+            <td style="padding: 12px 16px; text-align: center; color: var(--green);">&#x2713;</td>
             <td style="padding: 12px 16px; text-align: center; color: var(--text-secondary);">&#x2717;</td>
           </tr>
         </tbody>
@@ -1101,10 +1084,10 @@
     </div>
   </section>
 
-  <!-- Voice Commands Showcase -->
+  <!-- AI Notes Showcase -->
   <section class="section" style="padding-top: 20px;">
-    <h2 class="section-title">AI Voice Commands</h2>
-    <p class="section-sub">Speak a command after dictating — VoltType rewrites your text with AI.</p>
+    <h2 class="section-title">From Speech to Structured Notes</h2>
+    <p class="section-sub">Speak naturally, then use AI commands to shape the result into something useful.</p>
     <div class="steps-grid" style="max-width: 960px; margin: 0 auto;">
       <div class="step-card">
         <div class="step-num" style="background: linear-gradient(135deg, #ede9fe, #ddd6fe); color: #7c3aed;">&#x270E;</div>
@@ -1123,18 +1106,18 @@
       </div>
       <div class="step-card">
         <div class="step-num" style="background: linear-gradient(135deg, #fff7ed, #fed7aa); color: #ea580c;">&#x2702;</div>
-        <h3>"Make shorter"</h3>
-        <p>Condenses your text while keeping all key points intact.</p>
+        <h3>"Summarize notes"</h3>
+        <p>Condenses long speech into a clean summary you can keep or share.</p>
       </div>
       <div class="step-card">
         <div class="step-num" style="background: linear-gradient(135deg, #fdf2f8, #fce7f3); color: #db2777;">&#x1F4CB;</div>
-        <h3>"Make bullet points"</h3>
-        <p>Converts paragraphs into clean, organized bullet-point lists.</p>
+        <h3>"Pull action items"</h3>
+        <p>Converts spoken updates into clear next steps and follow-ups.</p>
       </div>
       <div class="step-card">
         <div class="step-num" style="background: linear-gradient(135deg, #fffbeb, #fef3c7); color: #d97706;">&#x1F504;</div>
-        <h3>"Rewrite"</h3>
-        <p>Rephrases your text for better clarity and readability.</p>
+        <h3>"Make bullet points"</h3>
+        <p>Turns rough dictation into organized bullets for meetings, planning, and handoff notes.</p>
       </div>
     </div>
   </section>
@@ -1183,6 +1166,28 @@
         <h3 style="font-size: 16px; margin-bottom: 6px;">Launch &mdash; v1.0</h3>
         <p style="font-size: 14px; color: var(--text-secondary);">Windows desktop app with hold-to-talk, toggle mode, LLM text cleanup, templates, history, auto-update, and system tray integration.</p>
       </div>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top: 20px; padding-bottom: 36px;">
+    <h2 class="section-title">Explore Guides</h2>
+    <p class="section-sub">Built to rank for the jobs VoltType actually helps with.</p>
+    <div class="steps-grid" style="max-width: 960px; margin: 0 auto;">
+      <a class="step-card" href="ai-voice-typing-windows.html" style="text-decoration:none;color:inherit;">
+        <div class="step-num" style="background: linear-gradient(135deg, #ede9fe, #dbeafe); color: #7c3aed;">1</div>
+        <h3>AI Voice Typing for Windows</h3>
+        <p>Why a downloadable voice-first workspace beats typing everything by hand.</p>
+      </a>
+      <a class="step-card" href="ai-notes-from-voice.html" style="text-decoration:none;color:inherit;">
+        <div class="step-num" style="background: linear-gradient(135deg, #ecfdf5, #d1fae5); color: #059669;">2</div>
+        <h3>AI Notes From Voice</h3>
+        <p>Use speech capture, summaries, and action items to turn rough thoughts into usable notes.</p>
+      </a>
+      <a class="step-card" href="speech-to-text-for-windows.html" style="text-decoration:none;color:inherit;">
+        <div class="step-num" style="background: linear-gradient(135deg, #fff7ed, #fed7aa); color: #ea580c;">3</div>
+        <h3>Speech to Text for Windows</h3>
+        <p>A practical guide to choosing a speech workflow for email, docs, and fast note capture.</p>
+      </a>
     </div>
   </section>
 
@@ -1272,12 +1277,17 @@
   <footer>
     <div class="footer-links">
       <a href="#features">Features</a>
-      <a href="#compare">Compare</a>
+      <a href="#compare">Use Cases</a>
       <a href="#pricing">Pricing</a>
       <a href="#download">Download</a>
       <a href="privacy-policy.html">Privacy</a>
       <a href="terms-of-service.html">Terms</a>
       <a href="mailto:support@volttype.com">Contact</a>
+    </div>
+    <div class="footer-links" style="gap:20px;font-size:13px;">
+      <a href="ai-voice-typing-windows.html">AI Voice Typing for Windows</a>
+      <a href="ai-notes-from-voice.html">AI Notes From Voice</a>
+      <a href="speech-to-text-for-windows.html">Speech to Text for Windows</a>
     </div>
     <div class="footer-links" style="margin-top:12px;gap:20px;opacity:0.6;font-size:12px;">
       <a href="https://jobalarm.dk" target="_blank" rel="noopener">JOBALARM</a>

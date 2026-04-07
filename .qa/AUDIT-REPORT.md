@@ -13,7 +13,7 @@
 |-------|-------|-------|
 | Technical & SEO | 78/100 | B+ |
 | Functional / QA | 72/100 | B- |
-| Competitive Analysis | 55/100 | C |
+| Market Positioning | 55/100 | C |
 | Improvement Potential | 70/100 | B- |
 
 ---
@@ -118,66 +118,25 @@
 
 ---
 
-## Layer 3 -- Competitive Analysis
+## Layer 3 -- Market Positioning
 
-### Competitor 1: Wispr Flow
-- **Website:** https://wisprflow.ai
-- **Pricing:** Free (2,000 words/week), Pro $12/mo annual / $15/mo monthly, Enterprise custom
-- **Platforms:** macOS, Windows, iOS
-- **Key advantages over VoltType:**
-  - Cross-platform (Mac + Windows + iOS)
-  - AI command mode -- edit text with voice ("make this more formal", "fix grammar")
-  - Personalized writing style learning -- adapts to YOUR tone
-  - 100+ languages
-  - SOC 2 Type II, HIPAA, ISO 27001 for enterprise
-  - $6/mo student pricing
-  - Polished brand, significant VC funding
-- **What VoltType does better:**
-  - Lower price point ($4.99/mo vs $12-15/mo)
-  - Free tier is time-based (10 min/day) vs word-based (2k words/week)
-  - Word Bank feature for custom vocabulary corrections
-  - Self-hostable / own API key option (power users love this)
+VoltType is strongest when positioned as a **voice-first AI workspace for Windows**, not as a narrow dictation utility.
 
-### Competitor 2: Voicy
-- **Website:** https://usevoicy.com
-- **Pricing:** $8.49/mo, $82/year, $220 lifetime
-- **Platforms:** macOS, Windows, Browser extension
-- **Key advantages over VoltType:**
-  - Lifetime purchase option ($220) -- one-time fee
-  - 99%+ claimed accuracy
-  - 50+ languages
-  - AI voice commands for editing
-  - More polished marketing and SEO (strong blog content)
-  - Browser extension for Chrome
-- **What VoltType does better:**
-  - Free tier (Voicy only has 40-minute trial)
-  - Vocabulary learning from corrections
-  - Lower monthly price
+### Product strengths
+- Fast capture into any focused app
+- Low-friction Windows desktop workflow
+- Personal vocabulary and correction learning
+- Clear path to AI rewrite, summaries, and note shaping
+- Affordable paid tiers with a free entry point
 
-### Competitor 3: Dragon NaturallySpeaking (Nuance/Microsoft)
-- **Pricing:** ~$700 one-time
-- **Platform:** Windows only (desktop), now mostly discontinued
-- **Key advantages:**
-  - 100% offline -- no cloud, no subscription
-  - Macro system for full Windows control by voice
-  - 25+ years of market presence and brand recognition
-  - Medical/legal specialized vocabularies
-- **What VoltType does better:**
-  - 100x cheaper ($4.99/mo vs $700)
-  - No training period -- works immediately
-  - Modern AI (Groq Whisper) vs aging Dragon engine
-  - Cloud processing = always improving
-  - Free tier
-
-### Key Competitive Gaps in VoltType
-
-1. **No AI command mode** -- Wispr and Voicy let you say "make this more formal" or "fix the grammar". VoltType only transcribes.
-2. **No browser extension** -- Competitors have Chrome extensions for in-browser dictation.
-3. **Single platform** -- Windows only. Mac/iOS would expand market 3-5x.
-4. **No lifetime plan** -- Voicy's $220 lifetime is very attractive to power users.
-5. **No multilingual marketing** -- Landing page is English only, but the app supports 8 languages.
-6. **No content marketing** -- Competitors have blogs with "best dictation software" type articles driving organic traffic.
-7. **No mobile app** -- Android app is scaffolded but not built. iOS not started.
+### Current gaps
+1. **Voice capture is stronger than note workflows** -- the product direction is right, but AI notes and follow-up creation need deeper productization.
+2. **Single platform** -- Windows is the right first market, but mobile and macOS are still future work.
+3. **Search footprint is thin** -- the landing page needs supporting pages and content to rank consistently.
+4. **No browser extension** -- web-only users still have no lightweight entry point.
+5. **No multilingual marketing** -- the app supports multiple languages, but the website does not present that clearly.
+6. **No content engine** -- there are no educational or comparison pages bringing in top-of-funnel search traffic.
+7. **Billing proof is limited** -- subscriptions are configured, but live customer flow still needs end-to-end validation.
 
 ---
 
@@ -187,7 +146,7 @@
 
 1. **Add a demo GIF/video to hero section** -- Record a 15-second screen capture of VoltType in action. This single change could double conversions.
 
-2. **Add pricing comparison with competitors** -- "VoltType $4.99/mo vs Dragon $700 vs Wispr $15/mo" -- position VoltType as the affordable option.
+2. **Add a workflow comparison section** -- show why VoltType is better than raw dictation or manual note-taking.
 
 3. **Fix download link to use latest release** -- Instead of hardcoding v1.0.0, use GitHub API:
    ```js
@@ -202,11 +161,11 @@
 
 ### Medium Improvements (1 day each)
 
-6. **Add AI Rewrite commands** -- This is the #1 feature gap vs Wispr Flow. Allow voice commands like "make this shorter", "fix grammar", "translate to Spanish". The LLM infrastructure is already there (Groq llama-3.3-70b).
+6. **Expand AI rewrite and note commands** -- deepen the command set around summaries, action items, follow-ups, and note cleanup.
 
 7. **Build a Chrome extension** -- Simple extension that injects a microphone button into text fields. Uses the same Worker API. Would unlock web-only users.
 
-8. **Add a lifetime plan** -- $149 or $199 lifetime option. Voicy charges $220. This appeals to indie hackers and power users who hate subscriptions.
+8. **Consider an annual plan before a lifetime plan** -- it is easier to price, cheaper to support, and a better first test of longer-term commitment.
 
 9. **Create an onboarding email sequence** -- After signup: Day 0 (welcome + tips), Day 3 (did you try Word Bank?), Day 7 (upgrade prompt), Day 14 (case study).
 
@@ -238,7 +197,7 @@
     - Voice-to-task: "Create a task for John, due Friday, about the invoice"
     - BrandPulso integration: dictate social media posts and have them scheduled
 
-14. **Offline Mode with Local Whisper** -- The `settings.js` already has a "local" engine option. Ship a bundled Whisper model (~150MB) for users who can't use cloud. This is a major selling point vs Wispr/Voicy.
+14. **Offline Mode with Local Whisper** -- The `settings.js` already has a "local" engine option. Ship a bundled Whisper model (~150MB) for users who cannot use cloud processing.
 
 ---
 
@@ -283,7 +242,7 @@
 | # | Action | Impact | Effort |
 |---|--------|--------|--------|
 | 1 | **Record a demo video/GIF** and add to hero section | HIGH -- visitors need to SEE it work | 1 hour |
-| 2 | **Add AI voice commands** ("make formal", "fix grammar") | HIGH -- closes #1 feature gap vs competitors | 2-3 days |
+| 2 | **Add AI voice commands** ("make formal", "fix grammar") | HIGH -- closes the biggest product gap in the workflow | 2-3 days |
 | 3 | **Get 10-20 real beta users** for testimonials before PH launch | HIGH -- real social proof replaces fake numbers | 1 week |
 | 4 | **Make download link dynamic** (latest GitHub release) | MEDIUM -- prevents broken links on updates | 30 min |
 | 5 | **Add lifetime pricing plan** ($149-199) for PH launch | MEDIUM -- converts one-time buyers who hate subscriptions | 2 hours |

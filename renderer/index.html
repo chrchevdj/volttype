@@ -14,9 +14,9 @@
       <span class="titlebar-title">VoltType</span>
     </div>
     <div class="titlebar-controls">
-      <button class="titlebar-btn" id="btn-minimize">&#x2013;</button>
-      <button class="titlebar-btn" id="btn-maximize">&#x25A1;</button>
-      <button class="titlebar-btn titlebar-close" id="btn-close">&#x2715;</button>
+      <button class="titlebar-btn" id="btn-minimize" type="button" aria-label="Minimize window" title="Minimize">&#x2013;</button>
+      <button class="titlebar-btn" id="btn-maximize" type="button" aria-label="Maximize window" title="Maximize">&#x25A1;</button>
+      <button class="titlebar-btn titlebar-close" id="btn-close" type="button" aria-label="Close window" title="Close">&#x2715;</button>
     </div>
   </div>
 
@@ -55,10 +55,10 @@
         </button>
       </div>
       <div class="sidebar-footer">
-        <div id="sidebar-status" class="status-idle">
-          <span class="status-dot"></span>
-          <span class="status-text">Ready</span>
-        </div>
+      <div id="sidebar-status" class="status-idle" aria-live="polite">
+        <span class="status-dot"></span>
+        <span class="status-text">Ready</span>
+      </div>
       </div>
     </nav>
 
@@ -207,8 +207,9 @@
             </div>
           </div>
           <div class="vocab-terms-bar">
-            <input type="text" id="vocab-term-input" placeholder="Add a name, brand, or term..." class="vocab-input">
-            <button class="btn-primary btn-small" id="btn-add-term">Add</button>
+            <label for="vocab-term-input" style="position:absolute;left:-9999px;">Add a custom vocabulary term</label>
+            <input type="text" id="vocab-term-input" placeholder="Add a name, brand, or term…" class="vocab-input">
+            <button class="btn-primary btn-small" id="btn-add-term" type="button">Add</button>
           </div>
           <div id="vocab-terms-list" class="vocab-terms-list"></div>
         </div>

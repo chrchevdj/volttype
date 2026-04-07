@@ -29,6 +29,10 @@ export default {
       return json({ status: 'ok', service: 'volttype-api' }, 200, request);
     }
 
+    if (path === '/v1/webhooks/stripe' && request.method === 'POST') {
+      return handleStripeWebhook(request, env);
+    }
+
     try {
     // All other endpoints require auth
     const user = await verifyToken(request, env);
@@ -116,10 +120,39 @@ export default {
     if (path === '/v1/checkout' && request.method === 'POST') {
       try {
         const { plan } = await request.json();
+        if (!['basic', 'pro'].includes(plan)) {
+          return json({ error: 'Invalid plan selected' }, 400, request);
+        }
+
         const priceId = plan === 'pro' ? env.STRIPE_PRICE_PRO : env.STRIPE_PRICE_BASIC;
 
         if (!priceId || !env.STRIPE_SECRET_KEY) {
           return json({ error: 'Payment not configured' }, 500, request);
+        }
+
+        const existingProfile = await getProfileByUserId(user.userId, env);
+        const checkoutParams = new URLSearchParams({
+          'mode': 'subscription',
+          'line_items[0][price]': priceId,
+          'line_items[0][quantity]': '1',
+          'success_url': `https://volttype.com/?payment=success&plan=${plan}`,
+          'cancel_url': `https://volttype.com/?payment=cancelled&plan=${plan}`,
+          'client_reference_id': user.userId,
+          'metadata[user_id]': user.userId,
+          'metadata[plan]': plan,
+          'subscription_data[metadata][user_id]': user.userId,
+          'subscription_data[metadata][plan]': plan,
+          'allow_promotion_codes': 'true',
+          'billing_address_collection': 'auto',
+          'payment_method_collection': 'if_required',
+          'customer_update[address]': 'auto',
+          'customer_update[name]': 'auto',
+        });
+
+        if (existingProfile?.stripe_customer_id) {
+          checkoutParams.set('customer', existingProfile.stripe_customer_id);
+        } else {
+          checkoutParams.set('customer_email', user.email);
         }
 
         // Create Stripe Checkout Session
@@ -128,17 +161,9 @@ export default {
           headers: {
             'Authorization': `Bearer ${env.STRIPE_SECRET_KEY}`,
             'Content-Type': 'application/x-www-form-urlencoded',
+            'Stripe-Version': '2026-02-25.clover',
           },
-          body: new URLSearchParams({
-            'mode': 'subscription',
-            'payment_method_types[]': 'card',
-            'line_items[0][price]': priceId,
-            'line_items[0][quantity]': '1',
-            'success_url': 'https://volttype.com/?payment=success',
-            'cancel_url': 'https://volttype.com/?payment=cancelled',
-            'client_reference_id': user.userId,
-            'customer_email': user.email,
-          }),
+          body: checkoutParams,
         });
 
         const session = await stripeRes.json();
@@ -258,4 +283,265 @@ function json(data, status, request) {
       ...corsHeaders(request),
     },
   });
+}
+
+async function handleStripeWebhook(request, env) {
+  if (!env.STRIPE_WEBHOOK_SECRET) {
+    return json({ error: 'Stripe webhook secret not configured' }, 500, request);
+  }
+
+  const signature = request.headers.get('stripe-signature');
+  const payload = await request.text();
+  const isValid = await verifyStripeWebhookSignature(payload, signature, env.STRIPE_WEBHOOK_SECRET);
+
+  if (!isValid) {
+    return json({ error: 'Invalid Stripe signature' }, 400, request);
+  }
+
+  let event;
+  try {
+    event = JSON.parse(payload);
+  } catch {
+    return json({ error: 'Invalid webhook payload' }, 400, request);
+  }
+
+  try {
+    switch (event.type) {
+      case 'checkout.session.completed': {
+        const session = event.data?.object;
+        const userId = session?.client_reference_id || session?.metadata?.user_id;
+        const customerId = getStripeId(session?.customer);
+
+        if (userId && customerId) {
+          await updateProfile(userId, { stripe_customer_id: customerId }, env);
+        }
+
+        if (session?.subscription) {
+          const subscription = await fetchStripeSubscription(session.subscription, env);
+          if (subscription) {
+            await syncStripeSubscription(subscription, env);
+          }
+        }
+        break;
+      }
+
+      case 'customer.subscription.created':
+      case 'customer.subscription.updated':
+      case 'customer.subscription.deleted':
+        await syncStripeSubscription(event.data?.object, env);
+        break;
+
+      case 'invoice.paid':
+      case 'invoice.payment_failed': {
+        const subscriptionId = getStripeId(event.data?.object?.subscription);
+        if (subscriptionId) {
+          const subscription = await fetchStripeSubscription(subscriptionId, env);
+          if (subscription) {
+            await syncStripeSubscription(subscription, env);
+          }
+        }
+        break;
+      }
+
+      default:
+        break;
+    }
+
+    return json({ received: true }, 200, request);
+  } catch (error) {
+    console.error('[STRIPE] Webhook handling failed:', error.message);
+    return json({ error: 'Webhook processing failed' }, 500, request);
+  }
+}
+
+async function syncStripeSubscription(subscription, env) {
+  if (!subscription?.id) return;
+
+  const customerId = getStripeId(subscription.customer);
+  let userId = subscription.metadata?.user_id || null;
+
+  if (!userId && customerId) {
+    const profile = await getProfileByCustomerId(customerId, env);
+    userId = profile?.id || null;
+  }
+
+  if (!userId) {
+    console.warn('[STRIPE] Missing user mapping for subscription', subscription.id);
+    return;
+  }
+
+  const plan = getPlanFromSubscription(subscription, env);
+  const activeStatuses = new Set(['active', 'trialing', 'past_due']);
+  const effectivePlan = activeStatuses.has(subscription.status) && plan ? plan : 'free';
+
+  await upsertSubscription(
+    {
+      stripe_subscription_id: subscription.id,
+      user_id: userId,
+      plan: plan || 'free',
+      status: subscription.status || 'inactive',
+      current_period_start: unixToIso(subscription.current_period_start),
+      current_period_end: unixToIso(subscription.current_period_end),
+    },
+    env
+  );
+
+  await updateProfile(
+    userId,
+    {
+      plan: effectivePlan,
+      stripe_customer_id: customerId,
+    },
+    env
+  );
+}
+
+async function fetchStripeSubscription(subscriptionId, env) {
+  const res = await fetch(`https://api.stripe.com/v1/subscriptions/${subscriptionId}`, {
+    headers: {
+      'Authorization': `Bearer ${env.STRIPE_SECRET_KEY}`,
+      'Stripe-Version': '2026-02-25.clover',
+    },
+  });
+
+  if (!res.ok) {
+    console.error('[STRIPE] Failed to fetch subscription:', await res.text());
+    return null;
+  }
+
+  return res.json();
+}
+
+function getPlanFromSubscription(subscription, env) {
+  const metadataPlan = subscription?.metadata?.plan;
+  if (metadataPlan === 'basic' || metadataPlan === 'pro') {
+    return metadataPlan;
+  }
+
+  const priceId = subscription?.items?.data?.[0]?.price?.id || null;
+  if (priceId === env.STRIPE_PRICE_PRO) return 'pro';
+  if (priceId === env.STRIPE_PRICE_BASIC) return 'basic';
+  return null;
+}
+
+function getStripeId(value) {
+  if (!value) return null;
+  return typeof value === 'string' ? value : value.id || null;
+}
+
+function unixToIso(value) {
+  return typeof value === 'number' ? new Date(value * 1000).toISOString() : null;
+}
+
+async function getProfileByUserId(userId, env) {
+  const res = await supabaseRequest(
+    `/rest/v1/volttype_profiles?select=id,email,plan,stripe_customer_id&id=eq.${encodeURIComponent(userId)}`,
+    env
+  );
+  return Array.isArray(res) ? res[0] || null : null;
+}
+
+async function getProfileByCustomerId(customerId, env) {
+  const res = await supabaseRequest(
+    `/rest/v1/volttype_profiles?select=id,email,plan,stripe_customer_id&stripe_customer_id=eq.${encodeURIComponent(customerId)}`,
+    env
+  );
+  return Array.isArray(res) ? res[0] || null : null;
+}
+
+async function updateProfile(userId, updates, env) {
+  await supabaseRequest(
+    `/rest/v1/volttype_profiles?id=eq.${encodeURIComponent(userId)}`,
+    env,
+    {
+      method: 'PATCH',
+      body: updates,
+      headers: {
+        'Prefer': 'return=minimal',
+      },
+    }
+  );
+}
+
+async function upsertSubscription(record, env) {
+  await supabaseRequest(
+    '/rest/v1/volttype_subscriptions?on_conflict=stripe_subscription_id',
+    env,
+    {
+      method: 'POST',
+      body: record,
+      headers: {
+        'Prefer': 'resolution=merge-duplicates,return=minimal',
+      },
+    }
+  );
+}
+
+async function supabaseRequest(path, env, options = {}) {
+  const res = await fetch(`${env.SUPABASE_URL}${path}`, {
+    method: options.method || 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': env.SUPABASE_SERVICE_KEY,
+      'Authorization': `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+      ...(options.headers || {}),
+    },
+    body: options.body ? JSON.stringify(options.body) : undefined,
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(`Supabase request failed (${res.status}): ${errorText}`);
+  }
+
+  if (res.status === 204) {
+    return null;
+  }
+
+  return res.json();
+}
+
+async function verifyStripeWebhookSignature(payload, signatureHeader, secret) {
+  if (!signatureHeader || !secret) return false;
+
+  const pieces = signatureHeader.split(',');
+  const timestamp = pieces.find((part) => part.startsWith('t='))?.slice(2);
+  const signatures = pieces
+    .filter((part) => part.startsWith('v1='))
+    .map((part) => part.slice(3));
+
+  if (!timestamp || signatures.length === 0) {
+    return false;
+  }
+
+  const signedPayload = `${timestamp}.${payload}`;
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const digest = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(signedPayload));
+  const expected = bufferToHex(digest);
+
+  return signatures.some((value) => timingSafeEqual(value, expected));
+}
+
+function bufferToHex(buffer) {
+  return Array.from(new Uint8Array(buffer))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+function timingSafeEqual(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) {
+    return false;
+  }
+
+  let mismatch = 0;
+  for (let i = 0; i < a.length; i++) {
+    mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return mismatch === 0;
 }

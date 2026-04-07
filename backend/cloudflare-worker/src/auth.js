@@ -1,5 +1,6 @@
 /**
- * JWT verification for Supabase Auth tokens.
+ * Token verification for Supabase Auth tokens.
+ * Verifies by calling Supabase's /auth/v1/user endpoint.
  */
 
 export async function verifyToken(request, env) {
@@ -11,36 +12,23 @@ export async function verifyToken(request, env) {
   const token = authHeader.slice(7);
 
   try {
-    // Decode JWT payload (base64url)
-    const parts = token.split('.');
-    if (parts.length !== 3) return null;
+    // Verify token by calling Supabase auth API
+    const res = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'apikey': env.SUPABASE_SERVICE_KEY,
+      },
+    });
 
-    const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+    if (!res.ok) return null;
 
-    // Check expiry
-    if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
-      return null;
-    }
-
-    // Verify signature using HMAC-SHA256 with Supabase JWT secret
-    const key = await crypto.subtle.importKey(
-      'raw',
-      new TextEncoder().encode(env.SUPABASE_JWT_SECRET),
-      { name: 'HMAC', hash: 'SHA-256' },
-      false,
-      ['verify']
-    );
-
-    const signatureData = new TextEncoder().encode(parts[0] + '.' + parts[1]);
-    const signature = Uint8Array.from(atob(parts[2].replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
-
-    const valid = await crypto.subtle.verify('HMAC', key, signature, signatureData);
-    if (!valid) return null;
+    const user = await res.json();
+    if (!user.id) return null;
 
     return {
-      userId: payload.sub,
-      email: payload.email,
-      role: payload.role,
+      userId: user.id,
+      email: user.email,
+      role: user.role,
     };
   } catch {
     return null;

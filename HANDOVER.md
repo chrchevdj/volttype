@@ -1,12 +1,12 @@
 # VoltType — Handover Document
 
-**Last Updated:** 2026-04-05
-**Status:** Launch-ready. AI voice commands added. Desktop app live, website enhanced with comparison table/changelog/shortcuts. PWA improved with offline support. API hardened. Android app needs APK build (low priority).
+**Last Updated:** 2026-04-07
+**Status:** Windows beta launchable. Desktop app, website, and API are working, but production billing still needs live webhook verification and mobile apps are not store-ready.
 
 ## Project Overview
 - **Name:** VoltType
 - **Website:** https://volttype.com
-- **What it does:** AI-powered desktop dictation app. Speak into your microphone, VoltType transcribes in real-time with AI enhancement. Learns your vocabulary over time.
+- **What it does:** Voice-first AI workspace for Windows. Speak into your microphone, type into any app, rewrite with AI commands, and turn rough speech into cleaner notes and follow-ups.
 - **Tech Stack:**
   - Electron (desktop app, Windows builds working)
   - HTML/CSS/JS landing page (Cloudflare Pages)
@@ -94,13 +94,13 @@ VoltType/
 11. **First-run onboarding** — 3-step welcome modal (localStorage gated).
 12. **Usage stats** — Words typed by voice, minutes saved, total sessions.
 13. **Pricing plans** — Free (10 min/day), Basic $4.99/mo (30 min/day), Pro $8.99/mo (unlimited).
-14. **Stripe checkout** — Worker endpoint creates Stripe Checkout sessions. All secrets set.
+14. **Stripe checkout** — Worker endpoint creates Stripe Checkout sessions, stores plan metadata, and syncs subscription state through Stripe webhooks.
 15. **Installer** — VoltType.Setup.1.0.0.exe on GitHub releases (chrchevdj/volttype-releases).
 16. **Auto-update** — electron-updater checks GitHub releases, downloads silently, shows update banner.
 17. **Hotkey config** — Ctrl+Shift+D (default), Ctrl+Alt+D, F9, F10 via dropdown.
 18. **Language selector** — EN, RO, DA, MK, EL, DE, FR, ES in settings.
 19. **Tray icon** — Stays in Windows tray, minimize to tray on close. Icon changes for recording/processing.
-20. **Website** — SEO (title, meta, OG tags, JSON-LD), dark mode toggle, mobile hamburger menu, PWA manifest + service worker, privacy policy, terms of service. Dynamic download link from GitHub releases. Competitor comparison table. AI voice commands showcase. Keyboard shortcuts reference. Changelog section. Credibility/builder section.
+20. **Website** — SEO foundations (title, meta, OG tags, JSON-LD), dark mode toggle, mobile hamburger menu, PWA manifest + service worker, privacy policy, terms of service, AI notes positioning, search landing pages, AI command showcase, keyboard shortcuts, changelog, and builder section.
 21. **GitHub Actions CI** — Builds Windows .exe + macOS .dmg on push to master.
 22. **Google OAuth** — Website supports Google sign-in redirect via Supabase.
 23. **PWA** — Both website/ and pwa/ have proper service workers with offline fallback pages, updated manifests with all required fields.
@@ -124,6 +124,7 @@ VoltType/
 - RLS enabled on all VoltType tables
 
 ### ⚠️ In Progress
+- **Production billing verification** — Register live Stripe webhooks and run a paid subscription end-to-end test.
 - **Android APK** — Expo app scaffolded with auth, dictation, settings. Needs EAS build config and APK generation.
 
 ### 📋 Nice to Have (Not Blocking Launch)
@@ -146,6 +147,18 @@ git commit -m "Update landing page"
 git push
 # Cloudflare Pages auto-deploys from GitHub
 ```
+
+### Stripe / Billing
+- Cards stay enabled as the default payment method for launch.
+- ACH Direct Debit is the relevant future bank method for eligible US subscriptions.
+- SEPA Direct Debit is the relevant future bank method for Europe, but it should only be enabled after EUR subscription prices are created in Stripe.
+- Required webhook events:
+  - `checkout.session.completed`
+  - `customer.subscription.created`
+  - `customer.subscription.updated`
+  - `customer.subscription.deleted`
+  - `invoice.paid`
+  - `invoice.payment_failed`
 
 ### Desktop App
 ```bash
