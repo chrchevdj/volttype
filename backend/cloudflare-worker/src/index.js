@@ -145,12 +145,12 @@ export default {
           'allow_promotion_codes': 'true',
           'billing_address_collection': 'auto',
           'payment_method_collection': 'if_required',
-          'customer_update[address]': 'auto',
-          'customer_update[name]': 'auto',
         });
 
         if (existingProfile?.stripe_customer_id) {
           checkoutParams.set('customer', existingProfile.stripe_customer_id);
+          checkoutParams.set('customer_update[address]', 'auto');
+          checkoutParams.set('customer_update[name]', 'auto');
         } else {
           checkoutParams.set('customer_email', user.email);
         }
@@ -180,8 +180,12 @@ export default {
     // --- GET /v1/admin/stats ---
     // Admin-only: returns user/subscriber/usage stats
     if (path === '/v1/admin/stats' && request.method === 'GET') {
-      const ADMIN_EMAIL = 'crcaway@gmail.com';
-      if (user.email !== ADMIN_EMAIL) {
+      const adminEmail = env.ADMIN_EMAIL?.toLowerCase();
+      if (!adminEmail) {
+        return json({ error: 'Admin email not configured' }, 500, request);
+      }
+
+      if ((user.email || '').toLowerCase() !== adminEmail) {
         return json({ error: 'Forbidden' }, 403, request);
       }
 
@@ -306,6 +310,11 @@ async function handleStripeWebhook(request, env) {
   }
 
   try {
+    const firstProcessing = await recordWebhookEvent(event, env);
+    if (!firstProcessing) {
+      return json({ received: true, duplicate: true }, 200, request);
+    }
+
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data?.object;
@@ -359,10 +368,11 @@ async function syncStripeSubscription(subscription, env) {
 
   const customerId = getStripeId(subscription.customer);
   let userId = subscription.metadata?.user_id || null;
+  let existingProfile = null;
 
   if (!userId && customerId) {
-    const profile = await getProfileByCustomerId(customerId, env);
-    userId = profile?.id || null;
+    existingProfile = await getProfileByCustomerId(customerId, env);
+    userId = existingProfile?.id || null;
   }
 
   if (!userId) {
@@ -370,15 +380,33 @@ async function syncStripeSubscription(subscription, env) {
     return;
   }
 
+  if (!existingProfile) {
+    existingProfile = await getProfileByUserId(userId, env);
+  }
+
   const plan = getPlanFromSubscription(subscription, env);
   const activeStatuses = new Set(['active', 'trialing', 'past_due']);
-  const effectivePlan = activeStatuses.has(subscription.status) && plan ? plan : 'free';
+  const isActiveSubscription = activeStatuses.has(subscription.status);
+  const fallbackPlan = existingProfile?.plan && existingProfile.plan !== 'free'
+    ? existingProfile.plan
+    : null;
+  const effectivePlan = isActiveSubscription
+    ? plan || fallbackPlan || null
+    : 'free';
+
+  if (isActiveSubscription && !plan) {
+    console.error('[STRIPE] Active subscription has unmapped plan/price', {
+      subscriptionId: subscription.id,
+      priceId: subscription?.items?.data?.[0]?.price?.id || null,
+      userId,
+    });
+  }
 
   await upsertSubscription(
     {
       stripe_subscription_id: subscription.id,
       user_id: userId,
-      plan: plan || 'free',
+      plan: plan || fallbackPlan || 'free',
       status: subscription.status || 'inactive',
       current_period_start: unixToIso(subscription.current_period_start),
       current_period_end: unixToIso(subscription.current_period_end),
@@ -389,7 +417,7 @@ async function syncStripeSubscription(subscription, env) {
   await updateProfile(
     userId,
     {
-      plan: effectivePlan,
+      ...(effectivePlan ? { plan: effectivePlan } : {}),
       stripe_customer_id: customerId,
     },
     env
@@ -447,6 +475,29 @@ async function getProfileByCustomerId(customerId, env) {
     env
   );
   return Array.isArray(res) ? res[0] || null : null;
+}
+
+async function recordWebhookEvent(event, env) {
+  if (!event?.id) {
+    throw new Error('Stripe event missing id');
+  }
+
+  const result = await supabaseRequest(
+    '/rest/v1/volttype_webhook_events?on_conflict=event_id',
+    env,
+    {
+      method: 'POST',
+      body: {
+        event_id: event.id,
+        event_type: event.type || 'unknown',
+      },
+      headers: {
+        'Prefer': 'resolution=ignore-duplicates,return=representation',
+      },
+    }
+  );
+
+  return Array.isArray(result) && result.length > 0;
 }
 
 async function updateProfile(userId, updates, env) {
@@ -511,6 +562,12 @@ async function verifyStripeWebhookSignature(payload, signatureHeader, secret) {
     .map((part) => part.slice(3));
 
   if (!timestamp || signatures.length === 0) {
+    return false;
+  }
+
+  const timestampSeconds = Number(timestamp);
+  const currentTimestampSeconds = Math.floor(Date.now() / 1000);
+  if (!Number.isFinite(timestampSeconds) || Math.abs(currentTimestampSeconds - timestampSeconds) > 300) {
     return false;
   }
 

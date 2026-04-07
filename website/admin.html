@@ -374,11 +374,19 @@
         (data.recentUsers || []).forEach(u => {
           const tr = document.createElement('tr');
           const date = dateFormatter.format(new Date(u.joined));
-          tr.innerHTML = `
-            <td>${u.email}</td>
-            <td><span class="badge ${u.plan}">${u.plan}</span></td>
-            <td style="color:#64748b">${date}</td>
-          `;
+          const tdEmail = document.createElement('td');
+          tdEmail.textContent = u.email;
+          const tdPlan = document.createElement('td');
+          const badge = document.createElement('span');
+          badge.className = 'badge ' + (['free','basic','pro'].includes(u.plan) ? u.plan : 'free');
+          badge.textContent = u.plan || 'free';
+          tdPlan.appendChild(badge);
+          const tdDate = document.createElement('td');
+          tdDate.style.color = '#64748b';
+          tdDate.textContent = date;
+          tr.appendChild(tdEmail);
+          tr.appendChild(tdPlan);
+          tr.appendChild(tdDate);
           tbody.appendChild(tr);
         });
 

@@ -119,6 +119,7 @@ VoltType/
 - `volttype_profiles` — User profiles (id, email, display_name, plan, stripe_customer_id)
 - `volttype_usage` — Daily usage tracking
 - `volttype_subscriptions` — Stripe subscription records
+- `volttype_webhook_events` — Processed Stripe webhook event IDs for idempotency
 - Trigger: `on_volttype_user_created` → `volttype_handle_new_user()` auto-creates profile on signup
 - RPC functions: `volttype_get_plan`, `volttype_get_daily_usage`, `volttype_log_usage`
 - RLS enabled on all VoltType tables
