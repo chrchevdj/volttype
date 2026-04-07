@@ -46,6 +46,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
+    html { scroll-behavior: smooth; }
+    html.dark { color-scheme: dark; }
     :root {
       --purple: #7c3aed;
       --purple-dark: #6d28d9;
@@ -81,6 +83,36 @@
       transition: background 0.3s, color 0.3s;
     }
     a { text-decoration: none; color: inherit; }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+    .skip-link {
+      position: absolute;
+      left: 16px;
+      top: 16px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: var(--text);
+      color: var(--white);
+      transform: translateY(-160%);
+      transition: transform 0.2s ease;
+      z-index: 2000;
+    }
+    .skip-link:focus { transform: translateY(0); }
+    a:focus-visible,
+    button:focus-visible,
+    input:focus-visible {
+      outline: 2px solid var(--blue);
+      outline-offset: 3px;
+    }
 
     /* Nav */
     nav {
@@ -109,6 +141,8 @@
       color: white !important; -webkit-text-fill-color: white;
       padding: 8px 20px; border-radius: 8px; font-weight: 600;
       box-shadow: 0 2px 12px rgba(124,58,237,0.3);
+      border: none;
+      cursor: pointer;
       transition: all 0.2s;
     }
     .nav-cta:hover { transform: translateY(-1px); box-shadow: 0 4px 18px rgba(124,58,237,0.4); }
@@ -179,6 +213,8 @@
       text-align: center;
       box-shadow: 0 2px 12px rgba(124,58,237,0.3);
       border-bottom: none !important;
+      border: none;
+      cursor: pointer;
     }
     @media (max-width: 768px) {
       .nav-links { display: none; }
@@ -428,13 +464,14 @@
     .modal-btn:hover { transform: translateY(-1px); }
     .modal-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
     .modal-toggle {
-      text-align: center; margin-top: 16px;
-      font-size: 13px; color: var(--text-secondary);
+      text-align: center; margin-top: 20px;
+      font-size: 15px; color: var(--text-secondary);
     }
     .modal-toggle button {
       background: none; border: none;
-      color: var(--purple); font-weight: 600;
-      cursor: pointer; font-size: 13px;
+      color: var(--purple); font-weight: 700;
+      cursor: pointer; font-size: 15px;
+      text-decoration: underline;
     }
     .modal-error {
       background: #fef2f2; border: 1px solid #fecaca;
@@ -469,7 +506,8 @@
     .nav-user.hidden { display: none; }
 
     .modal-logo { font-size: 32px; text-align: center; margin-bottom: 8px; }
-    .google-btn {
+    .google-btn,
+    .google-btn-unused {
       width: 100%;
       display: flex;
       align-items: center;
@@ -549,6 +587,22 @@
       .app-demo-section { padding: 40px 20px; }
       .app-demo-grid { grid-template-columns: 1fr; }
     }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+      .hero::before,
+      .btn-primary,
+      .btn-secondary-hero,
+      .step-card,
+      .price-card,
+      .nav-cta {
+        transform: none !important;
+      }
+    }
     /* App Demo Section */
     .app-demo-section { background: #f8fafc; padding: 64px 24px; }
     .app-demo-grid {
@@ -570,6 +624,7 @@
   </style>
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
 
   <!-- Nav -->
   <nav>
@@ -579,7 +634,7 @@
         <a href="#features">Features</a>
         <a href="#pricing">Pricing</a>
         <a href="#download">Download</a>
-        <a href="javascript:void(0)" class="nav-cta" id="nav-cta-btn">Sign Up Free</a>
+        <button class="nav-cta" id="nav-cta-btn" type="button">Sign Up Free</button>
       </div>
       <div class="nav-user hidden" id="nav-user">
         <a href="/admin.html" id="nav-admin-link" style="display:none;font-size:13px;color:#7c3aed;font-weight:600;text-decoration:none;">Admin</a>
@@ -598,10 +653,13 @@
       <a href="#features" onclick="closeMobileMenu()">Features</a>
       <a href="#pricing" onclick="closeMobileMenu()">Pricing</a>
       <a href="#download" onclick="closeMobileMenu()">Download</a>
-      <a href="javascript:void(0)" class="nav-mobile-cta" id="nav-mobile-cta-btn" onclick="closeMobileMenu()">Sign Up Free</a>
+      <button class="nav-mobile-cta" id="nav-mobile-cta-btn" type="button">Sign Up Free</button>
     </div>
   </nav>
 
+  <div id="site-message" class="hero-note hidden" aria-live="polite" style="margin:88px auto 0;max-width:720px;padding:12px 16px;border-radius:12px;background:var(--purple-light);color:var(--text);text-align:center;"></div>
+
+  <main id="main-content">
   <!-- Hero -->
   <section class="hero">
     <div class="hero-badge">AI Voice Commands — say "make formal" or "fix grammar"</div>
@@ -612,7 +670,7 @@
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Download Free for Windows
       </a>
-      <a href="javascript:void(0)" class="btn-hero btn-secondary-hero" id="hero-signup-btn">Create Account</a>
+      <button class="btn-hero btn-secondary-hero" id="hero-signup-btn" type="button">Create Account</button>
     </div>
     <p class="hero-note">Free tier — 10 minutes/day. No credit card needed. <span id="download-version"></span></p>
     <div class="hero-social-proof">
@@ -694,7 +752,7 @@
           <text x="210" y="21" font-family="Arial" font-size="9" fill="#94a3b8" text-anchor="middle">Outlook — New Message</text>
           <!-- Email compose area -->
           <rect x="12" y="40" width="396" height="24" rx="3" fill="#fff" stroke="#e2e8f0" stroke-width="1"/>
-          <text x="20" y="56" font-family="Arial" font-size="9" fill="#64748b">To: john@company.com</text>
+          <text x="20" y="56" font-family="Arial" font-size="9" fill="#64748b">To: john at company dot com</text>
           <rect x="12" y="68" width="396" height="24" rx="3" fill="#fff" stroke="#e2e8f0" stroke-width="1"/>
           <text x="20" y="84" font-family="Arial" font-size="9" fill="#1e293b">Subject: Follow-up on our meeting yesterday</text>
           <!-- Body with typed text -->
@@ -942,7 +1000,7 @@
           <li>Personal vocabulary</li>
           <li>Word Bank (5 rules)</li>
         </ul>
-        <button class="btn-price btn-price-secondary" onclick="handlePricing('free')">Try Free</button>
+        <button class="btn-price btn-price-secondary" data-plan="free" type="button">Try Free</button>
       </div>
       <div class="price-card popular">
         <div class="price-name">Basic</div>
@@ -955,7 +1013,7 @@
           <li>Templates</li>
           <li>Correction learning</li>
         </ul>
-        <button class="btn-price btn-price-primary" onclick="handlePricing('basic')">Upgrade to Basic</button>
+        <button class="btn-price btn-price-primary" data-plan="basic" type="button">Upgrade to Basic</button>
       </div>
       <div class="price-card">
         <div class="price-name">Pro</div>
@@ -968,7 +1026,7 @@
           <li>AI rewrite mode</li>
           <li>Priority support</li>
         </ul>
-        <button class="btn-price btn-price-primary" onclick="handlePricing('pro')">Upgrade to Pro</button>
+        <button class="btn-price btn-price-primary" data-plan="pro" type="button">Upgrade to Pro</button>
       </div>
     </div>
   </section>
@@ -1150,10 +1208,12 @@
     </div>
   </section>
 
+  </main>
+
   <!-- Auth Modal -->
-  <div class="modal-overlay hidden" id="auth-modal">
-    <div class="modal">
-      <button class="modal-close" id="modal-close">&times;</button>
+  <div class="modal-overlay hidden" id="auth-modal" role="presentation">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <button class="modal-close" id="modal-close" type="button" aria-label="Close sign-up dialog">&times;</button>
       <div class="modal-logo">&#x26A1;</div>
       <div class="modal-title" id="modal-title">Create Account</div>
       <p class="modal-sub" id="modal-sub">Sign up to start voice typing for free</p>
@@ -1164,38 +1224,43 @@
         <h3>Check your email</h3>
         <p id="verify-email-text">We sent a confirmation link to your email.</p>
         <p class="verify-note">Click the link to activate your account, then come back to sign in.</p>
-        <button class="modal-btn modal-btn-secondary" onclick="resendVerification()">Resend email</button>
-        <button class="modal-btn" onclick="switchToSignin()">Back to Sign In</button>
+        <button class="modal-btn modal-btn-secondary" id="modal-resend-btn" type="button">Resend Email</button>
+        <button class="modal-btn" id="modal-back-btn" type="button">Back to Sign In</button>
       </div>
 
       <!-- Auth form (shown by default) -->
       <div id="modal-form">
-        <!-- Google button -->
-        <button class="google-btn" id="google-signin-btn" onclick="signInWithGoogle()">
+        <button class="google-btn" id="google-signin-btn" type="button">
           <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
           Continue with Google
         </button>
 
         <div class="modal-divider"><span>or</span></div>
 
-        <div class="modal-error hidden" id="modal-error"></div>
-        <div class="modal-success hidden" id="modal-success"></div>
+        <div class="modal-error hidden" id="modal-error" aria-live="polite"></div>
+        <div class="modal-success hidden" id="modal-success" aria-live="polite"></div>
 
-        <input type="text" class="modal-input hidden" id="modal-name" placeholder="Full name" autocomplete="name">
-        <input type="email" class="modal-input" id="modal-email" placeholder="Email address" autocomplete="email">
+        <!-- Honeypot anti-bot field — hidden from humans -->
+        <input type="text" id="modal-website" name="website" autocomplete="off" spellcheck="false" tabindex="-1" style="position:absolute;left:-9999px;opacity:0;height:0;width:0;">
+
+        <label class="sr-only" for="modal-name">Full name</label>
+        <input type="text" class="modal-input hidden" id="modal-name" name="name" placeholder="Full name…" autocomplete="name">
+        <label class="sr-only" for="modal-email">Email address</label>
+        <input type="email" class="modal-input" id="modal-email" name="email" placeholder="Email address…" autocomplete="email" spellcheck="false">
         <div class="password-wrap">
-          <input type="password" class="modal-input" id="modal-password" placeholder="Password (min 8 characters)" autocomplete="current-password">
+          <label class="sr-only" for="modal-password">Password</label>
+          <input type="password" class="modal-input" id="modal-password" name="password" placeholder="Password (min 8 characters)…" autocomplete="current-password">
           <div class="password-strength hidden" id="password-strength">
             <div class="strength-bar" id="strength-bar"></div>
             <span class="strength-label" id="strength-label"></span>
           </div>
         </div>
 
-        <button class="modal-btn" id="modal-submit">Create Account</button>
+        <button class="modal-btn" id="modal-submit" type="button">Create Account</button>
 
         <div class="modal-toggle">
           <span id="modal-toggle-text">Already have an account?</span>
-          <button id="modal-toggle-btn" onclick="toggleAuthMode()">Sign in</button>
+          <button id="modal-toggle-btn" type="button">Sign In</button>
         </div>
 
         <p class="modal-terms">By signing up, you agree to our <a href="terms-of-service.html">Terms</a> and <a href="privacy-policy.html">Privacy Policy</a>.</p>
@@ -1292,6 +1357,14 @@
       pendingPlan = null;
     }
 
+    function showSiteMessage(message, variant = 'info') {
+      const banner = document.getElementById('site-message');
+      banner.textContent = message;
+      banner.classList.remove('hidden');
+      banner.style.background = variant === 'error' ? '#fee2e2' : variant === 'success' ? '#dcfce7' : 'var(--purple-light)';
+      banner.style.color = variant === 'error' ? '#991b1b' : variant === 'success' ? '#166534' : 'var(--text)';
+    }
+
     function updateModalUI() {
       const nameField = document.getElementById('modal-name');
       const strengthEl = document.getElementById('password-strength');
@@ -1334,13 +1407,16 @@
     async function resendVerification() {
       // Use pendingEmail saved when form was hidden; fall back to field value if still visible
       const email = pendingEmail || document.getElementById('modal-email').value.trim();
-      if (!email) { alert('Could not determine email address. Please close and try again.'); return; }
+      if (!email) {
+        showSiteMessage('Could not determine the email address. Close the dialog and try again.', 'error');
+        return;
+      }
       await fetch(`${SUPABASE_URL}/auth/v1/resend`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
         body: JSON.stringify({ type: 'signup', email })
       });
-      alert('Verification email resent! Check your inbox.');
+      showSiteMessage(`Verification email resent to ${email}.`, 'success');
     }
 
     function signInWithGoogle() {
@@ -1359,6 +1435,9 @@
       errEl.classList.add('hidden');
       successEl.classList.add('hidden');
 
+      // Honeypot check — bots fill hidden fields
+      if (document.getElementById('modal-website').value) { errEl.textContent = 'Signup blocked.'; errEl.classList.remove('hidden'); return; }
+
       if (!email || !password) { errEl.textContent = 'Enter email and password'; errEl.classList.remove('hidden'); return; }
 
       // Email format validation
@@ -1369,7 +1448,7 @@
       if (password.length < minLen) { errEl.textContent = `Password must be at least ${minLen} characters`; errEl.classList.remove('hidden'); return; }
 
       btn.disabled = true;
-      btn.textContent = 'Please wait...';
+      btn.textContent = 'Please wait…';
 
       try {
         const endpoint = authMode === 'signup'
@@ -1425,6 +1504,7 @@
           } else {
             successEl.textContent = 'Account created! Download VoltType and sign in with your email.';
             successEl.classList.remove('hidden');
+            showSiteMessage('Account created. Download VoltType and sign in to start dictating.', 'success');
             setTimeout(hideAuthModal, 3000);
           }
         } else {
@@ -1547,6 +1627,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       // Fetch latest download link
       updateDownloadLink();
+
       // Handle OAuth callback (Google sign-in redirect)
       const hashParams = new URLSearchParams(window.location.hash.replace('#', '?'));
       const accessToken = hashParams.get('access_token');
@@ -1555,7 +1636,6 @@
         const refreshToken = hashParams.get('refresh_token');
         if (refreshToken) localStorage.setItem('vt_refresh', refreshToken);
         token = accessToken;
-        // Clean URL
         history.replaceState(null, '', window.location.pathname);
       }
 
@@ -1565,13 +1645,25 @@
       // Check for payment return
       const params = new URLSearchParams(window.location.search);
       if (params.get('payment') === 'success') {
-        alert('Payment successful! Your plan has been upgraded. Download VoltType and sign in to use your new plan.');
+        const plan = params.get('plan');
+        const label = plan ? `${plan.charAt(0).toUpperCase()}${plan.slice(1)} plan confirmed.` : 'Payment successful.';
+        showSiteMessage(`${label} We’re syncing your subscription now. Sign in from the desktop app to use it.`, 'success');
+        window.history.replaceState({}, '', '/');
+      } else if (params.get('payment') === 'cancelled') {
+        showSiteMessage('Checkout was cancelled. Your account is still available on the free plan.', 'info');
         window.history.replaceState({}, '', '/');
       }
 
       // Nav CTA
       document.getElementById('nav-cta-btn').addEventListener('click', () => showAuthModal('signup'));
       document.getElementById('hero-signup-btn').addEventListener('click', () => showAuthModal('signup'));
+      document.getElementById('google-signin-btn').addEventListener('click', signInWithGoogle);
+      document.querySelectorAll('[data-plan]').forEach((button) => {
+        button.addEventListener('click', () => handlePricing(button.dataset.plan));
+      });
+      document.getElementById('modal-toggle-btn').addEventListener('click', toggleAuthMode);
+      document.getElementById('modal-resend-btn').addEventListener('click', resendVerification);
+      document.getElementById('modal-back-btn').addEventListener('click', switchToSignin);
 
       // Modal
       document.getElementById('modal-close').addEventListener('click', hideAuthModal);
@@ -1633,6 +1725,7 @@
         const mobileCta = document.getElementById('nav-mobile-cta-btn');
         if (mobileCta) {
           mobileCta.addEventListener('click', function() {
+            closeMobileMenu();
             showAuthModal('signup');
           });
         }
