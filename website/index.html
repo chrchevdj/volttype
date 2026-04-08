@@ -66,19 +66,19 @@
     }
     .dark {
       --text: #e2e8f0;
-      --text-secondary: #94a3b8;
-      --bg: #0f172a;
-      --white: #1e293b;
-      --card-bg: #1e293b;
-      --nav-bg: rgba(15,23,42,0.90);
-      --nav-border: rgba(255,255,255,0.08);
+      --text-secondary: #a5b4cb;
+      --bg: #0c0a1f;
+      --white: rgba(255,255,255,0.06);
+      --card-bg: rgba(255,255,255,0.05);
+      --nav-bg: rgba(12,10,31,0.92);
+      --nav-border: rgba(255,255,255,0.06);
       --purple-light: rgba(124,58,237,0.15);
-      --border-subtle: rgba(255,255,255,0.08);
+      --border-subtle: rgba(255,255,255,0.06);
       --text-primary: #e2e8f0;
-      --section-alt-bg: #1a2234;
-      --modal-bg: #1e293b;
-      --input-bg: #0f172a;
-      --input-border: rgba(255,255,255,0.12);
+      --section-alt-bg: rgba(124,58,237,0.06);
+      --modal-bg: #1a1535;
+      --input-bg: rgba(0,0,0,0.3);
+      --input-border: rgba(255,255,255,0.1);
     }
     :root {
       --border-subtle: rgba(0,0,0,0.06);
@@ -548,14 +548,14 @@
     .download-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-top: 24px; }
     .badge-coming {
       display: inline-block; padding: 10px 24px;
-      background: var(--bg); border: 1px solid rgba(0,0,0,0.1);
+      background: var(--card-bg); border: 1px solid var(--border-subtle);
       border-radius: 10px; font-size: 14px; color: var(--text-secondary);
       font-weight: 500;
     }
 
     /* Footer */
     footer {
-      background: var(--text); color: rgba(255,255,255,0.7);
+      background: #1e1b4b; color: rgba(255,255,255,0.7);
       padding: 48px 40px; text-align: center;
     }
     footer a { color: rgba(255,255,255,0.7); transition: color 0.2s; }
@@ -1398,10 +1398,9 @@
     </div>
   </section>
 
-  <!-- Built by / Credibility -->
-  <section style="padding: 48px 40px; text-align: center; background: var(--card-bg);">
-    <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">Built by <strong style="color: var(--text);">Djoko</strong> at <a href="https://myclienta.com" style="color: var(--purple); font-weight: 600;" target="_blank">MyClienta</a></p>
-    <p style="font-size: 13px; color: var(--text-secondary);">AI automation tools for people who hate repetitive work. VoltType is powered by Groq Whisper + Llama 3.3.</p>
+  <!-- Built by -->
+  <section style="padding: 32px 40px; text-align: center;">
+    <p style="font-size: 13px; color: var(--text-secondary);">Automation tool built by <a href="https://myclienta.com" style="color: var(--purple); font-weight: 600;" target="_blank">MyClienta</a> for people who hate repetitive work.</p>
   </section>
 
   <!-- Download -->

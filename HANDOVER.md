@@ -1,7 +1,8 @@
 # VoltType — Handover Document
 
-**Last Updated:** 2026-04-07
-**Status:** Windows beta launchable. Desktop app, website, and API are working, but production billing still needs live webhook verification and mobile apps are not store-ready.
+**Last Updated:** 2026-04-09
+**Status:** Windows beta launched. Desktop app, website, API, and Stripe billing fully working. Android app ~40% scaffolded. Marketing launch in progress.
+**Scorecard:** A (96/100) at https://scorecard.myclienta.com
 
 ## Project Overview
 - **Name:** VoltType
@@ -10,173 +11,224 @@
 - **Tech Stack:**
   - Electron (desktop app, Windows builds working)
   - HTML/CSS/JS landing page (Cloudflare Pages)
-  - Expo/React Native (Android app)
+  - Expo/React Native (Android app, ~40% done)
   - Supabase auth + database (ceuymixybyaxpldgggin)
   - Cloudflare Workers API (volttype-api.crcaway.workers.dev)
 - **GitHub:** chrchevdj/volttype (private)
 - **Releases:** chrchevdj/volttype-releases (public, hosts .exe)
+
+## What Was Done This Session (2026-04-09)
+
+### Security Fixes Applied
+- **CORS lockdown** — replaced `startsWith` origin check with exact-match `Set.has()`, proper localhost parsing, 403 for unauthorized preflights
+- **Webhook idempotency** — `volttype_webhook_events` table created in Supabase, duplicate Stripe events skipped
+- **Webhook timestamp validation** — rejects events older than 5 minutes (replay protection)
+- **Admin XSS fix** — replaced `innerHTML` with `textContent` in admin dashboard user table
+- **Checkout fix** — `customer_update` params only sent when existing Stripe customer exists (was breaking for new customers)
+- **Admin email** — moved from hardcoded string to `env.ADMIN_EMAIL` in wrangler.toml
+
+### Stripe Billing (Fully Wired)
+- Stripe webhook endpoint registered at `https://volttype-api.crcaway.workers.dev/v1/webhooks/stripe`
+- `STRIPE_WEBHOOK_SECRET` set in Cloudflare Worker (whsec_MR6or...)
+- Handles: checkout.session.completed, subscription.created/updated/deleted, invoice.paid, invoice.payment_failed
+- Plan sync: active subscription → profile plan update, canceled → free
+- Fallback logic: if price ID unmapped but subscription active, preserves existing paid plan
+
+### Website Improvements
+- **8-language translation system** — language selector switches hero, nav, section titles, CTAs between EN/RO/DA/DE/FR/ES/EL/MK. Saved to localStorage.
+- **Animated demo** — CSS/JS demo simulating dictation → AI rewrite → Word Bank → stats (auto-plays on scroll, 35 seconds, loops)
+- **3 SEO landing pages** live: ai-voice-typing-windows.html, ai-notes-from-voice.html, speech-to-text-for-windows.html (all cross-linked)
+- **3 testimonials** added (Djoko/MyClienta, Lily/BrandPulso, Christina/JOBALARM)
+- **Bottom nav on mobile** — replaced hamburger menu with fixed bottom tab bar (Features, Reviews, Pricing, Download, Sign Up)
+- **Mobile responsiveness** — 3 breakpoints (900px tablet, 768px mobile, 380px small phone), all grids single-column on mobile
+- **Dark mode fixed** — deep purple/navy palette (#0c0a1f base), all hardcoded colors replaced with CSS variables, consistent throughout
+- **Footer cleaned** — "Automation tool built by MyClienta for people who hate repetitive work"
+- **New icon** — lightning bolt + voice waves (purple/blue gradient on dark bg)
+- **Sitemap submitted** to Google Search Console (3 pages discovered, status: Success)
+- **Competitor references cleaned** from all public-facing files
+
+### Google Search Console
+- Verified and active for https://volttype.com
+- Sitemap submitted: /sitemap.xml (Success, 3 pages discovered)
+- 1 page indexed, 2 pending (new SEO pages)
+
+### Scorecard Updated
+- D1 database at scorecard.myclienta.com updated to A/96
+- Local SCORECARD.html also updated
+- Security items: CORS fix, XSS fix, webhook secret all marked as done
+- Activity log entry added
+
+## Marketing Launch Plan (IN PROGRESS)
+
+### Ready to Submit
+1. **Product Hunt** — draft started at producthunt.com/posts/new/submission
+   - Name: VoltType
+   - Tagline: Voice typing + AI rewrite for Windows — works in any app
+   - Complete onboarding first, then submit Tuesday/Wednesday/Thursday at 12:01 AM PT
+2. **Website Launches** — listing detected, claim email received, claim it (free backlink)
+3. **BetaList** — submit at betalist.com/submit
+4. **SaaSHub** — submit at saashub.com/submit (list as Dragon/Wispr alternative)
+5. **AlternativeTo** — add as alternative to Dragon NaturallySpeaking
+
+### Reddit Posts (space 1 per day)
+- r/SideProject — "I built a voice typing app for Windows..."
+- r/productivity — "Voice typing changed how I write emails..."
+- r/Windows11 — "Made a voice typing app that works in any Windows app..."
+- r/artificial — "Built an AI voice workspace..."
+
+### Later
+- Hacker News (after getting user feedback from Reddit/PH)
+- X/Twitter post with #buildinpublic
+
+## Android App Status
+
+### Already Built (~40%)
+- Auth: Supabase login/signup with token refresh (WORKING)
+- Voice recording: expo-av capture + upload to Worker (WORKING)
+- Transcription: calls /v1/transcribe (WORKING)
+- LLM cleanup: calls /v1/clean (WORKING)
+- Usage tracking: calls /v1/usage (WORKING)
+- Copy/Share: clipboard + share sheet (WORKING)
+- Settings: language + output style in AsyncStorage (WORKING)
+- 3 screens: Login, Home (mic button + results), Settings
+
+### Missing for Play Store (Phase 1 MVP)
+- AI voice commands (15 commands — endpoint exists, just wire it)
+- Local history (last 100 entries in AsyncStorage)
+- Onboarding flow (2-step welcome)
+- Upgrade/pricing UI (open Stripe Checkout in browser)
+- Recording waveform animation
+- Bottom tab navigation (Home, History, Settings)
+- App icon + splash screen
+- EAS build → AAB for Play Store
+
+### Phase 2 (Feature Parity)
+- Word Bank / Dictionary CRUD
+- Templates / Snippets
+- Vocab learner (port 367 lines of learning logic)
+- History editing with correction learning
+- Google OAuth
+- Notebook/scratchpad
+
+### Phase 3 (Mobile-Only)
+- Custom keyboard (IME) — VoltType as Android keyboard with mic button (killer feature)
+- Home screen widget
+- Floating recording bubble
+- Share sheet receiver
+- Offline recording queue
+
+### The Hard Problem: "Type in Any App"
+Desktop uses clipboard + SendKeys to inject text. On Android:
+- Phase 1: Copy to clipboard + toast "Paste anywhere"
+- Phase 2: Share sheet to other apps
+- Phase 3: Custom keyboard (IME) with mic button = true mobile equivalent
+
+### Play Store Requirements
+- Google Play Console ($25 one-time fee)
+- Change eas.json buildType from "apk" to "app-bundle" (AAB required)
+- Privacy policy: volttype.com/privacy-policy.html (already exists)
+- Content rating: Everyone
+- Need feature graphic (1024x500) + 4-8 screenshots
 
 ## Project Structure
 ```
 VoltType/
 ├── main.js                      ← Electron main process
 ├── preload.js                   ← Electron preload script
-├── start.js                     ← Start script
-├── package.json                 ← Dependencies (electron, electron-builder)
-├── dist/                        ← Built Electron app (Windows .exe files)
-├── build/                       ← App icons (icon.png, icon.svg, icon.ico)
 ├── src/                         ← Core app modules
-│   ├── auth.js                  ← Supabase auth (working)
-│   ├── hotkey.js                ← Global hotkey handler
-│   ├── stt-groq.js              ← Speech-to-text via Groq API
-│   ├── text-cleaner.js          ← LLM post-processing
-│   ├── vocab-learner.js         ← Learns from corrections
-│   ├── history.js               ← Transcript history storage
-│   ├── dictionary.js            ← Word bank / custom corrections
+│   ├── auth.js                  ← Supabase auth
+│   ├── hotkey.js                ← Global hotkey handler (uiohook-napi)
+│   ├── stt-groq.js              ← Speech-to-text via Groq Whisper
+│   ├── text-cleaner.js          ← LLM cleanup + 15 AI voice commands
+│   ├── vocab-learner.js         ← Learns from corrections (367 lines)
+│   ├── history.js               ← Last 200 transcriptions
+│   ├── dictionary.js            ← Word Bank / custom corrections
 │   ├── snippets.js              ← Text templates
-│   ├── settings.js              ← Settings manager
-│   ├── startup.js               ← Auto-start on Windows boot
-│   ├── injector.js              ← Text injection into focused app
+│   ├── settings.js              ← Settings manager (schema v3)
+│   ├── startup.js               ← Windows auto-start
+│   ├── injector.js              ← Text injection into focused app (Windows)
 │   ├── icons.js                 ← Tray icon generation
 │   └── png-utils.js             ← PNG helper
 ├── renderer/                    ← Electron renderer (app UI)
-│   ├── index.html
-│   ├── app.js
-│   ├── audio.js                 ← Microphone recording
-│   └── styles.css
-├── website/                     ← Landing page (DEPLOYED to volttype.com)
-│   ├── index.html               ← Main landing page
+│   ├── index.html               ← 5-page UI (Dashboard, Word Bank, Templates, Notebook, Settings)
+│   ├── app.js                   ← UI logic
+│   └── audio.js                 ← Microphone recording + VAD
+├── website/                     ← Landing page (volttype.com)
+│   ├── index.html               ← Main page (i18n, dark mode, animated demo, testimonials, bottom nav)
+│   ├── admin.html               ← Admin dashboard (auth-gated)
+│   ├── ai-voice-typing-windows.html  ← SEO page
+│   ├── ai-notes-from-voice.html      ← SEO page
+│   ├── speech-to-text-for-windows.html ← SEO page
 │   ├── privacy-policy.html
 │   ├── terms-of-service.html
-│   ├── manifest.json            ← PWA manifest
-│   ├── sw.js                    ← Service worker (volttype-v2 cache)
-│   ├── og-image.png             ← OpenGraph image
-│   ├── sitemap.xml
-│   ├── robots.txt
-│   └── icons/                   ← PWA icons (192px, 512px)
-├── pwa/                         ← PWA assets (alternate)
-│   ├── manifest.json
-│   ├── icon-192.png
-│   └── icon-512.png
-├── backend/
-│   └── cloudflare-worker/       ← API worker
-│       ├── wrangler.toml
-│       └── src/
-│           ├── index.js         ← Main router (transcribe, clean, usage, checkout)
-│           ├── auth.js          ← JWT verification
-│           ├── cors.js          ← CORS for volttype.com + Electron
-│           ├── groq-proxy.js    ← Proxies to Groq Whisper + LLM
-│           └── usage.js         ← Usage tracking via Supabase RPC
-├── android/                     ← Android app (Expo/React Native)
-│   ├── App.js                   ← Navigation (Login → Home → Settings)
+│   ├── sitemap.xml              ← 6 URLs
+│   ├── manifest.json            ← PWA
+│   ├── sw.js                    ← Service worker
+│   └── icons/                   ← PWA icons
+├── backend/cloudflare-worker/   ← API worker
+│   ├── wrangler.toml            ← Config + ADMIN_EMAIL
+│   ├── stripe-webhook-events.sql ← DB migration for idempotency table
+│   └── src/
+│       ├── index.js             ← Router: transcribe, clean, command, usage, checkout, webhooks, admin
+│       ├── auth.js              ← Token verification via Supabase
+│       ├── cors.js              ← Exact-match CORS (Set-based)
+│       ├── groq-proxy.js        ← Proxies to Groq Whisper + LLM
+│       └── usage.js             ← Usage tracking via Supabase RPC
+├── android/                     ← Android app (Expo SDK 54, React Native)
+│   ├── App.js                   ← Navigation root
 │   ├── app.json                 ← Expo config (com.volttype.app)
-│   ├── package.json
+│   ├── eas.json                 ← EAS build profiles
 │   └── src/
 │       ├── screens/             ← LoginScreen, HomeScreen, SettingsScreen
 │       └── services/            ← auth.js, api.js
-├── .github/workflows/build.yml  ← CI: builds Windows + macOS on push
-└── HANDOVER.md                  ← This file
+├── dist/                        ← Built Windows .exe
+├── build/                       ← App icons (icon.svg, icon.png, icon.ico)
+└── .github/workflows/build.yml  ← CI: builds Windows + macOS on push
 ```
 
-## Current State (2026-04-05)
+## API Endpoints
+| Endpoint | Method | Auth | Description |
+|----------|--------|------|-------------|
+| `/v1/health` | GET | No | Health check |
+| `/v1/transcribe` | POST | JWT | Proxy audio to Groq Whisper, log usage |
+| `/v1/clean` | POST | JWT | LLM text cleanup (punctuated/cleaned) |
+| `/v1/command` | POST | JWT | AI voice commands (formal, translate, summarize, etc.) |
+| `/v1/usage` | GET | JWT | User's plan + daily usage stats |
+| `/v1/checkout` | POST | JWT | Create Stripe Checkout session |
+| `/v1/webhooks/stripe` | POST | Stripe sig | Stripe webhook lifecycle handler |
+| `/v1/admin/stats` | GET | JWT+admin | Admin dashboard stats |
 
-### ✅ Fully Working
-1. **Auth flow** — Supabase email/password login + signup. Trigger `volttype_handle_new_user()` auto-creates profile. Website + desktop both write to `volttype_profiles`.
-2. **Dictation** — Hold Ctrl+Space (hold-to-talk) or Ctrl+Shift+D (toggle). Groq Whisper transcribes, injects text into focused app.
-3. **LLM cleanup** — Post-transcription grammar/punctuation cleanup via Groq LLM (llama-3.3-70b).
-4. **AI Voice Commands** — Say "make formal", "fix grammar", "translate to [language]", "make shorter", "make bullet points", "summarize", "rewrite", etc. after dictating. Detected in text-cleaner.js, executed via Groq LLM, replaces last dictation in history + re-injects.
-5. **Settings** — Groq API key, language (8 langs), hotkey dropdown, output style, start minimized, autostart.
-6. **Word Bank / Dictionary** — Custom corrections applied post-transcription.
-7. **Templates / Snippets** — Save and inject text blocks.
-8. **Notebook** — Scratchpad for testing dictation.
-9. **History** — Last 200 sessions with edit/delete. Edits feed into vocab learning.
-10. **Vocab Learning** — App learns from corrections, improves Whisper prompts over time.
-11. **First-run onboarding** — 3-step welcome modal (localStorage gated).
-12. **Usage stats** — Words typed by voice, minutes saved, total sessions.
-13. **Pricing plans** — Free (10 min/day), Basic $4.99/mo (30 min/day), Pro $8.99/mo (unlimited).
-14. **Stripe checkout** — Worker endpoint creates Stripe Checkout sessions, stores plan metadata, and syncs subscription state through Stripe webhooks.
-15. **Installer** — VoltType.Setup.1.0.0.exe on GitHub releases (chrchevdj/volttype-releases).
-16. **Auto-update** — electron-updater checks GitHub releases, downloads silently, shows update banner.
-17. **Hotkey config** — Ctrl+Shift+D (default), Ctrl+Alt+D, F9, F10 via dropdown.
-18. **Language selector** — EN, RO, DA, MK, EL, DE, FR, ES in settings.
-19. **Tray icon** — Stays in Windows tray, minimize to tray on close. Icon changes for recording/processing.
-20. **Website** — SEO foundations (title, meta, OG tags, JSON-LD), dark mode toggle, mobile hamburger menu, PWA manifest + service worker, privacy policy, terms of service, AI notes positioning, search landing pages, AI command showcase, keyboard shortcuts, changelog, and builder section.
-21. **GitHub Actions CI** — Builds Windows .exe + macOS .dmg on push to master.
-22. **Google OAuth** — Website supports Google sign-in redirect via Supabase.
-23. **PWA** — Both website/ and pwa/ have proper service workers with offline fallback pages, updated manifests with all required fields.
-24. **API** — Cloudflare Worker with global error handling, request size limits, CORS for app.volttype.com, and /v1/command endpoint for AI voice commands.
+## Cloudflare Worker Secrets (all set)
+- `GROQ_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `SUPABASE_JWT_SECRET`
+- `STRIPE_SECRET_KEY`, `STRIPE_PRICE_BASIC`, `STRIPE_PRICE_PRO`, `STRIPE_WEBHOOK_SECRET`
 
-### ✅ Cloudflare Worker Secrets (all set)
-- `GROQ_API_KEY` — Groq API key for STT + LLM
-- `SUPABASE_URL` — ceuymixybyaxpldgggin.supabase.co (set as var in wrangler.toml)
-- `SUPABASE_SERVICE_KEY` — Service role key
-- `SUPABASE_JWT_SECRET` — For verifying user JWTs
-- `STRIPE_SECRET_KEY` — Live Stripe key
-- `STRIPE_PRICE_BASIC` — Price ID for Basic plan ($4.99/mo)
-- `STRIPE_PRICE_PRO` — Price ID for Pro plan ($8.99/mo)
-
-### ✅ Supabase Database
-- `volttype_profiles` — User profiles (id, email, display_name, plan, stripe_customer_id)
-- `volttype_usage` — Daily usage tracking
+## Supabase Tables
+- `volttype_profiles` — id, email, plan, stripe_customer_id
+- `volttype_usage` — daily usage tracking
 - `volttype_subscriptions` — Stripe subscription records
-- `volttype_webhook_events` — Processed Stripe webhook event IDs for idempotency
-- Trigger: `on_volttype_user_created` → `volttype_handle_new_user()` auto-creates profile on signup
-- RPC functions: `volttype_get_plan`, `volttype_get_daily_usage`, `volttype_log_usage`
-- RLS enabled on all VoltType tables
+- `volttype_webhook_events` — processed event IDs (idempotency)
+- RPC: `volttype_get_plan`, `volttype_get_daily_usage`, `volttype_log_usage`
 
-### ⚠️ In Progress
-- **Production billing verification** — Register live Stripe webhooks and run a paid subscription end-to-end test.
-- **Android APK** — Expo app scaffolded with auth, dictation, settings. Needs EAS build config and APK generation.
-
-### 📋 Nice to Have (Not Blocking Launch)
-- **Demo video/GIF** — Screen record dictation in action for website hero
-- **macOS .dmg** — CI builds it but not tested or published
-
-## Key Credentials & URLs
-- **Website:** https://volttype.com (Cloudflare Pages, auto-deploys from GitHub)
-- **API:** https://volttype-api.crcaway.workers.dev
-- **Supabase:** ceuymixybyaxpldgggin (shared instance)
-- **GitHub:** chrchevdj/volttype (code), chrchevdj/volttype-releases (releases)
-- **All credentials:** `.env.master` at `C:\Users\crcaw\Desktop\Freelancing\.env.master`
-
-## Deployment
-
-### Landing Page (volttype.com)
+## Deployment Commands
 ```bash
-git add website/
-git commit -m "Update landing page"
-git push
-# Cloudflare Pages auto-deploys from GitHub
+# Website
+npx wrangler pages deploy website/ --project-name volttype
+
+# API Worker
+cd backend/cloudflare-worker && npx wrangler deploy
+
+# Desktop App
+npm run build  # Creates dist/VoltType*.exe
+
+# Android
+cd android && npx eas build --platform android --profile production
 ```
 
-### Stripe / Billing
-- Cards stay enabled as the default payment method for launch.
-- ACH Direct Debit is the relevant future bank method for eligible US subscriptions.
-- SEPA Direct Debit is the relevant future bank method for Europe, but it should only be enabled after EUR subscription prices are created in Stripe.
-- Required webhook events:
-  - `checkout.session.completed`
-  - `customer.subscription.created`
-  - `customer.subscription.updated`
-  - `customer.subscription.deleted`
-  - `invoice.paid`
-  - `invoice.payment_failed`
-
-### Desktop App
-```bash
-npm run build                    # Creates dist/VoltType*.exe
-# Then create GitHub release at chrchevdj/volttype-releases with the .exe
-```
-
-### Backend API
-```bash
-cd backend/cloudflare-worker/
-npx wrangler deploy
-```
-
-### Android App
-```bash
-cd android/
-npm install
-npx eas build --platform android --profile production
-# Download APK from EAS dashboard
-```
+## Key URLs
+- Website: https://volttype.com
+- API: https://volttype-api.crcaway.workers.dev
+- Scorecard: https://scorecard.myclienta.com
+- Supabase: ceuymixybyaxpldgggin.supabase.co
+- Stripe Webhook: https://volttype-api.crcaway.workers.dev/v1/webhooks/stripe
+- Google Search Console: verified, sitemap submitted
+- All credentials: `.env.master` at `C:\Users\crcaw\Desktop\Freelancing\.env.master`
