@@ -824,11 +824,11 @@
     <div class="nav-inner">
       <a href="/" class="nav-brand">VoltType</a>
       <div class="nav-links">
-      <a href="#features">Features</a>
-      <a href="#pricing">Pricing</a>
-      <a href="#compare">Use Cases</a>
-      <a href="#download">Download</a>
-        <button class="nav-cta" id="nav-cta-btn" type="button">Sign Up Free</button>
+      <a href="#features" data-i18n="navFeatures">Features</a>
+      <a href="#pricing" data-i18n="navPricing">Pricing</a>
+      <a href="#compare" data-i18n="navUseCases">Use Cases</a>
+      <a href="#download" data-i18n="navDownload">Download</a>
+        <button class="nav-cta" id="nav-cta-btn" type="button" data-i18n="navSignup">Sign Up Free</button>
       </div>
       <div class="nav-user hidden" id="nav-user">
         <a href="/admin.html" id="nav-admin-link" style="display:none;font-size:13px;color:#7c3aed;font-weight:600;text-decoration:none;">Admin</a>
@@ -880,17 +880,17 @@
   <main id="main-content">
   <!-- Hero -->
   <section class="hero">
-    <div class="hero-badge">Voice typing, AI rewrite, and AI notes in one Windows workspace</div>
-    <h1>Speak once. <span>Turn it into work.</span></h1>
-    <p>VoltType is the voice-first AI workspace for Windows. Dictate in any app, clean up your writing with voice commands, and turn rough speech into notes, summaries, and follow-ups.</p>
+    <div class="hero-badge" data-i18n="heroBadge">Voice typing, AI rewrite, and AI notes in one Windows workspace</div>
+    <h1 data-i18n="heroH1">Speak once. <span>Turn it into work.</span></h1>
+    <p data-i18n="heroP">VoltType is the voice-first AI workspace for Windows. Dictate in any app, clean up your writing with voice commands, and turn rough speech into notes, summaries, and follow-ups.</p>
     <div class="hero-buttons">
       <a href="https://github.com/chrchevdj/volttype-releases/releases/latest" class="btn-hero btn-primary" id="download-btn" style="font-size: 18px; padding: 16px 36px;">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Download Free for Windows
+        <span data-i18n="heroBtn">Download Free for Windows</span>
       </a>
-      <button class="btn-hero btn-secondary-hero" id="hero-signup-btn" type="button">Create Account</button>
+      <button class="btn-hero btn-secondary-hero" id="hero-signup-btn" type="button" data-i18n="heroSignup">Create Account</button>
     </div>
-    <p class="hero-note">Free tier — 10 minutes/day. No credit card needed. Windows beta available now. <span id="download-version"></span></p>
+    <p class="hero-note"><span data-i18n="heroNote">Free tier — 10 minutes/day. No credit card needed. Windows beta available now.</span> <span id="download-version"></span></p>
     <div class="hero-social-proof">
       <div class="proof-item">
         <span>&#x1F399;</span>
@@ -1014,31 +1014,31 @@
 
   <!-- How it works -->
   <section class="section">
-    <h2 class="section-title">How It Works</h2>
-    <p class="section-sub">Capture the thought, clean it up, and keep moving.</p>
+    <h2 class="section-title" data-i18n="howTitle">How It Works</h2>
+    <p class="section-sub" data-i18n="howSub">Capture the thought, clean it up, and keep moving.</p>
     <div class="steps-grid">
       <div class="step-card">
         <div class="step-num">1</div>
-        <h3>Download & Install</h3>
-        <p>One-click installer for Windows. No accounts required for the free tier.</p>
+        <h3 data-i18n="step1">Download & Install</h3>
+        <p data-i18n="step1p">One-click installer for Windows. No accounts required for the free tier.</p>
       </div>
       <div class="step-card">
         <div class="step-num">2</div>
-        <h3>Hold Ctrl+Space & Speak</h3>
-        <p>Speak in email, chat, docs, or your own note workspace without switching tools.</p>
+        <h3 data-i18n="step2">Hold Ctrl+Space & Speak</h3>
+        <p data-i18n="step2p">Speak in email, chat, docs, or your own note workspace without switching tools.</p>
       </div>
       <div class="step-card">
         <div class="step-num">3</div>
-        <h3>Rewrite or Turn It Into Notes</h3>
-        <p>Use voice commands to polish the writing, summarize it, or turn it into action items and shareable notes.</p>
+        <h3 data-i18n="step3">Rewrite or Turn It Into Notes</h3>
+        <p data-i18n="step3p">Use voice commands to polish the writing, summarize it, or turn it into action items and shareable notes.</p>
       </div>
     </div>
   </section>
 
   <!-- Features -->
   <section class="section features-bg" id="features">
-    <h2 class="section-title">Why VoltType?</h2>
-    <p class="section-sub">Built for people who want to capture ideas quickly and leave with clean output.</p>
+    <h2 class="section-title" data-i18n="featTitle">Why VoltType?</h2>
+    <p class="section-sub" data-i18n="featSub">Built for people who want to capture ideas quickly and leave with clean output.</p>
     <div class="features-grid">
       <div class="feature-card">
         <div class="feature-icon" style="background: linear-gradient(135deg, #ede9fe, #e0e7ff);">&#x26A1;</div>
@@ -1140,8 +1140,8 @@
 
   <!-- Testimonials -->
   <section class="section" id="testimonials">
-    <h2 class="section-title">What Users Say</h2>
-    <p class="section-sub">Real feedback from real people using VoltType every day.</p>
+    <h2 class="section-title" data-i18n="testTitle">What Users Say</h2>
+    <p class="section-sub" data-i18n="testSub">Real feedback from real people using VoltType every day.</p>
     <div class="testimonials-grid">
       <div class="testimonial-card">
         <div class="testimonial-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
@@ -1181,7 +1181,7 @@
 
   <!-- Pricing -->
   <section class="section" id="pricing">
-    <h2 class="section-title">Simple Pricing</h2>
+    <h2 class="section-title" data-i18n="priceTitle">Simple Pricing</h2>
     <p class="section-sub">Start with cards for the fastest setup today. Bank debit can be enabled later for eligible regions and plans.</p>
     <div class="pricing-grid">
       <div class="price-card">
@@ -1392,8 +1392,8 @@
 
   <!-- Download -->
   <section class="section download-section" id="download">
-    <h2 class="section-title">Download VoltType</h2>
-    <p class="section-sub">Download, create an account, and start voice typing.</p>
+    <h2 class="section-title" data-i18n="dlTitle">Download VoltType</h2>
+    <p class="section-sub" data-i18n="dlSub">Download, create an account, and start voice typing.</p>
     <div class="download-buttons">
       <a href="https://github.com/chrchevdj/volttype-releases/releases/latest" class="btn-hero btn-primary" id="download-btn-2" style="font-size: 18px; padding: 16px 36px;">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -2079,6 +2079,186 @@
         obs.observe(vtaEl);
       }
     })();
+
+    // i18n translations
+    const i18n = {
+      en: {
+        heroBadge: 'Voice typing, AI rewrite, and AI notes in one Windows workspace',
+        heroH1: 'Speak once. <span>Turn it into work.</span>',
+        heroP: 'VoltType is the voice-first AI workspace for Windows. Dictate in any app, clean up your writing with voice commands, and turn rough speech into notes, summaries, and follow-ups.',
+        heroBtn: 'Download Free for Windows',
+        heroSignup: 'Create Account',
+        heroNote: 'Free tier — 10 minutes/day. No credit card needed. Windows beta available now.',
+        howTitle: 'How It Works',
+        howSub: 'Capture the thought, clean it up, and keep moving.',
+        step1: 'Download & Install', step1p: 'One-click installer for Windows. No accounts required for the free tier.',
+        step2: 'Hold Ctrl+Space & Speak', step2p: 'Speak in email, chat, docs, or your own note workspace without switching tools.',
+        step3: 'Rewrite or Turn It Into Notes', step3p: 'Use AI commands to fix grammar, make text formal, or create summaries and follow-ups.',
+        featTitle: 'Features', featSub: 'Built to move fast and stay out of your way.',
+        testTitle: 'What Users Say', testSub: 'Real feedback from real people using VoltType every day.',
+        priceTitle: 'Simple Pricing', priceFree: 'Free Trial', priceBasic: 'Basic', pricePro: 'Pro',
+        dlTitle: 'Download VoltType', dlSub: 'Windows 10/11 required. Free tier — no credit card needed.',
+        navFeatures: 'Features', navPricing: 'Pricing', navUseCases: 'Use Cases', navDownload: 'Download', navSignup: 'Sign Up Free',
+        bnFeatures: 'Features', bnReviews: 'Reviews', bnPricing: 'Pricing', bnDownload: 'Download', bnSignup: 'Sign Up',
+      },
+      ro: {
+        heroBadge: 'Dictare vocala, rescriere AI si note AI intr-un singur spatiu de lucru Windows',
+        heroH1: 'Vorbeste o data. <span>Transforma in munca.</span>',
+        heroP: 'VoltType este spatiul de lucru AI bazat pe voce pentru Windows. Dicteaza in orice aplicatie, corecteaza textul cu comenzi vocale si transforma vorbirea in note, rezumate si follow-up-uri.',
+        heroBtn: 'Descarca gratuit pentru Windows',
+        heroSignup: 'Creeaza cont',
+        heroNote: 'Plan gratuit — 10 minute/zi. Fara card de credit. Beta Windows disponibil acum.',
+        howTitle: 'Cum functioneaza',
+        howSub: 'Capteaza ideea, curata textul si mergi mai departe.',
+        step1: 'Descarca si instaleaza', step1p: 'Installer cu un singur click pentru Windows. Nu e nevoie de cont pentru planul gratuit.',
+        step2: 'Tine Ctrl+Space si vorbeste', step2p: 'Vorbeste in email, chat, documente sau spatiul tau de note fara sa schimbi aplicatia.',
+        step3: 'Rescrie sau transforma in note', step3p: 'Foloseste comenzi AI pentru a corecta gramatica, a face textul formal sau a crea rezumate.',
+        featTitle: 'Functii', featSub: 'Construit sa fie rapid si sa nu te incurce.',
+        testTitle: 'Ce spun utilizatorii', testSub: 'Feedback real de la oameni reali care folosesc VoltType zilnic.',
+        priceTitle: 'Preturi simple', priceFree: 'Gratuit', priceBasic: 'Basic', pricePro: 'Pro',
+        dlTitle: 'Descarca VoltType', dlSub: 'Windows 10/11 necesar. Plan gratuit — fara card de credit.',
+        navFeatures: 'Functii', navPricing: 'Preturi', navUseCases: 'Utilizari', navDownload: 'Descarca', navSignup: 'Inregistrare',
+        bnFeatures: 'Functii', bnReviews: 'Recenzii', bnPricing: 'Preturi', bnDownload: 'Descarca', bnSignup: 'Cont',
+      },
+      da: {
+        heroBadge: 'Stemme-diktering, AI-omskrivning og AI-noter i et Windows-arbejdsomrade',
+        heroH1: 'Tal en gang. <span>Gor det til arbejde.</span>',
+        heroP: 'VoltType er det stemme-forst AI-arbejdsomrade til Windows. Dikter i enhver app, ryd op i din tekst med stemmekommandoer, og forvandl tale til noter, resumeer og opfolgninger.',
+        heroBtn: 'Download gratis til Windows',
+        heroSignup: 'Opret konto',
+        heroNote: 'Gratis plan — 10 minutter/dag. Intet kreditkort krevet. Windows beta tilgengelig nu.',
+        howTitle: 'Sadan virker det',
+        howSub: 'Fang tanken, ryd op og kom videre.',
+        step1: 'Download og installer', step1p: 'Et-klik installation til Windows. Ingen konto nødvendig for gratis planen.',
+        step2: 'Hold Ctrl+Space og tal', step2p: 'Tal i email, chat, dokumenter eller dit eget noteomrade uden at skifte værktøj.',
+        step3: 'Omskriv eller lav noter', step3p: 'Brug AI-kommandoer til at rette grammatik, gore tekst formel eller lave resumeer.',
+        featTitle: 'Funktioner', featSub: 'Bygget til at vere hurtig og ikke sta i vejen.',
+        testTitle: 'Hvad brugere siger', testSub: 'Reel feedback fra rigtige mennesker der bruger VoltType hver dag.',
+        priceTitle: 'Enkel prissaetning', priceFree: 'Gratis', priceBasic: 'Basis', pricePro: 'Pro',
+        dlTitle: 'Download VoltType', dlSub: 'Windows 10/11 pakreves. Gratis plan — intet kreditkort krevet.',
+        navFeatures: 'Funktioner', navPricing: 'Priser', navUseCases: 'Brug', navDownload: 'Download', navSignup: 'Tilmeld dig',
+        bnFeatures: 'Funktioner', bnReviews: 'Anmeldelser', bnPricing: 'Priser', bnDownload: 'Download', bnSignup: 'Tilmeld',
+      },
+      de: {
+        heroBadge: 'Sprachdiktat, KI-Umschreibung und KI-Notizen in einem Windows-Arbeitsbereich',
+        heroH1: 'Einmal sprechen. <span>In Arbeit verwandeln.</span>',
+        heroP: 'VoltType ist der sprachbasierte KI-Arbeitsbereich fur Windows. Diktiere in jeder App, bereinige deinen Text mit Sprachbefehlen und verwandle Sprache in Notizen, Zusammenfassungen und Follow-ups.',
+        heroBtn: 'Kostenlos fur Windows herunterladen',
+        heroSignup: 'Konto erstellen',
+        heroNote: 'Kostenloser Plan — 10 Minuten/Tag. Keine Kreditkarte erforderlich. Windows Beta jetzt verfugbar.',
+        howTitle: 'So funktioniert es',
+        howSub: 'Gedanken festhalten, aufraumen und weitermachen.',
+        step1: 'Herunterladen & Installieren', step1p: 'Ein-Klick-Installer fur Windows. Kein Konto fur den kostenlosen Plan erforderlich.',
+        step2: 'Ctrl+Space halten & sprechen', step2p: 'Sprich in E-Mail, Chat, Dokumenten oder deinem Notizbereich ohne Werkzeugwechsel.',
+        step3: 'Umschreiben oder Notizen erstellen', step3p: 'Verwende KI-Befehle um Grammatik zu korrigieren, Text formell zu machen oder Zusammenfassungen zu erstellen.',
+        featTitle: 'Funktionen', featSub: 'Gebaut um schnell zu sein und nicht im Weg zu stehen.',
+        testTitle: 'Was Nutzer sagen', testSub: 'Echtes Feedback von echten Menschen die VoltType taglich nutzen.',
+        priceTitle: 'Einfache Preise', priceFree: 'Kostenlos', priceBasic: 'Basis', pricePro: 'Pro',
+        dlTitle: 'VoltType herunterladen', dlSub: 'Windows 10/11 erforderlich. Kostenloser Plan — keine Kreditkarte notig.',
+        navFeatures: 'Funktionen', navPricing: 'Preise', navUseCases: 'Anwendungen', navDownload: 'Download', navSignup: 'Registrieren',
+        bnFeatures: 'Funktionen', bnReviews: 'Bewertungen', bnPricing: 'Preise', bnDownload: 'Download', bnSignup: 'Konto',
+      },
+      fr: {
+        heroBadge: 'Dictee vocale, reecriture IA et notes IA dans un espace de travail Windows',
+        heroH1: 'Parlez une fois. <span>Transformez en travail.</span>',
+        heroP: 'VoltType est l\'espace de travail IA vocal pour Windows. Dictez dans n\'importe quelle app, nettoyez votre texte avec des commandes vocales et transformez la parole en notes, resumes et suivis.',
+        heroBtn: 'Telecharger gratuitement pour Windows',
+        heroSignup: 'Creer un compte',
+        heroNote: 'Plan gratuit — 10 minutes/jour. Pas de carte de credit requise. Beta Windows disponible maintenant.',
+        howTitle: 'Comment ca marche',
+        howSub: 'Capturez l\'idee, nettoyez et avancez.',
+        step1: 'Telecharger et installer', step1p: 'Installation en un clic pour Windows. Pas de compte requis pour le plan gratuit.',
+        step2: 'Maintenez Ctrl+Space et parlez', step2p: 'Parlez dans l\'email, le chat, les documents ou votre espace de notes sans changer d\'outil.',
+        step3: 'Reecrivez ou creez des notes', step3p: 'Utilisez des commandes IA pour corriger la grammaire, formaliser le texte ou creer des resumes.',
+        featTitle: 'Fonctionnalites', featSub: 'Concu pour etre rapide et ne pas gener.',
+        testTitle: 'Ce que disent les utilisateurs', testSub: 'Des retours reels de vraies personnes utilisant VoltType au quotidien.',
+        priceTitle: 'Tarification simple', priceFree: 'Gratuit', priceBasic: 'Basique', pricePro: 'Pro',
+        dlTitle: 'Telecharger VoltType', dlSub: 'Windows 10/11 requis. Plan gratuit — pas de carte de credit requise.',
+        navFeatures: 'Fonctionnalites', navPricing: 'Tarifs', navUseCases: 'Usages', navDownload: 'Telecharger', navSignup: 'S\'inscrire',
+        bnFeatures: 'Fonctions', bnReviews: 'Avis', bnPricing: 'Tarifs', bnDownload: 'Telecharger', bnSignup: 'Compte',
+      },
+      es: {
+        heroBadge: 'Dictado por voz, reescritura IA y notas IA en un espacio de trabajo Windows',
+        heroH1: 'Habla una vez. <span>Conviertelo en trabajo.</span>',
+        heroP: 'VoltType es el espacio de trabajo IA basado en voz para Windows. Dicta en cualquier app, limpia tu texto con comandos de voz y convierte el habla en notas, resumenes y seguimientos.',
+        heroBtn: 'Descargar gratis para Windows',
+        heroSignup: 'Crear cuenta',
+        heroNote: 'Plan gratuito — 10 minutos/dia. Sin tarjeta de credito. Beta de Windows disponible ahora.',
+        howTitle: 'Como funciona',
+        howSub: 'Captura la idea, limpiala y sigue adelante.',
+        step1: 'Descargar e instalar', step1p: 'Instalador de un clic para Windows. No se requiere cuenta para el plan gratuito.',
+        step2: 'Manten Ctrl+Space y habla', step2p: 'Habla en email, chat, documentos o tu espacio de notas sin cambiar de herramienta.',
+        step3: 'Reescribe o crea notas', step3p: 'Usa comandos IA para corregir gramatica, formalizar texto o crear resumenes.',
+        featTitle: 'Caracteristicas', featSub: 'Construido para ser rapido y no estorbar.',
+        testTitle: 'Que dicen los usuarios', testSub: 'Comentarios reales de personas reales que usan VoltType a diario.',
+        priceTitle: 'Precios simples', priceFree: 'Gratis', priceBasic: 'Basico', pricePro: 'Pro',
+        dlTitle: 'Descargar VoltType', dlSub: 'Windows 10/11 requerido. Plan gratuito — sin tarjeta de credito.',
+        navFeatures: 'Funciones', navPricing: 'Precios', navUseCases: 'Usos', navDownload: 'Descargar', navSignup: 'Registrarse',
+        bnFeatures: 'Funciones', bnReviews: 'Resenas', bnPricing: 'Precios', bnDownload: 'Descargar', bnSignup: 'Cuenta',
+      },
+      el: {
+        heroBadge: 'Φωνητικη πληκτρολογηση, AI επανεγγραφη και AI σημειωσεις σε εναν χωρο εργασιας Windows',
+        heroH1: 'Μιλησε μια φορα. <span>Μετατρεψε το σε δουλεια.</span>',
+        heroP: 'Το VoltType ειναι ο χωρος εργασιας AI με φωνη για Windows. Υπαγορευσε σε οποιαδηποτε εφαρμογη, καθαρισε το κειμενο σου με φωνητικες εντολες και μετατρεψε την ομιλια σε σημειωσεις και περιληψεις.',
+        heroBtn: 'Κατεβασε δωρεαν για Windows',
+        heroSignup: 'Δημιουργια λογαριασμου',
+        heroNote: 'Δωρεαν πλανο — 10 λεπτα/μερα. Δεν χρειαζεται πιστωτικη καρτα.',
+        howTitle: 'Πως λειτουργει', howSub: 'Συλλαβε την ιδεα, καθαρισε την και προχωρα.',
+        step1: 'Κατεβασμα και εγκατασταση', step1p: 'Εγκατασταση με ενα κλικ για Windows.',
+        step2: 'Κρατα Ctrl+Space και μιλα', step2p: 'Μιλα σε email, chat, εγγραφα χωρις να αλλαζεις εργαλειο.',
+        step3: 'Ξαναγραψε η δημιουργησε σημειωσεις', step3p: 'Χρησιμοποιησε εντολες AI για διορθωση γραμματικης η δημιουργια περιληψεων.',
+        featTitle: 'Χαρακτηριστικα', featSub: 'Φτιαγμενο για ταχυτητα.',
+        testTitle: 'Τι λενε οι χρηστες', testSub: 'Πραγματικα σχολια απο χρηστες του VoltType.',
+        priceTitle: 'Απλη τιμολογηση', priceFree: 'Δωρεαν', priceBasic: 'Βασικο', pricePro: 'Pro',
+        dlTitle: 'Κατεβασε το VoltType', dlSub: 'Απαιτειται Windows 10/11. Δωρεαν πλανο.',
+        navFeatures: 'Χαρακτηριστικα', navPricing: 'Τιμες', navUseCases: 'Χρησεις', navDownload: 'Κατεβασμα', navSignup: 'Εγγραφη',
+        bnFeatures: 'Χαρ/κα', bnReviews: 'Κριτικες', bnPricing: 'Τιμες', bnDownload: 'Κατεβασμα', bnSignup: 'Εγγραφη',
+      },
+      mk: {
+        heroBadge: 'Гласовно диктирање, AI преработка и AI белешки во еден Windows работен простор',
+        heroH1: 'Зборувај еднаш. <span>Претвори го во работа.</span>',
+        heroP: 'VoltType е работен простор базиран на глас за Windows. Диктирај во секоја апликација, среди го текстот со гласовни команди и претвори го зборувањето во белешки, резимеа и следења.',
+        heroBtn: 'Преземи бесплатно за Windows',
+        heroSignup: 'Креирај сметка',
+        heroNote: 'Бесплатен план — 10 минути/ден. Без кредитна картичка.',
+        howTitle: 'Како функционира', howSub: 'Фати ја идејата, среди ја и продолжи.',
+        step1: 'Преземи и инсталирај', step1p: 'Инсталација со еден клик за Windows.',
+        step2: 'Држи Ctrl+Space и зборувај', step2p: 'Зборувај во email, chat, документи без менување на алатки.',
+        step3: 'Преработи или направи белешки', step3p: 'Користи AI команди за граматика, формален текст или резимеа.',
+        featTitle: 'Функции', featSub: 'Направено за брзина.',
+        testTitle: 'Што велат корисниците', testSub: 'Реални коментари од реални корисници на VoltType.',
+        priceTitle: 'Едноставни цени', priceFree: 'Бесплатно', priceBasic: 'Основен', pricePro: 'Про',
+        dlTitle: 'Преземи VoltType', dlSub: 'Потребен Windows 10/11. Бесплатен план.',
+        navFeatures: 'Функции', navPricing: 'Цени', navUseCases: 'Употреби', navDownload: 'Преземи', navSignup: 'Регистрација',
+        bnFeatures: 'Функции', bnReviews: 'Оцени', bnPricing: 'Цени', bnDownload: 'Преземи', bnSignup: 'Сметка',
+      },
+    };
+
+    // Language switcher
+    const langSelect = document.getElementById('lang-select');
+    const savedLang = localStorage.getItem('vt_lang') || 'en';
+    if (langSelect) langSelect.value = savedLang;
+    function applyLang(lang) {
+      const t = i18n[lang] || i18n.en;
+      localStorage.setItem('vt_lang', lang);
+      document.querySelectorAll('[data-i18n]').forEach(function(el) {
+        const key = el.getAttribute('data-i18n');
+        if (t[key]) {
+          if (el.tagName === 'INPUT' || el.tagName === 'BUTTON') {
+            if (el.type === 'submit') el.value = t[key];
+            else el.textContent = t[key];
+          } else if (key === 'heroH1') {
+            el.innerHTML = t[key];
+          } else {
+            el.textContent = t[key];
+          }
+        }
+      });
+    }
+    if (langSelect) {
+      langSelect.addEventListener('change', function() { applyLang(this.value); });
+    }
+    if (savedLang !== 'en') applyLang(savedLang);
 
     // PWA service worker
     if ('serviceWorker' in navigator) {
