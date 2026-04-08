@@ -407,6 +407,52 @@
     @keyframes vtaWave{0%,100%{height:4px}50%{height:24px}}
     @keyframes vtaFadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 
+    /* Demo mobile */
+    @media (max-width: 768px) {
+      .vta{border-radius:12px}
+      .vta-bar{padding:8px 12px;gap:8px}
+      .vta-dots span{width:8px;height:8px}
+      .vta-url{font-size:10px;padding:4px 8px}
+      .vta-rec{font-size:9px;padding:2px 6px}
+      .vta-body{min-height:200px}
+      .vta-scene{min-height:200px;flex-direction:column}
+      .vta-np-text{font-size:11px;padding:10px 12px;min-height:100px;line-height:1.5}
+      .vta-np-bar{font-size:10px;padding:5px 10px}
+      .vta-np-hint{display:none}
+      .vta-panel{width:100%;flex-direction:row;padding:10px 12px;gap:8px;border-left:none;border-top:1px solid #312e81;flex-wrap:wrap;justify-content:center}
+      .vta-panel-mic{width:32px;height:32px;font-size:14px}
+      .vta-panel-status{font-size:10px;min-height:auto}
+      .vta-waves{height:20px}
+      .vta-waves span{width:4px}
+      .vta-panel-hint{font-size:9px;padding:2px 6px}
+      .vta-sidebar{width:100%;flex-direction:row;padding:8px;gap:4px;overflow-x:auto}
+      .vta-sb-logo{display:none}
+      .vta-nav{font-size:10px;padding:6px 8px;white-space:nowrap}
+      .vta-main{padding:12px}
+      .vta-main-h{font-size:13px}
+      .vta-main-sub{font-size:10px;margin-bottom:10px}
+      .vta-wb-hd{font-size:9px;padding:4px 8px;grid-template-columns:1fr 1fr 32px}
+      .vta-wb-row{font-size:10px;padding:6px 8px;grid-template-columns:1fr 1fr 32px}
+      .vta-stats{grid-template-columns:repeat(3,1fr);gap:6px}
+      .vta-stat{padding:8px 6px}
+      .vta-sn{font-size:15px}
+      .vta-sl{font-size:9px}
+      .vta-bars{height:48px}
+      .vta-ctrls{padding:6px 10px;gap:8px}
+      .vta-pbtn{width:26px;height:26px}
+      .vta-tlbl{font-size:10px}
+      .vta-cname{font-size:10px}
+      .vta-obtn{width:48px;height:48px}
+      .vta-overlay p{font-size:13px}
+    }
+    @media (max-width: 380px) {
+      .vta{border-radius:8px}
+      .vta-np-text{font-size:10px;padding:8px 10px}
+      .vta-stats{grid-template-columns:1fr 1fr 1fr;gap:4px}
+      .vta-sn{font-size:13px}
+      .vta-cname{display:none}
+    }
+
     /* Testimonials */
     .testimonials-grid {
       display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
