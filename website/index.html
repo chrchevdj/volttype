@@ -159,69 +159,49 @@
     }
     .dark-toggle:hover { border-color: var(--purple); color: var(--purple); }
 
-    /* Mobile hamburger */
-    .nav-hamburger {
+    /* Mobile hamburger (hidden — replaced by bottom nav) */
+    .nav-hamburger { display: none; }
+    .nav-mobile-menu { display: none; }
+
+    /* Bottom nav (mobile only) */
+    .bottom-nav {
       display: none;
-      flex-direction: column;
-      gap: 5px;
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 6px;
-      z-index: 101;
-    }
-    .nav-hamburger span {
-      display: block;
-      width: 24px;
-      height: 2px;
-      background: var(--text);
-      border-radius: 2px;
-      transition: all 0.3s;
-    }
-    .nav-mobile-menu {
-      display: none;
-      position: absolute;
-      top: 64px;
-      left: 0;
-      right: 0;
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
       background: var(--nav-bg);
       backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--nav-border);
-      padding: 16px 24px 20px;
-      flex-direction: column;
-      gap: 4px;
-      z-index: 99;
+      border-top: 1px solid var(--nav-border);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
     }
-    .nav-mobile-menu.open { display: flex; }
-    .nav-mobile-menu a {
-      font-size: 15px;
-      font-weight: 500;
-      color: var(--text-secondary);
-      padding: 10px 0;
-      border-bottom: 1px solid rgba(0,0,0,0.05);
-      transition: color 0.2s;
+    .bottom-nav-inner {
+      display: flex; justify-content: space-around; align-items: center;
+      max-width: 500px; margin: 0 auto; padding: 6px 0 4px;
     }
-    .nav-mobile-menu a:last-child { border-bottom: none; }
-    .nav-mobile-menu a:hover { color: var(--text); }
-    .nav-mobile-cta {
-      margin-top: 8px;
-      background: linear-gradient(135deg, var(--purple), var(--blue));
-      color: white !important;
-      -webkit-text-fill-color: white;
-      padding: 12px 20px;
-      border-radius: 10px;
-      font-weight: 700;
-      text-align: center;
-      box-shadow: 0 2px 12px rgba(124,58,237,0.3);
-      border-bottom: none !important;
-      border: none;
-      cursor: pointer;
+    .bottom-nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      text-decoration: none; color: var(--text-secondary);
+      font-size: 10px; font-weight: 600; padding: 4px 8px;
+      border-radius: 8px; transition: color 0.2s; background: none; border: none; cursor: pointer;
+      -webkit-text-fill-color: var(--text-secondary);
     }
+    .bottom-nav-item:hover, .bottom-nav-item.active { color: var(--purple); -webkit-text-fill-color: var(--purple); }
+    .bottom-nav-item svg { width: 22px; height: 22px; }
+
+    /* Language selector */
+    .lang-select {
+      background: none; border: 1px solid rgba(128,128,128,0.25);
+      border-radius: 8px; padding: 4px 8px;
+      font-size: 12px; font-weight: 600; color: var(--text-secondary);
+      cursor: pointer; font-family: inherit;
+    }
+    .lang-select:focus { outline: none; border-color: var(--purple); }
+
     @media (max-width: 768px) {
       .nav-links { display: none; }
-      .nav-hamburger { display: flex; }
       nav { padding: 0 16px; }
       .nav-inner { gap: 8px; }
+      .bottom-nav { display: block; }
+      body { padding-bottom: 64px; }
+      footer { padding-bottom: 80px; }
     }
 
     /* Hero */
@@ -617,7 +597,6 @@
       nav { padding: 0 16px; }
       .nav-inner { gap: 8px; }
       .nav-links { display: none; }
-      .nav-hamburger { display: flex; }
       .nav-user { gap: 8px; }
       .nav-user-email { display: none; }
       .nav-logout { font-size: 11px; padding: 3px 8px; }
@@ -721,20 +700,43 @@
         <span class="nav-user-email" id="nav-user-email"></span>
         <button class="nav-logout" id="nav-logout">Sign Out</button>
       </div>
+      <select class="lang-select" id="lang-select" aria-label="Language">
+        <option value="en">EN</option>
+        <option value="ro">RO</option>
+        <option value="da">DA</option>
+        <option value="de">DE</option>
+        <option value="fr">FR</option>
+        <option value="es">ES</option>
+        <option value="el">EL</option>
+        <option value="mk">MK</option>
+      </select>
       <button class="dark-toggle" id="dark-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">🌙</button>
-      <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu">
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
     </div>
-    <!-- Mobile menu -->
-    <div class="nav-mobile-menu" id="nav-mobile-menu">
-      <a href="#features" onclick="closeMobileMenu()">Features</a>
-      <a href="#pricing" onclick="closeMobileMenu()">Pricing</a>
-      <a href="#compare" onclick="closeMobileMenu()">Use Cases</a>
-      <a href="#download" onclick="closeMobileMenu()">Download</a>
-      <button class="nav-mobile-cta" id="nav-mobile-cta-btn" type="button">Sign Up Free</button>
+  </nav>
+
+  <!-- Bottom nav (mobile only) -->
+  <nav class="bottom-nav" id="bottom-nav" aria-label="Mobile navigation">
+    <div class="bottom-nav-inner">
+      <a href="#features" class="bottom-nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        Features
+      </a>
+      <a href="#testimonials" class="bottom-nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        Reviews
+      </a>
+      <a href="#pricing" class="bottom-nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        Pricing
+      </a>
+      <a href="#download" class="bottom-nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download
+      </a>
+      <button class="bottom-nav-item" id="bottom-nav-signup" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Sign Up
+      </button>
     </div>
   </nav>
 
@@ -1851,28 +1853,34 @@
         });
       }
 
-      // Mobile hamburger menu
-      const hamburger = document.getElementById('nav-hamburger');
-      const mobileMenu = document.getElementById('nav-mobile-menu');
-      if (hamburger && mobileMenu) {
-        hamburger.addEventListener('click', function() {
-          mobileMenu.classList.toggle('open');
+      // Bottom nav signup
+      const bottomSignup = document.getElementById('bottom-nav-signup');
+      if (bottomSignup) {
+        bottomSignup.addEventListener('click', function() {
+          showAuthModal('signup');
         });
-        // Wire mobile CTA to same handler as desktop
-        const mobileCta = document.getElementById('nav-mobile-cta-btn');
-        if (mobileCta) {
-          mobileCta.addEventListener('click', function() {
-            closeMobileMenu();
-            showAuthModal('signup');
+      }
+
+      // Bottom nav - highlight active section on scroll
+      const bottomNavItems = document.querySelectorAll('.bottom-nav-item[href]');
+      const sections = [];
+      bottomNavItems.forEach(function(item) {
+        const id = item.getAttribute('href').replace('#', '');
+        const el = document.getElementById(id);
+        if (el) sections.push({ id: id, el: el, nav: item });
+      });
+      if (sections.length > 0) {
+        window.addEventListener('scroll', function() {
+          const scrollY = window.scrollY + 200;
+          let current = sections[0];
+          sections.forEach(function(s) {
+            if (s.el.offsetTop <= scrollY) current = s;
           });
-        }
+          bottomNavItems.forEach(function(item) { item.classList.remove('active'); });
+          if (current) current.nav.classList.add('active');
+        }, { passive: true });
       }
     });
-
-    function closeMobileMenu() {
-      const mobileMenu = document.getElementById('nav-mobile-menu');
-      if (mobileMenu) mobileMenu.classList.remove('open');
-    }
 
     // PWA service worker
     if ('serviceWorker' in navigator) {
