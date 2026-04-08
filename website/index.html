@@ -324,6 +324,44 @@
     .feature-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
     .feature-card p { font-size: 14px; color: var(--text-secondary); }
 
+    /* Demo Video */
+    .demo-video-wrap {
+      position: relative;
+      max-width: 800px;
+      margin: 0 auto;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.12);
+      background: #000;
+      cursor: pointer;
+    }
+    .demo-video {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 16px;
+    }
+    .demo-play-btn {
+      position: absolute;
+      bottom: 16px;
+      right: 16px;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .demo-play-btn svg { width: 20px; height: 20px; }
+    .demo-video-wrap:hover .demo-play-btn { opacity: 1; }
+    .demo-play-btn.paused { opacity: 1; }
+
     /* Testimonials */
     .testimonials-grid {
       display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -626,6 +664,8 @@
       .price-amount { font-size: 36px; }
       .app-demo-section { padding: 32px 16px; }
       .app-demo-grid { grid-template-columns: 1fr; gap: 16px; }
+      .demo-video-wrap { border-radius: 12px; margin: 0 -4px; }
+      .demo-play-btn { opacity: 1; width: 40px; height: 40px; bottom: 12px; right: 12px; }
       .download-section { padding: 48px 16px; }
       .download-buttons { flex-direction: column; align-items: center; }
       footer { padding: 32px 16px; }
@@ -644,6 +684,7 @@
       .btn-hero { font-size: 14px; padding: 12px 16px; }
       .price-amount { font-size: 32px; }
       footer { padding: 28px 12px; }
+      .demo-video-wrap { border-radius: 8px; }
     }
     @media (prefers-reduced-motion: reduce) {
       html { scroll-behavior: auto; }
@@ -774,172 +815,20 @@
     </div>
   </section>
 
-  <!-- App Demo / Screenshots -->
-  <section class="app-demo-section">
-    <h2 class="section-title" style="text-align:center;font-size:22px;font-weight:800;color:#1e293b;margin-bottom:4px;">See It In Action</h2>
-    <p style="text-align:center;color:#64748b;font-size:15px;margin:0;">Real screenshots from VoltType running on Windows</p>
-    <div class="app-demo-grid">
-
-      <!-- Card 1: Listening overlay -->
-      <div class="app-demo-card">
-        <svg viewBox="0 0 420 240" xmlns="http://www.w3.org/2000/svg">
-          <!-- Desktop background -->
-          <rect width="420" height="240" fill="#1a1a2e"/>
-          <!-- Taskbar -->
-          <rect y="220" width="420" height="20" fill="#16213e"/>
-          <rect x="4" y="223" width="60" height="14" rx="3" fill="#0f3460"/>
-          <text x="34" y="233" font-family="Arial" font-size="8" fill="#94a3b8" text-anchor="middle">Start</text>
-          <rect x="370" y="224" width="46" height="12" rx="2" fill="#0f3460"/>
-          <text x="393" y="233" font-family="Arial" font-size="7" fill="#94a3b8" text-anchor="middle">9:41 AM</text>
-          <!-- VoltType overlay panel -->
-          <rect x="85" y="70" width="250" height="120" rx="14" fill="#1e1b4b" stroke="#4f46e5" stroke-width="1.5" filter="url(#glow)"/>
-          <defs>
-            <filter id="glow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-          </defs>
-          <!-- VoltType logo area -->
-          <text x="210" y="94" font-family="Arial" font-size="11" font-weight="bold" fill="#a5b4fc" text-anchor="middle">⚡ VoltType</text>
-          <!-- Listening indicator -->
-          <circle cx="210" cy="120" r="18" fill="#4f46e5" opacity="0.2"/>
-          <circle cx="210" cy="120" r="11" fill="#4f46e5"/>
-          <text x="210" y="124" font-family="Arial" font-size="11" fill="#fff" text-anchor="middle">🎤</text>
-          <!-- Waveform bars -->
-          <rect x="155" y="148" width="5" height="8" rx="2" fill="#6366f1" opacity="0.5"/>
-          <rect x="163" y="143" width="5" height="13" rx="2" fill="#818cf8"/>
-          <rect x="171" y="140" width="5" height="16" rx="2" fill="#a5b4fc"/>
-          <rect x="179" y="145" width="5" height="11" rx="2" fill="#818cf8"/>
-          <rect x="187" y="142" width="5" height="14" rx="2" fill="#a5b4fc"/>
-          <rect x="195" y="138" width="5" height="18" rx="2" fill="#6366f1"/>
-          <rect x="203" y="143" width="5" height="13" rx="2" fill="#818cf8"/>
-          <rect x="211" y="140" width="5" height="16" rx="2" fill="#a5b4fc"/>
-          <rect x="219" y="136" width="5" height="20" rx="2" fill="#6366f1"/>
-          <rect x="227" y="141" width="5" height="15" rx="2" fill="#818cf8"/>
-          <rect x="235" y="144" width="5" height="12" rx="2" fill="#a5b4fc"/>
-          <rect x="243" y="147" width="5" height="9" rx="2" fill="#6366f1" opacity="0.5"/>
-          <rect x="251" y="143" width="5" height="13" rx="2" fill="#818cf8"/>
-          <!-- Status text -->
-          <text x="210" y="178" font-family="Arial" font-size="9" fill="#a5b4fc" text-anchor="middle">Listening... (hold Ctrl+Space)</text>
-        </svg>
-        <div class="app-demo-label">🎤 Listening overlay — appears on any screen</div>
-      </div>
-
-      <!-- Card 2: Text being typed into an app -->
-      <div class="app-demo-card">
-        <svg viewBox="0 0 420 240" xmlns="http://www.w3.org/2000/svg">
-          <!-- Email client background -->
-          <rect width="420" height="240" fill="#f1f5f9"/>
-          <!-- Window chrome -->
-          <rect width="420" height="32" fill="#334155"/>
-          <circle cx="14" cy="16" r="5" fill="#ef4444"/>
-          <circle cx="28" cy="16" r="5" fill="#f59e0b"/>
-          <circle cx="42" cy="16" r="5" fill="#22c55e"/>
-          <text x="210" y="21" font-family="Arial" font-size="9" fill="#94a3b8" text-anchor="middle">Outlook — New Message</text>
-          <!-- Email compose area -->
-          <rect x="12" y="40" width="396" height="24" rx="3" fill="#fff" stroke="#e2e8f0" stroke-width="1"/>
-          <text x="20" y="56" font-family="Arial" font-size="9" fill="#64748b">To: john at company dot com</text>
-          <rect x="12" y="68" width="396" height="24" rx="3" fill="#fff" stroke="#e2e8f0" stroke-width="1"/>
-          <text x="20" y="84" font-family="Arial" font-size="9" fill="#1e293b">Subject: Follow-up on our meeting yesterday</text>
-          <!-- Body with typed text -->
-          <rect x="12" y="96" width="396" height="110" rx="3" fill="#fff" stroke="#e2e8f0" stroke-width="1"/>
-          <text x="20" y="112" font-family="Arial" font-size="8.5" fill="#1e293b">Hi John, I wanted to follow up on the points we</text>
-          <text x="20" y="125" font-family="Arial" font-size="8.5" fill="#1e293b">discussed yesterday. As I mentioned, the project</text>
-          <text x="20" y="138" font-family="Arial" font-size="8.5" fill="#1e293b">timeline needs to be adjusted to account for the</text>
-          <text x="20" y="151" font-family="Arial" font-size="8.5" fill="#1e293b">new requirements from the client. I suggest we</text>
-          <text x="20" y="164" font-family="Arial" font-size="8.5" fill="#1e293b">schedule a call early next week to align on this.|</text>
-          <!-- Blinking cursor -->
-          <rect x="290" y="157" width="2" height="11" fill="#4f46e5"/>
-          <!-- VoltType mini indicator -->
-          <rect x="345" y="188" width="60" height="16" rx="8" fill="#4f46e5" opacity="0.9"/>
-          <text x="375" y="199" font-family="Arial" font-size="7.5" fill="#fff" text-anchor="middle">⚡ VoltType</text>
-        </svg>
-        <div class="app-demo-label">✍️ Text typed directly into any app</div>
-      </div>
-
-      <!-- Card 3: Word Bank / vocabulary screen -->
-      <div class="app-demo-card">
-        <svg viewBox="0 0 420 240" xmlns="http://www.w3.org/2000/svg">
-          <!-- App window -->
-          <rect width="420" height="240" fill="#0f172a"/>
-          <rect width="420" height="36" fill="#1e293b"/>
-          <text x="16" y="23" font-family="Arial" font-size="12" font-weight="bold" fill="#f8fafc">⚡ VoltType</text>
-          <text x="380" y="23" font-family="Arial" font-size="14" fill="#64748b" text-anchor="middle">×</text>
-          <!-- Sidebar -->
-          <rect x="0" y="36" width="110" height="204" fill="#1e293b"/>
-          <rect x="8" y="50" width="94" height="26" rx="6" fill="#312e81"/>
-          <text x="55" y="67" font-family="Arial" font-size="9" fill="#a5b4fc" text-anchor="middle">🏠 Dashboard</text>
-          <text x="55" y="92" font-family="Arial" font-size="9" fill="#64748b" text-anchor="middle">📖 Word Bank</text>
-          <rect x="8" y="100" width="94" height="26" rx="6" fill="#1a1a3e"/>
-          <text x="55" y="117" font-family="Arial" font-size="9" fill="#818cf8" text-anchor="middle">📖 Word Bank</text>
-          <text x="55" y="142" font-family="Arial" font-size="9" fill="#64748b" text-anchor="middle">📊 Stats</text>
-          <text x="55" y="167" font-family="Arial" font-size="9" fill="#64748b" text-anchor="middle">⚙️ Settings</text>
-          <!-- Main content -->
-          <text x="130" y="58" font-family="Arial" font-size="11" font-weight="bold" fill="#f8fafc">Word Bank</text>
-          <text x="130" y="71" font-family="Arial" font-size="8" fill="#64748b">Custom words VoltType always recognizes correctly</text>
-          <!-- Word list -->
-          <rect x="120" y="80" width="288" height="22" rx="4" fill="#1e293b"/>
-          <text x="130" y="95" font-family="Arial" font-size="8.5" fill="#94a3b8">WORD / PHRASE</text>
-          <text x="310" y="95" font-family="Arial" font-size="8.5" fill="#94a3b8">USES</text>
-          <rect x="120" y="104" width="288" height="22" rx="4" fill="#312e81" opacity="0.3"/>
-          <text x="130" y="119" font-family="Arial" font-size="9" fill="#e2e8f0">Kubernetes</text><text x="310" y="119" font-family="Arial" font-size="9" fill="#64748b">47×</text>
-          <rect x="120" y="128" width="288" height="22" rx="4" fill="#0f172a"/>
-          <text x="130" y="143" font-family="Arial" font-size="9" fill="#e2e8f0">Dr. Johansson</text><text x="310" y="143" font-family="Arial" font-size="9" fill="#64748b">31×</text>
-          <rect x="120" y="152" width="288" height="22" rx="4" fill="#0f172a"/>
-          <text x="130" y="167" font-family="Arial" font-size="9" fill="#e2e8f0">PostgreSQL</text><text x="310" y="167" font-family="Arial" font-size="9" fill="#64748b">28×</text>
-          <rect x="120" y="176" width="288" height="22" rx="4" fill="#0f172a"/>
-          <text x="130" y="191" font-family="Arial" font-size="9" fill="#e2e8f0">TechCorp Inc.</text><text x="310" y="191" font-family="Arial" font-size="9" fill="#64748b">19×</text>
-          <!-- Add button -->
-          <rect x="300" y="210" width="108" height="22" rx="6" fill="#4f46e5"/>
-          <text x="354" y="225" font-family="Arial" font-size="9" fill="#fff" text-anchor="middle">+ Add Word</text>
-        </svg>
-        <div class="app-demo-label">📖 Word Bank — teaches VoltType your vocabulary</div>
-      </div>
-
-      <!-- Card 4: Stats dashboard -->
-      <div class="app-demo-card">
-        <svg viewBox="0 0 420 240" xmlns="http://www.w3.org/2000/svg">
-          <rect width="420" height="240" fill="#0f172a"/>
-          <rect width="420" height="36" fill="#1e293b"/>
-          <text x="16" y="23" font-family="Arial" font-size="12" font-weight="bold" fill="#f8fafc">⚡ VoltType</text>
-          <!-- Sidebar -->
-          <rect x="0" y="36" width="110" height="204" fill="#1e293b"/>
-          <text x="55" y="67" font-family="Arial" font-size="9" fill="#64748b" text-anchor="middle">🏠 Dashboard</text>
-          <text x="55" y="92" font-family="Arial" font-size="9" fill="#64748b" text-anchor="middle">📖 Word Bank</text>
-          <text x="55" y="117" font-family="Arial" font-size="9" fill="#64748b" text-anchor="middle">📊 Stats</text>
-          <rect x="8" y="125" width="94" height="26" rx="6" fill="#1a1a3e"/>
-          <text x="55" y="142" font-family="Arial" font-size="9" fill="#818cf8" text-anchor="middle">📊 Stats</text>
-          <!-- Stats cards -->
-          <text x="130" y="58" font-family="Arial" font-size="11" font-weight="bold" fill="#f8fafc">Usage Stats — This Month</text>
-          <rect x="120" y="68" width="85" height="52" rx="8" fill="#1e293b"/>
-          <text x="162" y="85" font-family="Arial" font-size="8" fill="#64748b" text-anchor="middle">Words Dictated</text>
-          <text x="162" y="105" font-family="Arial" font-size="18" font-weight="bold" fill="#a5b4fc" text-anchor="middle">12,847</text>
-          <rect x="215" y="68" width="85" height="52" rx="8" fill="#1e293b"/>
-          <text x="257" y="85" font-family="Arial" font-size="8" fill="#64748b" text-anchor="middle">Time Saved</text>
-          <text x="257" y="105" font-family="Arial" font-size="18" font-weight="bold" fill="#34d399" text-anchor="middle">3.2 hrs</text>
-          <rect x="310" y="68" width="98" height="52" rx="8" fill="#1e293b"/>
-          <text x="359" y="85" font-family="Arial" font-size="8" fill="#64748b" text-anchor="middle">Accuracy</text>
-          <text x="359" y="105" font-family="Arial" font-size="18" font-weight="bold" fill="#fbbf24" text-anchor="middle">97.4%</text>
-          <!-- Bar chart -->
-          <text x="130" y="140" font-family="Arial" font-size="8" fill="#64748b">Daily usage (words/day)</text>
-          <!-- Bars -->
-          <rect x="128" y="195" width="18" height="25" rx="2" fill="#4f46e5" opacity="0.5"/><text x="137" y="207" font-family="Arial" font-size="6" fill="#64748b" text-anchor="middle">Mon</text>
-          <rect x="153" y="180" width="18" height="40" rx="2" fill="#4f46e5" opacity="0.7"/><text x="162" y="207" font-family="Arial" font-size="6" fill="#64748b" text-anchor="middle">Tue</text>
-          <rect x="178" y="165" width="18" height="55" rx="2" fill="#4f46e5"/><text x="187" y="207" font-family="Arial" font-size="6" fill="#64748b" text-anchor="middle">Wed</text>
-          <rect x="203" y="175" width="18" height="45" rx="2" fill="#4f46e5" opacity="0.8"/><text x="212" y="207" font-family="Arial" font-size="6" fill="#64748b" text-anchor="middle">Thu</text>
-          <rect x="228" y="158" width="18" height="62" rx="2" fill="#6366f1"/><text x="237" y="207" font-family="Arial" font-size="6" fill="#64748b" text-anchor="middle">Fri</text>
-          <rect x="253" y="190" width="18" height="30" rx="2" fill="#4f46e5" opacity="0.4"/><text x="262" y="207" font-family="Arial" font-size="6" fill="#64748b" text-anchor="middle">Sat</text>
-          <rect x="278" y="185" width="18" height="35" rx="2" fill="#4f46e5" opacity="0.4"/><text x="287" y="207" font-family="Arial" font-size="6" fill="#64748b" text-anchor="middle">Sun</text>
-          <!-- Plan badge -->
-          <rect x="310" y="135" width="98" height="75" rx="8" fill="#312e81"/>
-          <text x="359" y="152" font-family="Arial" font-size="8" fill="#a5b4fc" text-anchor="middle">Current Plan</text>
-          <text x="359" y="170" font-family="Arial" font-size="14" font-weight="bold" fill="#fff" text-anchor="middle">Pro</text>
-          <text x="359" y="184" font-family="Arial" font-size="8" fill="#818cf8" text-anchor="middle">Unlimited minutes</text>
-          <rect x="325" y="192" width="68" height="14" rx="6" fill="#4f46e5"/>
-          <text x="359" y="202" font-family="Arial" font-size="7.5" fill="#fff" text-anchor="middle">Manage Plan</text>
-        </svg>
-        <div class="app-demo-label">📊 Stats dashboard — track words saved &amp; accuracy</div>
-      </div>
-
+  <!-- App Demo Video -->
+  <section class="app-demo-section" id="demo">
+    <h2 class="section-title" style="text-align:center;font-size:22px;font-weight:800;margin-bottom:4px;">See It In Action</h2>
+    <p style="text-align:center;color:var(--text-secondary);font-size:15px;margin:0 0 24px;">Watch VoltType turn speech into polished writing in 30 seconds</p>
+    <div class="demo-video-wrap">
+      <video class="demo-video" autoplay muted loop playsinline poster="" preload="metadata">
+        <source src="/demo.mp4" type="video/mp4">
+      </video>
+      <button class="demo-play-btn" id="demo-play-btn" aria-label="Play or pause video">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="32" height="32"><polygon points="5,3 19,12 5,21"/></svg>
+      </button>
     </div>
   </section>
+
 
   <!-- How it works -->
   <section class="section">
@@ -1881,6 +1770,26 @@
         }, { passive: true });
       }
     });
+
+    // Demo video play/pause
+    const demoVideo = document.querySelector('.demo-video');
+    const demoBtn = document.getElementById('demo-play-btn');
+    if (demoVideo && demoBtn) {
+      function toggleDemo() {
+        if (demoVideo.paused) {
+          demoVideo.muted = false;
+          demoVideo.play();
+          demoBtn.classList.remove('paused');
+          demoBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
+        } else {
+          demoVideo.pause();
+          demoBtn.classList.add('paused');
+          demoBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>';
+        }
+      }
+      demoBtn.addEventListener('click', function(e) { e.stopPropagation(); toggleDemo(); });
+      demoVideo.addEventListener('click', toggleDemo);
+    }
 
     // PWA service worker
     if ('serviceWorker' in navigator) {
