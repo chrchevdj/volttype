@@ -324,43 +324,88 @@
     .feature-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
     .feature-card p { font-size: 14px; color: var(--text-secondary); }
 
-    /* Demo Video */
-    .demo-video-wrap {
-      position: relative;
-      max-width: 800px;
-      margin: 0 auto;
-      border-radius: 16px;
-      overflow: hidden;
-      box-shadow: 0 8px 40px rgba(0,0,0,0.12);
-      background: #000;
-      cursor: pointer;
-    }
-    .demo-video {
-      display: block;
-      width: 100%;
-      height: auto;
-      border-radius: 16px;
-    }
-    .demo-play-btn {
-      position: absolute;
-      bottom: 16px;
-      right: 16px;
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background: rgba(0,0,0,0.6);
-      color: #fff;
-      border: none;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-    .demo-play-btn svg { width: 20px; height: 20px; }
-    .demo-video-wrap:hover .demo-play-btn { opacity: 1; }
-    .demo-play-btn.paused { opacity: 1; }
+    /* VoltType Animated Demo */
+    .vta{position:relative;border-radius:16px;overflow:hidden;background:#0f172a;box-shadow:0 8px 40px rgba(0,0,0,0.2);max-width:800px;margin:0 auto}
+    .vta-bar{background:#1e293b;padding:10px 16px;display:flex;align-items:center;gap:12px}
+    .vta-dots{display:flex;gap:6px;flex-shrink:0}
+    .vta-dots span{width:12px;height:12px;border-radius:50%}
+    .vta-dots span:nth-child(1){background:#ef4444}
+    .vta-dots span:nth-child(2){background:#f59e0b}
+    .vta-dots span:nth-child(3){background:#22c55e}
+    .vta-url{flex:1;background:#334155;border-radius:6px;padding:5px 12px;font-size:12px;color:#94a3b8;font-family:monospace;text-align:center}
+    .vta-rec{display:none;align-items:center;gap:6px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:6px;padding:3px 10px;font-size:11px;color:#f87171;font-weight:700;flex-shrink:0}
+    .vta-rec.show{display:flex}
+    .vta-recdot{width:8px;height:8px;border-radius:50%;background:#ef4444;animation:vtaRecBlink 1.2s infinite}
+    .vta-body{position:relative;min-height:240px}
+    .vta-scene{display:flex;min-height:240px}
+    .vta-hide{display:none!important}
+    .vta-np{flex:1;background:#f8fafc;display:flex;flex-direction:column}
+    .vta-np-bar{background:#e2e8f0;padding:7px 12px;font-size:11px;color:#475569;display:flex;align-items:center;gap:6px;border-bottom:1px solid #cbd5e1}
+    .vta-np-hint{color:#94a3b8;font-size:10px;margin-left:auto}
+    .vta-np-text{flex:1;padding:14px 16px;font-size:13px;color:#1e293b;line-height:1.7;font-family:Consolas,monospace;min-height:190px}
+    .vta-selected{background:rgba(79,70,229,0.18);border-radius:2px;display:inline}
+    .vta-caret{display:inline-block;width:2px;height:14px;background:#4f46e5;animation:vtaCaret 1s infinite;vertical-align:text-bottom;margin-left:1px}
+    .vta-panel{width:160px;background:#1e1b4b;padding:16px 12px;display:flex;flex-direction:column;align-items:center;gap:10px;border-left:1px solid #312e81;flex-shrink:0}
+    .vta-panel-logo{color:#a5b4fc;font-weight:800;font-size:12px;letter-spacing:0.5px}
+    .vta-panel-mic{width:44px;height:44px;border-radius:50%;background:#312e81;display:flex;align-items:center;justify-content:center;font-size:20px;transition:all 0.3s}
+    .vta-panel-mic.active{background:#4f46e5;box-shadow:0 0 24px rgba(79,70,229,0.6);animation:vtaPulse 1.2s infinite}
+    .vta-panel-status{font-size:11px;color:#818cf8;text-align:center;font-weight:600;min-height:16px}
+    .vta-waves{display:flex;align-items:flex-end;gap:3px;height:28px}
+    .vta-waves span{width:5px;background:#6366f1;border-radius:3px;height:4px;opacity:0.4;transition:height 0.2s}
+    .vta-waves.active span{opacity:1;animation:vtaWave 0.7s ease-in-out infinite}
+    .vta-waves span:nth-child(1){animation-delay:0s}
+    .vta-waves span:nth-child(2){animation-delay:0.1s}
+    .vta-waves span:nth-child(3){animation-delay:0.2s}
+    .vta-waves span:nth-child(4){animation-delay:0.15s}
+    .vta-waves span:nth-child(5){animation-delay:0.05s}
+    .vta-waves span:nth-child(6){animation-delay:0.25s}
+    .vta-waves span:nth-child(7){animation-delay:0.12s}
+    .vta-panel-hint{font-size:10px;color:#818cf8;font-weight:600;background:rgba(79,70,229,0.15);border:1px solid #312e81;border-radius:6px;padding:3px 8px}
+    .vta-sidebar{width:130px;background:#1e293b;padding:12px 8px;display:flex;flex-direction:column;gap:2px;flex-shrink:0}
+    .vta-sb-logo{color:#a5b4fc;font-weight:800;font-size:12px;padding:8px 10px;margin-bottom:8px}
+    .vta-nav{font-size:11px;color:#64748b;padding:8px 10px;border-radius:8px;cursor:default}
+    .vta-nav-on{background:#312e81;color:#a5b4fc}
+    .vta-main{flex:1;padding:16px 20px;overflow:hidden;background:#0f172a}
+    .vta-main-h{color:#f8fafc;font-size:14px;font-weight:800;margin-bottom:3px}
+    .vta-main-sub{color:#64748b;font-size:11px;margin-bottom:14px}
+    .vta-wb-hd{display:grid;grid-template-columns:1fr 1fr 40px;padding:6px 10px;font-size:10px;color:#475569;font-weight:700;text-transform:uppercase;background:#1e293b;border-radius:6px;margin-bottom:4px}
+    .vta-wb-row{display:grid;grid-template-columns:1fr 1fr 40px;padding:8px 10px;font-size:11px;color:#94a3b8;border-radius:6px;animation:vtaFadeIn 0.5s forwards}
+    .vta-wb-row:nth-child(3){animation-delay:0.1s}
+    .vta-wb-row:nth-child(4){animation-delay:0.2s}
+    .vta-wb-row:nth-child(5){animation-delay:0.3s}
+    .vta-wb-hi{background:rgba(79,70,229,0.2);color:#c7d2fe}
+    .vta-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+    .vta-stat{background:#1e293b;border-radius:10px;padding:12px;text-align:center}
+    .vta-sn{font-size:20px;font-weight:800;margin-bottom:4px}
+    .vta-sl{font-size:10px;color:#64748b}
+    .vta-purple{color:#a5b4fc}
+    .vta-green{color:#34d399}
+    .vta-yellow{color:#fbbf24}
+    .vta-chart-label{font-size:10px;color:#475569;margin-bottom:6px}
+    .vta-bars{display:flex;align-items:flex-end;gap:6px;height:64px}
+    .vta-bc{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1}
+    .vta-b{width:100%;background:#4f46e5;border-radius:3px 3px 0 0;opacity:0.6}
+    .vta-today{opacity:1;background:#818cf8}
+    .vta-bl{font-size:9px;color:#475569}
+    .vta-ctrl{background:#1e293b;border-top:1px solid #334155}
+    .vta-prog{height:3px;background:#334155;cursor:pointer}
+    .vta-pfill{height:3px;background:#4f46e5;width:0%;transition:none}
+    .vta-ctrls{display:flex;align-items:center;gap:10px;padding:9px 14px}
+    .vta-pbtn{width:30px;height:30px;border-radius:50%;background:#4f46e5;border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.2s}
+    .vta-pbtn:hover{background:#6366f1}
+    .vta-tlbl{font-size:11px;color:#64748b;font-family:monospace}
+    .vta-cname{flex:1;font-size:11px;color:#475569;text-align:right}
+    .vta-overlay{position:absolute;inset:0;background:rgba(15,23,42,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:10}
+    .vta-overlay.gone{display:none}
+    .vta-obtn{width:60px;height:60px;border-radius:50%;background:#4f46e5;border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(79,70,229,0.5);transition:background 0.2s}
+    .vta-obtn:hover{background:#6366f1}
+    .vta-overlay p{color:#fff;font-weight:700;font-size:14px;margin:0;text-align:center}
+    .vta-overlay small{color:#64748b;font-size:11px}
+    @keyframes vtaRecBlink{0%,100%{opacity:1}50%{opacity:0.3}}
+    @keyframes vtaCaret{0%,100%{opacity:1}50%{opacity:0}}
+    @keyframes vtaPulse{0%,100%{box-shadow:0 0 24px rgba(79,70,229,0.5)}50%{box-shadow:0 0 40px rgba(79,70,229,0.9)}}
+    @keyframes vtaWave{0%,100%{height:4px}50%{height:24px}}
+    @keyframes vtaFadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 
     /* Testimonials */
     .testimonials-grid {
@@ -664,8 +709,9 @@
       .price-amount { font-size: 36px; }
       .app-demo-section { padding: 32px 16px; }
       .app-demo-grid { grid-template-columns: 1fr; gap: 16px; }
-      .demo-video-wrap { border-radius: 12px; margin: 0 -4px; }
-      .demo-play-btn { opacity: 1; width: 40px; height: 40px; bottom: 12px; right: 12px; }
+      .vta { border-radius: 12px; margin: 0 -4px; }
+      .vta-panel { width: 120px; }
+      .vta-np-text { font-size: 12px; padding: 10px 12px; }
       .download-section { padding: 48px 16px; }
       .download-buttons { flex-direction: column; align-items: center; }
       footer { padding: 32px 16px; }
@@ -684,7 +730,9 @@
       .btn-hero { font-size: 14px; padding: 12px 16px; }
       .price-amount { font-size: 32px; }
       footer { padding: 28px 12px; }
-      .demo-video-wrap { border-radius: 8px; }
+      .vta { border-radius: 8px; }
+      .vta-stats { grid-template-columns: repeat(3,1fr); gap: 6px; }
+      .vta-sn { font-size: 16px; }
     }
     @media (prefers-reduced-motion: reduce) {
       html { scroll-behavior: auto; }
@@ -819,13 +867,101 @@
   <section class="app-demo-section" id="demo">
     <h2 class="section-title" style="text-align:center;font-size:22px;font-weight:800;margin-bottom:4px;">See It In Action</h2>
     <p style="text-align:center;color:var(--text-secondary);font-size:15px;margin:0 0 24px;">Watch VoltType turn speech into polished writing in 30 seconds</p>
-    <div class="demo-video-wrap">
-      <video class="demo-video" autoplay muted loop playsinline poster="" preload="metadata">
-        <source src="/demo.mp4" type="video/mp4">
-      </video>
-      <button class="demo-play-btn" id="demo-play-btn" aria-label="Play or pause video">
-        <svg viewBox="0 0 24 24" fill="currentColor" width="32" height="32"><polygon points="5,3 19,12 5,21"/></svg>
-      </button>
+    <div class="vta" id="vta-wrap">
+      <!-- Browser chrome bar -->
+      <div class="vta-bar">
+        <div class="vta-dots"><span></span><span></span><span></span></div>
+        <div class="vta-url">&#x26A1; VoltType &mdash; Live Demo</div>
+        <div class="vta-rec" id="vta-rec"><span class="vta-recdot"></span> REC <span id="vta-rectime">0:00</span></div>
+      </div>
+      <!-- Scenes container -->
+      <div class="vta-body">
+        <!-- Scene 1: Notepad + VoltType listening panel -->
+        <div class="vta-scene" id="vta-s1">
+          <div class="vta-np">
+            <div class="vta-np-bar">
+              <span>&#x1F4DD;</span> Notepad
+              <span class="vta-np-hint">text appears here as you speak</span>
+            </div>
+            <div class="vta-np-text"><span id="vta-typed"></span><span class="vta-caret" id="vta-caret">|</span></div>
+          </div>
+          <div class="vta-panel" id="vta-panel">
+            <div class="vta-panel-logo">&#x26A1; VoltType</div>
+            <div class="vta-panel-mic" id="vta-panel-mic">&#x1F3A4;</div>
+            <div class="vta-panel-status" id="vta-panel-status">Ready</div>
+            <div class="vta-waves" id="vta-waves">
+              <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <div class="vta-panel-hint">Ctrl+Space</div>
+          </div>
+        </div>
+        <!-- Scene 2: Word Bank -->
+        <div class="vta-scene vta-hide" id="vta-s2">
+          <div class="vta-sidebar">
+            <div class="vta-sb-logo">&#x26A1; VoltType</div>
+            <div class="vta-nav">&#x1F3E0; Dashboard</div>
+            <div class="vta-nav vta-nav-on">&#x1F4D6; Word Bank</div>
+            <div class="vta-nav">&#x1F4CA; Stats</div>
+            <div class="vta-nav">&#x2699;&#xFE0F; Settings</div>
+          </div>
+          <div class="vta-main">
+            <div class="vta-main-h">Word Bank</div>
+            <div class="vta-main-sub">VoltType learns your vocabulary &mdash; always gets these right</div>
+            <div class="vta-wb-hd"><span>Spoken</span><span>Corrected to</span><span>Uses</span></div>
+            <div class="vta-wb-row vta-wb-hi"><span>myclienta</span><span>&#8594; MyClienta</span><span>24&times;</span></div>
+            <div class="vta-wb-row"><span>volttype</span><span>&#8594; VoltType</span><span>18&times;</span></div>
+            <div class="vta-wb-row"><span>jobalarm</span><span>&#8594; JOBALARM</span><span>11&times;</span></div>
+            <div class="vta-wb-row"><span>lifirent</span><span>&#8594; LifiRent</span><span>9&times;</span></div>
+          </div>
+        </div>
+        <!-- Scene 3: Stats dashboard -->
+        <div class="vta-scene vta-hide" id="vta-s3">
+          <div class="vta-sidebar">
+            <div class="vta-sb-logo">&#x26A1; VoltType</div>
+            <div class="vta-nav">&#x1F3E0; Dashboard</div>
+            <div class="vta-nav">&#x1F4D6; Word Bank</div>
+            <div class="vta-nav vta-nav-on">&#x1F4CA; Stats</div>
+            <div class="vta-nav">&#x2699;&#xFE0F; Settings</div>
+          </div>
+          <div class="vta-main">
+            <div class="vta-main-h">Usage Stats &mdash; This Month</div>
+            <div class="vta-stats">
+              <div class="vta-stat"><div class="vta-sn vta-purple">12,847</div><div class="vta-sl">Words Dictated</div></div>
+              <div class="vta-stat"><div class="vta-sn vta-green">3.2 hrs</div><div class="vta-sl">Time Saved</div></div>
+              <div class="vta-stat"><div class="vta-sn vta-yellow">97.4%</div><div class="vta-sl">Accuracy</div></div>
+            </div>
+            <div class="vta-chart-label">Daily words dictated</div>
+            <div class="vta-bars">
+              <div class="vta-bc"><div class="vta-b" style="height:35%"></div><div class="vta-bl">Mon</div></div>
+              <div class="vta-bc"><div class="vta-b" style="height:55%"></div><div class="vta-bl">Tue</div></div>
+              <div class="vta-bc"><div class="vta-b" style="height:70%"></div><div class="vta-bl">Wed</div></div>
+              <div class="vta-bc"><div class="vta-b" style="height:60%"></div><div class="vta-bl">Thu</div></div>
+              <div class="vta-bc"><div class="vta-b vta-today" style="height:85%"></div><div class="vta-bl">Fri</div></div>
+              <div class="vta-bc"><div class="vta-b" style="height:40%"></div><div class="vta-bl">Sat</div></div>
+              <div class="vta-bc"><div class="vta-b" style="height:45%"></div><div class="vta-bl">Sun</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Player controls -->
+      <div class="vta-ctrl">
+        <div class="vta-prog" onclick="vtaToggle()"><div class="vta-pfill" id="vta-pfill"></div></div>
+        <div class="vta-ctrls">
+          <button class="vta-pbtn" id="vta-pbtn" onclick="vtaToggle()">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M8 5v14l11-7z"/></svg>
+          </button>
+          <span class="vta-tlbl" id="vta-tlbl">0:00 / 0:35</span>
+          <span class="vta-cname">VoltType &mdash; voice-to-text demo</span>
+        </div>
+      </div>
+      <!-- Start overlay (hidden after autostart) -->
+      <div class="vta-overlay" id="vta-overlay">
+        <button class="vta-obtn" onclick="vtaStart()">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="30" height="30"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        <p>Watch VoltType in action</p>
+        <small>35 sec &mdash; auto-starts on scroll</small>
+      </div>
     </div>
   </section>
 
@@ -1771,25 +1907,132 @@
       }
     });
 
-    // Demo video play/pause
-    const demoVideo = document.querySelector('.demo-video');
-    const demoBtn = document.getElementById('demo-play-btn');
-    if (demoVideo && demoBtn) {
-      function toggleDemo() {
-        if (demoVideo.paused) {
-          demoVideo.muted = false;
-          demoVideo.play();
-          demoBtn.classList.remove('paused');
-          demoBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
-        } else {
-          demoVideo.pause();
-          demoBtn.classList.add('paused');
-          demoBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>';
-        }
+    // VoltType animated demo
+    (function(){
+      var CASUAL = "Hi team, just a quick update. We finished the landing page yesterday and the new pricing is live. Let me know if you have any questions.";
+      var FORMAL = "Dear Team, I wanted to share a brief update. The landing page has been completed successfully, and the updated pricing is now live. Please feel free to reach out if you have any questions.";
+      var DURATION = 35000;
+      var vtaPlaying = false, vtaStarted = false, vtaRaf = null, vtaTOs = [];
+      var vtaEl = document.getElementById('vta-wrap');
+      function fmt(ms){ var s=Math.floor(ms/1000); return '0:'+(s<10?'0':'')+s; }
+      function kill(){ vtaTOs.forEach(clearTimeout); vtaTOs=[]; if(vtaRaf) cancelAnimationFrame(vtaRaf); }
+      function at(ms,fn){ var t=setTimeout(fn,ms); vtaTOs.push(t); }
+      function scene(id){
+        ['vta-s1','vta-s2','vta-s3'].forEach(function(s){ var e=document.getElementById(s); if(e){e.classList.add('vta-hide');} });
+        var el=document.getElementById(id); if(el) el.classList.remove('vta-hide');
       }
-      demoBtn.addEventListener('click', function(e) { e.stopPropagation(); toggleDemo(); });
-      demoVideo.addEventListener('click', toggleDemo);
-    }
+      function pbtn(playing){
+        var b=document.getElementById('vta-pbtn');
+        if(!b) return;
+        b.innerHTML = playing
+          ? '<svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>'
+          : '<svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M8 5v14l11-7z"/></svg>';
+      }
+      function run(){
+        kill(); vtaPlaying=true;
+        var t0=performance.now();
+        // Reset
+        scene('vta-s1');
+        var typed=document.getElementById('vta-typed');
+        var mic=document.getElementById('vta-panel-mic');
+        var status=document.getElementById('vta-panel-status');
+        var waves=document.getElementById('vta-waves');
+        var rec=document.getElementById('vta-rec');
+        if(typed){ typed.textContent=''; typed.style.opacity='1'; typed.className=''; }
+        if(mic) mic.classList.remove('active');
+        if(status) status.textContent='Ready';
+        if(waves) waves.classList.remove('active');
+        if(rec) rec.classList.remove('show');
+        pbtn(true);
+        // RAF tick
+        function tick(){
+          var ms=performance.now()-t0;
+          var pct=Math.min(100,(ms/DURATION)*100);
+          var fill=document.getElementById('vta-pfill');
+          var lbl=document.getElementById('vta-tlbl');
+          var rt=document.getElementById('vta-rectime');
+          if(fill) fill.style.width=pct+'%';
+          if(lbl) lbl.textContent=fmt(ms)+' / 0:35';
+          if(rt&&rec&&rec.classList.contains('show')) rt.textContent=fmt(ms);
+          if(pct<100){ vtaRaf=requestAnimationFrame(tick); }
+          else{ vtaPlaying=false; pbtn(false); at(3000,run); }
+        }
+        vtaRaf=requestAnimationFrame(tick);
+        // Sequence
+        at(1800,function(){ // activate VoltType
+          if(mic) mic.classList.add('active');
+          if(status) status.textContent='\uD83C\uDFA4 Listening...';
+          if(waves) waves.classList.add('active');
+          if(rec) rec.classList.add('show');
+        });
+        at(2400,function(){ // type words
+          if(!typed) return;
+          var words=CASUAL.split(' ');
+          var gap=9000/words.length;
+          var i=0;
+          function next(){
+            if(i>=words.length) return;
+            typed.textContent+=(i>0?' ':'')+words[i++];
+            var t=setTimeout(next,gap+(Math.random()*80-40));
+            vtaTOs.push(t);
+          }
+          next();
+        });
+        at(13200,function(){ // done transcribing
+          if(mic) mic.classList.remove('active');
+          if(status) status.textContent='\u2713 Transcribed';
+          if(waves) waves.classList.remove('active');
+          if(typed) typed.className='vta-selected';
+        });
+        at(15000,function(){ // "make formal" command
+          if(mic) mic.classList.add('active');
+          if(status) status.textContent='\uD83C\uDFA4 "Make formal"';
+          if(waves) waves.classList.add('active');
+        });
+        at(17200,function(){ // AI rewriting
+          if(mic) mic.classList.remove('active');
+          if(status) status.textContent='\u2728 Rewriting...';
+          if(waves) waves.classList.remove('active');
+        });
+        at(18400,function(){ // show formal text
+          if(!typed) return;
+          typed.className='';
+          typed.style.transition='opacity 0.4s';
+          typed.style.opacity='0';
+          var t=setTimeout(function(){
+            if(typed){ typed.textContent=FORMAL; typed.style.opacity='1'; }
+            if(status) status.textContent='\u2705 Done';
+          },420);
+          vtaTOs.push(t);
+        });
+        at(23000,function(){ scene('vta-s2'); if(rec) rec.classList.remove('show'); }); // Word Bank
+        at(29000,function(){ scene('vta-s3'); }); // Stats
+      }
+      window.vtaStart=function(){
+        vtaStarted=true;
+        var ov=document.getElementById('vta-overlay');
+        if(ov) ov.classList.add('gone');
+        run();
+      };
+      window.vtaToggle=function(){
+        if(!vtaStarted){ vtaStart(); return; }
+        if(vtaPlaying){ kill(); vtaPlaying=false; pbtn(false); }
+        else{ run(); }
+      };
+      // Auto-start via IntersectionObserver
+      if(vtaEl && 'IntersectionObserver' in window){
+        var obs=new IntersectionObserver(function(entries){
+          if(entries[0].isIntersecting && !vtaStarted){
+            vtaStarted=true;
+            var ov=document.getElementById('vta-overlay');
+            if(ov) ov.classList.add('gone');
+            run();
+            obs.disconnect();
+          }
+        },{threshold:0.3});
+        obs.observe(vtaEl);
+      }
+    })();
 
     // PWA service worker
     if ('serviceWorker' in navigator) {
