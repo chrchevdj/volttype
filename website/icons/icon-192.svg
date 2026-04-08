@@ -1,4 +1,18 @@
-<svg xmlns='http://www.w3.org/2000/svg' width='192' height='192' viewBox='0 0 192 192'>
-  <rect width='192' height='192' rx='32' fill='#7c3aed'/>
-  <text x='96' y='115' font-family='Arial' font-size='80' font-weight='bold' fill='white' text-anchor='middle'>⚡</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e1b4b"/>
+      <stop offset="100%" style="stop-color:#0f172a"/>
+    </linearGradient>
+    <linearGradient id="bolt" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#a78bfa"/>
+      <stop offset="100%" style="stop-color:#3b82f6"/>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" rx="56" fill="url(#bg)"/>
+  <path d="M148 40L96 136h36L108 216l76-108h-40z" fill="url(#bolt)"/>
+  <path d="M58 104 Q48 118 58 132" fill="none" stroke="#818cf8" stroke-width="4" stroke-linecap="round" opacity="0.6"/>
+  <path d="M44 92 Q28 118 44 144" fill="none" stroke="#818cf8" stroke-width="3.5" stroke-linecap="round" opacity="0.35"/>
+  <path d="M198 104 Q208 118 198 132" fill="none" stroke="#818cf8" stroke-width="4" stroke-linecap="round" opacity="0.6"/>
+  <path d="M212 92 Q228 118 212 144" fill="none" stroke="#818cf8" stroke-width="3.5" stroke-linecap="round" opacity="0.35"/>
 </svg>

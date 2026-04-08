@@ -1,56 +1,39 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#0f2027"/>
-      <stop offset="50%" style="stop-color:#162137"/>
-      <stop offset="100%" style="stop-color:#1a3040"/>
+      <stop offset="0%" style="stop-color:#1e1b4b"/>
+      <stop offset="100%" style="stop-color:#0f172a"/>
     </linearGradient>
-    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#38bd9c"/>
+    <linearGradient id="bolt" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#a78bfa"/>
       <stop offset="100%" style="stop-color:#3b82f6"/>
     </linearGradient>
-    <linearGradient id="strike" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#f87171"/>
-      <stop offset="100%" style="stop-color:#ef4444"/>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7c3aed"/>
+      <stop offset="100%" style="stop-color:#2563eb"/>
     </linearGradient>
+    <filter id="softglow">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
   </defs>
 
-  <!-- Background rounded square -->
-  <rect width="256" height="256" rx="48" fill="url(#bg)"/>
+  <!-- Background -->
+  <rect width="256" height="256" rx="56" fill="url(#bg)"/>
 
-  <!-- Keyboard (simplified, bottom half) -->
-  <rect x="48" y="148" width="160" height="72" rx="10" fill="none" stroke="#4a5568" stroke-width="4" opacity="0.4"/>
-  <!-- Keyboard keys row 1 -->
-  <rect x="58" y="158" width="18" height="14" rx="3" fill="#4a5568" opacity="0.35"/>
-  <rect x="80" y="158" width="18" height="14" rx="3" fill="#4a5568" opacity="0.35"/>
-  <rect x="102" y="158" width="18" height="14" rx="3" fill="#4a5568" opacity="0.35"/>
-  <rect x="124" y="158" width="18" height="14" rx="3" fill="#4a5568" opacity="0.35"/>
-  <rect x="146" y="158" width="18" height="14" rx="3" fill="#4a5568" opacity="0.35"/>
-  <rect x="168" y="158" width="18" height="14" rx="3" fill="#4a5568" opacity="0.35"/>
-  <rect x="190" y="158" width="12" height="14" rx="3" fill="#4a5568" opacity="0.35"/>
-  <!-- Keyboard keys row 2 -->
-  <rect x="64" y="176" width="18" height="14" rx="3" fill="#4a5568" opacity="0.35"/>
-  <rect x="86" y="176" width="18" height="14" rx="3" fill="#4a5568" opacity="0.35"/>
-  <rect x="108" y="176" width="18" height="14" rx="3" fill="#4a5568" opacity="0.35"/>
-  <rect x="130" y="176" width="18" height="14" rx="3" fill="#4a5568" opacity="0.35"/>
-  <rect x="152" y="176" width="18" height="14" rx="3" fill="#4a5568" opacity="0.35"/>
-  <rect x="174" y="176" width="18" height="14" rx="3" fill="#4a5568" opacity="0.35"/>
-  <!-- Spacebar -->
-  <rect x="80" y="196" width="96" height="14" rx="3" fill="#4a5568" opacity="0.35"/>
+  <!-- Subtle inner glow -->
+  <circle cx="128" cy="118" r="60" fill="url(#glow)" opacity="0.08"/>
 
-  <!-- Forbidden/strike-through line over keyboard -->
-  <line x1="38" y1="230" x2="218" y2="140" stroke="url(#strike)" stroke-width="6" stroke-linecap="round" opacity="0.85"/>
-
-  <!-- Sound wave / voice (top half) — the replacement -->
-  <g transform="translate(128, 75)" opacity="1">
-    <!-- Center wave line -->
-    <path d="M-60,0 Q-45,-20 -30,0 Q-15,20 0,0 Q15,-20 30,0 Q45,20 60,0" fill="none" stroke="url(#accent)" stroke-width="5" stroke-linecap="round"/>
-    <!-- Outer wave -->
-    <path d="M-50,25 Q-37,10 -25,25 Q-12,40 0,25 Q12,10 25,25 Q37,40 50,25" fill="none" stroke="url(#accent)" stroke-width="3.5" stroke-linecap="round" opacity="0.6"/>
-    <!-- Inner wave -->
-    <path d="M-50,-25 Q-37,-40 -25,-25 Q-12,-10 0,-25 Q12,-40 25,-25 Q37,-10 50,-25" fill="none" stroke="url(#accent)" stroke-width="3.5" stroke-linecap="round" opacity="0.6"/>
+  <!-- Lightning bolt (main icon) -->
+  <g filter="url(#softglow)">
+    <path d="M148 40L96 136h36L108 216l76-108h-40z" fill="url(#bolt)"/>
   </g>
 
-  <!-- Small bolt/volt symbol -->
-  <polygon points="138,28 126,52 136,52 124,76 148,44 136,44 146,28" fill="url(#accent)" opacity="0.9"/>
+  <!-- Voice wave lines (left) -->
+  <path d="M58 104 Q48 118 58 132" fill="none" stroke="#818cf8" stroke-width="4" stroke-linecap="round" opacity="0.6"/>
+  <path d="M44 92 Q28 118 44 144" fill="none" stroke="#818cf8" stroke-width="3.5" stroke-linecap="round" opacity="0.35"/>
+
+  <!-- Voice wave lines (right) -->
+  <path d="M198 104 Q208 118 198 132" fill="none" stroke="#818cf8" stroke-width="4" stroke-linecap="round" opacity="0.6"/>
+  <path d="M212 92 Q228 118 212 144" fill="none" stroke="#818cf8" stroke-width="3.5" stroke-linecap="round" opacity="0.35"/>
 </svg>

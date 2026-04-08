@@ -71,8 +71,22 @@
       --white: #1e293b;
       --card-bg: #1e293b;
       --nav-bg: rgba(15,23,42,0.90);
-      --nav-border: rgba(255,255,255,0.06);
+      --nav-border: rgba(255,255,255,0.08);
       --purple-light: rgba(124,58,237,0.15);
+      --border-subtle: rgba(255,255,255,0.08);
+      --text-primary: #e2e8f0;
+      --section-alt-bg: #1a2234;
+      --modal-bg: #1e293b;
+      --input-bg: #0f172a;
+      --input-border: rgba(255,255,255,0.12);
+    }
+    :root {
+      --border-subtle: rgba(0,0,0,0.06);
+      --text-primary: #1e1b4b;
+      --section-alt-bg: #f8fafc;
+      --modal-bg: #ffffff;
+      --input-bg: #f8f9fc;
+      --input-border: rgba(0,0,0,0.12);
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { overflow-x: hidden; }
@@ -304,7 +318,7 @@
     .step-card p { font-size: 14px; color: var(--text-secondary); }
 
     /* Features */
-    .features-bg { background: var(--card-bg); }
+    .features-bg { background: var(--section-alt-bg); }
     .features-grid {
       display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
       gap: 24px;
@@ -585,9 +599,9 @@
     .modal-input {
       display: block; width: 100%;
       padding: 12px 16px; margin-bottom: 12px;
-      border: 1px solid rgba(0,0,0,0.12);
+      border: 1px solid var(--input-border);
       border-radius: 10px; font-size: 15px;
-      font-family: inherit; background: var(--bg);
+      font-family: inherit; background: var(--input-bg);
       color: var(--text);
     }
     .modal-input:focus { outline: none; border-color: var(--purple); }
@@ -653,17 +667,17 @@
       justify-content: center;
       gap: 10px;
       padding: 11px 16px;
-      background: #fff;
-      border: 1.5px solid #dadce0;
+      background: var(--card-bg);
+      border: 1.5px solid var(--border-subtle);
       border-radius: 8px;
       font-size: 14px;
       font-weight: 500;
-      color: #3c4043;
+      color: var(--text);
       cursor: pointer;
       transition: background 0.2s, box-shadow 0.2s;
       margin-bottom: 4px;
     }
-    .google-btn:hover { background: #f8f9fa; box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
+    .google-btn:hover { background: var(--bg); box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
     .modal-divider {
       display: flex;
       align-items: center;
@@ -676,7 +690,7 @@
       content: '';
       flex: 1;
       height: 1px;
-      background: #e2e8f0;
+      background: var(--border-subtle);
     }
     .password-wrap { position: relative; }
     .password-strength {
@@ -692,18 +706,18 @@
       transition: all 0.3s;
       flex: 1;
     }
-    .strength-label { font-size: 11px; color: #64748b; }
+    .strength-label { font-size: 11px; color: var(--text-secondary); }
     .modal-terms { font-size: 11px; color: #94a3b8; text-align: center; margin-top: 12px; }
     .modal-terms a { color: #6366f1; text-decoration: none; }
     .modal-verify { text-align: center; padding: 8px 0; }
     .verify-icon { font-size: 48px; margin-bottom: 12px; }
-    .modal-verify h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: #1e293b; }
-    .modal-verify p { font-size: 14px; color: #64748b; margin-bottom: 6px; }
+    .modal-verify h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: var(--text); }
+    .modal-verify p { font-size: 14px; color: var(--text-secondary); margin-bottom: 6px; }
     .verify-note { font-size: 12px !important; }
     .modal-btn-secondary {
-      background: #f1f5f9;
-      color: #475569;
-      border: 1px solid #e2e8f0;
+      background: var(--bg);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-subtle);
       width: 100%;
       padding: 11px;
       border-radius: 8px;
@@ -797,7 +811,7 @@
       }
     }
     /* App Demo Section */
-    .app-demo-section { background: #f8fafc; padding: 64px 24px; }
+    .app-demo-section { background: var(--section-alt-bg); padding: 64px 24px; }
     .app-demo-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -806,14 +820,14 @@
       margin: 32px auto 0;
     }
     .app-demo-card {
-      background: #fff;
-      border: 1px solid #e2e8f0;
+      background: var(--card-bg);
+      border: 1px solid var(--border-subtle);
       border-radius: 14px;
       overflow: hidden;
       box-shadow: 0 4px 20px rgba(0,0,0,0.06);
     }
     .app-demo-card svg { display: block; width: 100%; height: auto; }
-    .app-demo-label { font-size: 12px; color: #64748b; text-align: center; padding: 10px 0 12px; font-weight: 500; }
+    .app-demo-label { font-size: 12px; color: var(--text-secondary); text-align: center; padding: 10px 0 12px; font-weight: 500; }
   </style>
 </head>
 <body>
