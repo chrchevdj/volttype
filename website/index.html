@@ -342,6 +342,34 @@
     .feature-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
     .feature-card p { font-size: 14px; color: var(--text-secondary); }
 
+    /* Testimonials */
+    .testimonials-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px; max-width: 960px; margin: 0 auto;
+    }
+    .testimonial-card {
+      background: var(--white); border-radius: var(--radius);
+      border: 1px solid rgba(0,0,0,0.06);
+      padding: 28px; text-align: left;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    }
+    .testimonial-card .quote {
+      font-size: 15px; line-height: 1.6; color: var(--text-secondary);
+      font-style: italic; margin-bottom: 16px;
+    }
+    .testimonial-card .author {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .testimonial-card .avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--purple), var(--blue));
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 700; font-size: 16px; flex-shrink: 0;
+    }
+    .testimonial-card .author-name { font-weight: 700; font-size: 14px; color: var(--text-primary); }
+    .testimonial-card .author-role { font-size: 12px; color: var(--text-secondary); }
+    .testimonial-stars { color: #f59e0b; font-size: 14px; margin-bottom: 12px; letter-spacing: 2px; }
+
     /* Pricing */
     .pricing-grid {
       display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -983,6 +1011,47 @@
       </div>
 
       <p style="color: #6b7280; font-size: 13px; margin-top: 24px;">Works in Gmail, Word, Slack, Chrome, Notepad, and your own AI notes workflow</p>
+    </div>
+  </section>
+
+  <!-- Testimonials -->
+  <section class="section" id="testimonials">
+    <h2 class="section-title">What Users Say</h2>
+    <p class="section-sub">Real feedback from real people using VoltType every day.</p>
+    <div class="testimonials-grid">
+      <div class="testimonial-card">
+        <div class="testimonial-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <p class="quote">"VoltType completely changed the speed I work at. I used to spend 20 minutes drafting emails and follow-ups -- now I just talk and it's done in two. I'm genuinely more productive than I've ever been."</p>
+        <div class="author">
+          <div class="avatar">D</div>
+          <div>
+            <div class="author-name">Djoko</div>
+            <div class="author-role">Founder, <a href="https://myclienta.com" target="_blank" style="color:var(--purple)">myclienta.com</a></div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="testimonial-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <p class="quote">"My boss actually asked me what happened -- why I was getting reports and client updates out so fast. I just smile. VoltType lets me speak through everything instead of typing it out one word at a time."</p>
+        <div class="author">
+          <div class="avatar">L</div>
+          <div>
+            <div class="author-name">Lily</div>
+            <div class="author-role">Operations Manager, <a href="https://brandpulso.com" target="_blank" style="color:var(--purple)">brandpulso.com</a></div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="testimonial-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <p class="quote">"I respond to project plans and client briefs so much faster now. What used to take me 15 minutes of careful typing, I can dictate in 2 minutes and let the AI clean it up. It's a game changer for consultants."</p>
+        <div class="author">
+          <div class="avatar">C</div>
+          <div>
+            <div class="author-name">Christina</div>
+            <div class="author-role">Senior Consultant, Apex Strategy Group</div>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
