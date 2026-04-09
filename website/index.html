@@ -57,7 +57,8 @@
       --green: #10b981;
       --text: #1e1b4b;
       --text-secondary: #64648c;
-      --bg: #f8f9fc;
+      --bg: #ffffff;
+      --gradient-top: #ede5ff;
       --white: #ffffff;
       --radius: 16px;
       --card-bg: #ffffff;
@@ -68,6 +69,7 @@
       --text: #e2e8f0;
       --text-secondary: #a5b4cb;
       --bg: #1a1254;
+      --gradient-top: #120d40;
       --white: #1a1254;
       --card-bg: rgba(255,255,255,0.06);
       --nav-bg: rgba(26,18,84,0.95);
@@ -83,7 +85,7 @@
     :root {
       --border-subtle: rgba(0,0,0,0.06);
       --text-primary: #1e1b4b;
-      --section-alt-bg: #f8fafc;
+      --section-alt-bg: rgba(124,58,237,0.02);
       --modal-bg: #ffffff;
       --input-bg: #f8f9fc;
       --input-border: rgba(0,0,0,0.12);
@@ -92,10 +94,12 @@
     html, body { overflow-x: hidden; }
     body {
       font-family: 'Inter', -apple-system, system-ui, sans-serif;
-      background: var(--bg);
+      background-color: var(--bg);
+      background-image: linear-gradient(180deg, var(--gradient-top) 0%, var(--bg) 700px);
+      background-repeat: no-repeat;
       color: var(--text);
       line-height: 1.6;
-      transition: background 0.3s, color 0.3s;
+      transition: background-color 0.3s, color 0.3s;
     }
     a { text-decoration: none; color: inherit; }
     .sr-only {
@@ -562,6 +566,8 @@
     footer a:hover { color: white; }
     .footer-links { display: flex; gap: 32px; justify-content: center; margin-bottom: 24px; font-size: 14px; }
     .footer-copy { font-size: 13px; color: rgba(255,255,255,0.4); }
+    .dark #demo { background: var(--bg) !important; }
+    .dark footer { background: var(--bg); border-top: 1px solid rgba(255,255,255,0.06); }
 
     /* Auth Modal */
     .modal-overlay {
