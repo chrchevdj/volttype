@@ -70,7 +70,10 @@ export default function SettingsScreen({ navigation }) {
         style: 'destructive',
         onPress: async () => {
           await logout();
-          navigation.replace('Login');
+          navigation.getParent()?.reset({
+            index: 0,
+            routes: [{ name: 'Login' }],
+          });
         },
       },
     ]);
@@ -79,11 +82,7 @@ export default function SettingsScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.backBtn}>{'\u2190'} Back</Text>
-        </TouchableOpacity>
         <Text style={styles.headerTitle}>Settings</Text>
-        <View style={{ width: 60 }} />
       </View>
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
@@ -149,7 +148,7 @@ export default function SettingsScreen({ navigation }) {
           <Text style={styles.logoutText}>Sign Out</Text>
         </TouchableOpacity>
 
-        <Text style={styles.version}>VoltType v1.0.0</Text>
+        <Text style={styles.version}>VoltType v1.1.0</Text>
       </ScrollView>
     </View>
   );
@@ -161,20 +160,13 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.bg,
   },
   header: {
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingTop: 56,
     paddingHorizontal: 20,
     paddingBottom: 16,
   },
-  backBtn: {
-    fontSize: 16,
-    color: COLORS.accent,
-    fontWeight: '600',
-  },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: '700',
     color: COLORS.text,
   },

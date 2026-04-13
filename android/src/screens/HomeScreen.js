@@ -26,10 +26,48 @@ const COLORS = {
   border: 'rgba(255,255,255,0.08)',
 };
 
+const HISTORY_KEY = 'volttype_history';
+
 function formatTime(seconds) {
   const m = Math.floor(seconds / 60);
   const s = Math.floor(seconds % 60);
   return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+async function saveToHistory(text, language) {
+  try {
+    const raw = await AsyncStorage.getItem(HISTORY_KEY);
+    const history = raw ? JSON.parse(raw) : [];
+    const entry = {
+      id: Date.now().toString() + Math.random().toString(36).slice(2, 8),
+      text,
+      language,
+      timestamp: Date.now(),
+    };
+    history.push(entry);
+    // Keep only the last 200 entries to avoid storage bloat
+    if (history.length > 200) {
+      history.splice(0, history.length - 200);
+    }
+    await AsyncStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  } catch {
+    // Non-critical — don't block the user
+  }
+}
+
+async function checkConnectivity() {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    await fetch('https://volttype-api.crcaway.workers.dev/v1/usage', {
+      method: 'HEAD',
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export default function HomeScreen({ navigation }) {
@@ -39,13 +77,19 @@ export default function HomeScreen({ navigation }) {
   const [sessionCount, setSessionCount] = useState(0);
   const [remaining, setRemaining] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [offline, setOffline] = useState(false);
   const languageRef = useRef('en');
   const outputStyleRef = useRef('clean');
+
+  const limitReached = remaining != null && remaining <= 0;
 
   // Load usage and settings on mount + when returning from Settings
   useEffect(() => {
     loadUsage();
-    const unsubscribe = navigation.addListener('focus', loadSettings);
+    const unsubscribe = navigation.addListener('focus', () => {
+      loadSettings();
+      loadUsage();
+    });
     loadSettings();
     return unsubscribe;
   }, [navigation]);
@@ -61,12 +105,36 @@ export default function HomeScreen({ navigation }) {
     try {
       const usage = await getUsage();
       setRemaining(usage.remainingSeconds);
+      setOffline(false);
     } catch {
-      // Silently fail — usage display is non-critical
+      // Check if it's a connectivity issue
+      const online = await checkConnectivity();
+      setOffline(!online);
     }
   }
 
   async function startRecording() {
+    // Check connectivity first
+    if (offline) {
+      const online = await checkConnectivity();
+      if (!online) {
+        Alert.alert(
+          'No connection',
+          'Please check your internet connection and try again.',
+        );
+        return;
+      }
+      setOffline(false);
+    }
+
+    if (limitReached) {
+      Alert.alert(
+        'Daily limit reached',
+        'Upgrade your plan for more minutes at volttype.com',
+      );
+      return;
+    }
+
     try {
       const permission = await Audio.requestPermissionsAsync();
       if (!permission.granted) {
@@ -120,9 +188,13 @@ export default function HomeScreen({ navigation }) {
         if (result.usage?.remaining != null) {
           setRemaining(result.usage.remaining);
         }
+
+        // Save to local history
+        await saveToHistory(finalText, languageRef.current);
       }
     } catch (err) {
       if (err.message === 'LIMIT_REACHED') {
+        setRemaining(0);
         Alert.alert(
           'Daily limit reached',
           'Upgrade your plan for more minutes at volttype.com',
@@ -131,10 +203,28 @@ export default function HomeScreen({ navigation }) {
         Alert.alert(
           'Session expired',
           'Please sign in again.',
-          [{ text: 'OK', onPress: () => navigation.replace('Login') }],
+          [{
+            text: 'OK',
+            onPress: () => {
+              navigation.getParent()?.reset({
+                index: 0,
+                routes: [{ name: 'Login' }],
+              });
+            },
+          }],
         );
       } else {
-        Alert.alert('Error', err.message);
+        // Could be a network error
+        const online = await checkConnectivity();
+        if (!online) {
+          setOffline(true);
+          Alert.alert(
+            'No connection',
+            'Could not reach the server. Please check your internet connection.',
+          );
+        } else {
+          Alert.alert('Error', err.message);
+        }
       }
     } finally {
       setProcessing(false);
@@ -170,11 +260,15 @@ export default function HomeScreen({ navigation }) {
     setResultText('');
   }
 
+  const micDisabled = processing || limitReached;
+
   const micLabel = processing
     ? 'Transcribing...'
     : recording
       ? 'Tap to stop'
-      : 'Tap to start voice typing';
+      : limitReached
+        ? 'Daily limit reached'
+        : 'Tap to start voice typing';
 
   const micEmoji = processing ? '\u23F3' : recording ? '\u23F9' : '\uD83C\uDF99';
 
@@ -186,19 +280,43 @@ export default function HomeScreen({ navigation }) {
         <Text style={styles.tagline}>Tap to speak. Text appears.</Text>
       </View>
 
-      {/* Stats */}
-      <View style={styles.statsRow}>
-        <View style={styles.stat}>
-          <Text style={styles.statValue}>
-            {remaining != null ? formatTime(remaining) : '--:--'}
+      {/* Offline banner */}
+      {offline && (
+        <TouchableOpacity style={styles.offlineBanner} onPress={loadUsage}>
+          <Text style={styles.offlineText}>
+            No internet connection. Tap to retry.
           </Text>
-          <Text style={styles.statLabel}>REMAINING</Text>
-        </View>
-        <View style={styles.stat}>
-          <Text style={styles.statValue}>{sessionCount}</Text>
-          <Text style={styles.statLabel}>SESSIONS</Text>
-        </View>
+        </TouchableOpacity>
+      )}
+
+      {/* Remaining time - prominent display */}
+      <View style={styles.remainingBar}>
+        <Text
+          style={[
+            styles.remainingValue,
+            limitReached && styles.remainingValueDepleted,
+          ]}
+        >
+          {remaining != null ? formatTime(remaining) : '--:--'}
+        </Text>
+        <Text style={styles.remainingLabel}>
+          {limitReached ? 'LIMIT REACHED' : 'TIME REMAINING TODAY'}
+        </Text>
+        {limitReached && (
+          <Text style={styles.upgradeHint}>
+            Upgrade at volttype.com for more time
+          </Text>
+        )}
       </View>
+
+      {/* Sessions count */}
+      {sessionCount > 0 && (
+        <View style={styles.sessionRow}>
+          <Text style={styles.sessionText}>
+            {sessionCount} recording{sessionCount !== 1 ? 's' : ''} this session
+          </Text>
+        </View>
+      )}
 
       {/* Mic button */}
       <View style={styles.micArea}>
@@ -207,18 +325,23 @@ export default function HomeScreen({ navigation }) {
             styles.micRing,
             recording && styles.micRingRecording,
             processing && styles.micRingProcessing,
+            limitReached && styles.micRingDisabled,
           ]}
           onPress={handleMicPress}
           activeOpacity={0.8}
-          disabled={processing}
+          disabled={micDisabled}
         >
           {processing ? (
             <ActivityIndicator size="large" color="#fff" />
           ) : (
-            <Text style={styles.micEmoji}>{micEmoji}</Text>
+            <Text style={[styles.micEmoji, limitReached && styles.micEmojiDisabled]}>
+              {micEmoji}
+            </Text>
           )}
         </TouchableOpacity>
-        <Text style={styles.micLabel}>{micLabel}</Text>
+        <Text style={[styles.micLabel, limitReached && styles.micLabelDepleted]}>
+          {micLabel}
+        </Text>
       </View>
 
       {/* Result */}
@@ -255,15 +378,37 @@ export default function HomeScreen({ navigation }) {
             </TouchableOpacity>
           </View>
         ) : null}
-      </ScrollView>
 
-      {/* Settings gear */}
-      <TouchableOpacity
-        style={styles.settingsBtn}
-        onPress={() => navigation.navigate('Settings')}
-      >
-        <Text style={styles.settingsIcon}>{'\u2699'}</Text>
-      </TouchableOpacity>
+        {/* Voice commands info card */}
+        {!resultText && (
+          <View style={styles.voiceCommandsCard}>
+            <Text style={styles.voiceCommandsTitle}>Voice Commands</Text>
+            <Text style={styles.voiceCommandsSubtitle}>
+              Say these phrases while dictating:
+            </Text>
+            <View style={styles.commandRow}>
+              <Text style={styles.commandLabel}>"make formal"</Text>
+              <Text style={styles.commandDesc}>Polishes tone to professional</Text>
+            </View>
+            <View style={styles.commandRow}>
+              <Text style={styles.commandLabel}>"summarize"</Text>
+              <Text style={styles.commandDesc}>Condenses into key points</Text>
+            </View>
+            <View style={styles.commandRow}>
+              <Text style={styles.commandLabel}>"bullet points"</Text>
+              <Text style={styles.commandDesc}>Converts to a bulleted list</Text>
+            </View>
+            <View style={styles.commandRow}>
+              <Text style={styles.commandLabel}>"new paragraph"</Text>
+              <Text style={styles.commandDesc}>Starts a new paragraph</Text>
+            </View>
+            <View style={styles.commandRow}>
+              <Text style={styles.commandLabel}>"translate to [lang]"</Text>
+              <Text style={styles.commandDesc}>Translates your text</Text>
+            </View>
+          </View>
+        )}
+      </ScrollView>
     </View>
   );
 }
@@ -275,7 +420,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingTop: 56,
-    paddingBottom: 8,
+    paddingBottom: 4,
     alignItems: 'center',
   },
   logo: {
@@ -288,34 +433,66 @@ const styles = StyleSheet.create({
     color: COLORS.text3,
     marginTop: 4,
   },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 32,
-    paddingVertical: 12,
-  },
-  stat: {
+
+  /* Offline banner */
+  offlineBanner: {
+    backgroundColor: 'rgba(248,113,113,0.15)',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(248,113,113,0.3)',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
     alignItems: 'center',
   },
-  statValue: {
-    fontSize: 18,
-    fontWeight: '700',
+  offlineText: {
+    fontSize: 13,
+    color: COLORS.red,
+    fontWeight: '600',
+  },
+
+  /* Remaining time bar */
+  remainingBar: {
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  remainingValue: {
+    fontSize: 28,
+    fontWeight: '800',
     color: COLORS.accent,
   },
-  statLabel: {
+  remainingValueDepleted: {
+    color: COLORS.red,
+  },
+  remainingLabel: {
     fontSize: 10,
     color: COLORS.text3,
-    letterSpacing: 0.5,
+    letterSpacing: 1,
     marginTop: 2,
   },
+  upgradeHint: {
+    fontSize: 12,
+    color: COLORS.accent2,
+    marginTop: 4,
+  },
+
+  /* Session row */
+  sessionRow: {
+    alignItems: 'center',
+    paddingBottom: 4,
+  },
+  sessionText: {
+    fontSize: 12,
+    color: COLORS.text3,
+  },
+
+  /* Mic */
   micArea: {
     alignItems: 'center',
-    paddingVertical: 20,
+    paddingVertical: 16,
   },
   micRing: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 110,
+    height: 110,
+    borderRadius: 55,
     backgroundColor: COLORS.accent,
     alignItems: 'center',
     justifyContent: 'center',
@@ -333,15 +510,28 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.accent,
     opacity: 0.7,
   },
+  micRingDisabled: {
+    backgroundColor: COLORS.text3,
+    shadowColor: COLORS.text3,
+    opacity: 0.5,
+  },
   micEmoji: {
-    fontSize: 44,
+    fontSize: 40,
     color: '#fff',
+  },
+  micEmojiDisabled: {
+    opacity: 0.6,
   },
   micLabel: {
     fontSize: 14,
     color: COLORS.text2,
-    marginTop: 14,
+    marginTop: 12,
   },
+  micLabelDepleted: {
+    color: COLORS.red,
+  },
+
+  /* Result */
   resultScroll: {
     flex: 1,
     paddingHorizontal: 20,
@@ -404,14 +594,43 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
   },
-  settingsBtn: {
-    position: 'absolute',
-    top: 52,
-    right: 20,
-    padding: 8,
+
+  /* Voice Commands Card */
+  voiceCommandsCard: {
+    backgroundColor: COLORS.card,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 14,
+    padding: 16,
+    marginTop: 16,
   },
-  settingsIcon: {
-    fontSize: 22,
+  voiceCommandsTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: COLORS.text,
+    marginBottom: 4,
+  },
+  voiceCommandsSubtitle: {
+    fontSize: 12,
+    color: COLORS.text3,
+    marginBottom: 12,
+  },
+  commandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+  },
+  commandLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: COLORS.accent,
+    width: 140,
+  },
+  commandDesc: {
+    fontSize: 12,
     color: COLORS.text2,
+    flex: 1,
   },
 });

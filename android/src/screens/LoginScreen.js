@@ -48,7 +48,7 @@ export default function LoginScreen({ navigation }) {
       } else {
         await login(email.trim(), password);
       }
-      navigation.replace('Home');
+      navigation.replace('Main');
     } catch (err) {
       setError(err.message);
     } finally {
