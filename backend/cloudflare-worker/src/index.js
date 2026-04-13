@@ -198,7 +198,7 @@ export default {
         const supabaseUrl = env.SUPABASE_URL;
 
         // Fetch all stats in parallel
-        const [usersRes, profilesRes, subsRes, usageRes] = await Promise.all([
+        const [_usersRes, profilesRes, subsRes, usageRes] = await Promise.all([
           // Total auth users
           fetch(`${supabaseUrl}/auth/v1/admin/users?per_page=1`, {
             headers: { ...supabaseHeaders, 'Authorization': `Bearer ${env.SUPABASE_SERVICE_KEY}` },

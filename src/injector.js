@@ -18,7 +18,7 @@ let _savedHwnd = null;
 function saveForegroundWindow() {
   try {
     const result = execSync(
-      'powershell -NoProfile -Command "Add-Type -MemberDefinition \'[DllImport(\\\"user32.dll\\\")] public static extern IntPtr GetForegroundWindow();\' -Name U -Namespace U -PassThru | Out-Null; [U.U]::GetForegroundWindow().ToInt64()"',
+      'powershell -NoProfile -Command "Add-Type -MemberDefinition \'[DllImport(\\"user32.dll\\")] public static extern IntPtr GetForegroundWindow();\' -Name U -Namespace U -PassThru | Out-Null; [U.U]::GetForegroundWindow().ToInt64()"',
       { windowsHide: true, timeout: 2000 }
     ).toString().trim();
     _savedHwnd = result;

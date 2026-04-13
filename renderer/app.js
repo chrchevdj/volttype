@@ -423,7 +423,7 @@ async function _handleRecordingState({ recording, skip, mode }) {
   }
 }
 
-function handleTranscriptionResult({ text, duration, apiLatency, voiceCommand, voiceCommandLabel }) {
+function handleTranscriptionResult({ text, duration: _duration, apiLatency: _apiLatency, voiceCommand, voiceCommandLabel }) {
   const status = document.getElementById('sidebar-status');
 
   if (voiceCommand) {
@@ -464,7 +464,7 @@ function showUpgradeBanner() {
   document.getElementById('upgrade-banner').classList.remove('hidden');
 }
 
-function hideUpgradeBanner() {
+function hideUpgradeBanner() { // eslint-disable-line no-unused-vars
   document.getElementById('upgrade-banner').classList.add('hidden');
 }
 
@@ -541,7 +541,7 @@ async function loadHistory() {
 
       // Replace edit button with save/cancel
       const actionsEl = item.querySelector('.history-actions');
-      const origActions = actionsEl.innerHTML;
+      const _origActions = actionsEl.innerHTML;
       actionsEl.innerHTML = `
         <button class="btn-primary btn-small history-save">Save &amp; Learn</button>
         <button class="btn-secondary btn-small history-cancel">Cancel</button>
@@ -625,7 +625,7 @@ function updateQuickStart() {
   document.getElementById('hotkey-display').textContent = settings.hotkey || 'Ctrl+Shift+D';
 
   // Quickstart section visibility
-  const section = document.getElementById('quickstart-section');
+  const _section = document.getElementById('quickstart-section');
   if (hasKey) {
     // Could hide quickstart after first use, but keep it for reference
   }
@@ -1034,14 +1034,14 @@ function initOnboarding() {
   const overlay = document.getElementById('onboarding-overlay');
   overlay.classList.remove('hidden');
 
-  let currentStep = 1;
+  let _currentStep = 1;
 
   function showStep(n) {
     for (let i = 1; i <= 3; i++) {
       document.getElementById(`ob-step-${i}`).classList.toggle('hidden', i !== n);
       document.getElementById(`ob-dot-${i}`).classList.toggle('active', i === n);
     }
-    currentStep = n;
+    _currentStep = n;
   }
 
   document.getElementById('ob-next-1').addEventListener('click', () => showStep(2));

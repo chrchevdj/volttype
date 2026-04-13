@@ -4,7 +4,7 @@
  * Local-first Windows dictation app with global hotkey activation.
  * Uses Groq Whisper API (free) for speech-to-text.
  */
-const { app, BrowserWindow, globalShortcut, ipcMain, session, Tray, Menu, nativeImage } = require('electron');
+const { app, BrowserWindow, globalShortcut, ipcMain, session, Tray, Menu } = require('electron');
 const path = require('path');
 const { autoUpdater } = require('electron-updater');
 const Settings = require('./src/settings');
