@@ -74,6 +74,45 @@ async function injectText(text) {
   });
 }
 
+/**
+ * Replace previously injected text with corrected text.
+ * Sends backspaces to delete the old text, then pastes the new text.
+ * Only works if cursor is still at the end of the injected text.
+ */
+async function replaceAndInject(newText, oldLength) {
+  if (!newText || !oldLength) return;
+  console.log(`[INJECT] Replacing ${oldLength} chars with ${newText.length} chars`);
+
+  let oldClip = '';
+  try { oldClip = clipboard.readText(); } catch {}
+
+  clipboard.writeText(newText);
+
+  const focusCmd = _savedHwnd
+    ? `Add-Type -MemberDefinition '[DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr h);' -Name U -Namespace U -PassThru | Out-Null; [U.U]::SetForegroundWindow([IntPtr]${_savedHwnd}); Start-Sleep -Milliseconds 100;`
+    : 'Start-Sleep -Milliseconds 100;';
+
+  // Select old text with Shift+Left, then paste over it
+  const psScript = `${focusCmd} Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.SendKeys]::SendWait('+({LEFT ${oldLength}})'); Start-Sleep -Milliseconds 50; [System.Windows.Forms.SendKeys]::SendWait('^v')`;
+
+  return new Promise((resolve) => {
+    exec(`powershell -NoProfile -NonInteractive -Command "${psScript}"`, {
+      windowsHide: true,
+      timeout: 8000,
+    }, (err) => {
+      if (err) {
+        console.error('[INJECT] Replace failed:', err.message);
+      } else {
+        console.log('[INJECT] Replaced OK');
+      }
+      setTimeout(() => {
+        try { if (oldClip) clipboard.writeText(oldClip); } catch {}
+        resolve();
+      }, 600);
+    });
+  });
+}
+
 function cleanup() {}
 
-module.exports = { injectText, saveForegroundWindow, cleanup };
+module.exports = { injectText, replaceAndInject, saveForegroundWindow, cleanup };

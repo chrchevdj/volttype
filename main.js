@@ -12,7 +12,7 @@ const History = require('./src/history');
 const Dictionary = require('./src/dictionary');
 const Snippets = require('./src/snippets');
 const GroqSTT = require('./src/stt-groq');
-const { injectText, saveForegroundWindow, cleanup: cleanupInjector } = require('./src/injector');
+const { injectText, replaceAndInject, saveForegroundWindow, cleanup: cleanupInjector } = require('./src/injector');
 const { setAutoStart, getAutoStartEnabled } = require('./src/startup');
 const { createIdleIcon, createRecordingIcon, createProcessingIcon } = require('./src/icons');
 const HotkeyManager = require('./src/hotkey');
@@ -681,6 +681,32 @@ ipcMain.handle('edit-history-entry', (event, { id, newText }) => {
     console.log(`[LEARN] User corrected: "${originalText.slice(0, 40)}..." → "${newText.slice(0, 40)}..."`);
   }
   return true;
+});
+
+// Correct and re-inject — user fixes text in correction popup
+ipcMain.handle('correct-and-reinject', async (event, { originalText, newText }) => {
+  if (!originalText || !newText) return { success: false };
+  if (originalText.trim() === newText.trim()) return { success: false };
+
+  // Learn from the correction
+  vocabLearner.learnCorrection(originalText, newText);
+  console.log(`[CORRECT] Learned: "${originalText.slice(0, 40)}..." → "${newText.slice(0, 40)}..."`);
+
+  // Update the most recent history entry if it matches
+  const recent = history.getRecent(1);
+  if (recent.length > 0 && recent[0].text === originalText) {
+    history.update(recent[0].id, newText);
+  }
+
+  // Re-inject: select the old text and paste the corrected version
+  try {
+    await replaceAndInject(newText, originalText.length);
+    console.log('[CORRECT] Re-injected corrected text');
+  } catch (err) {
+    console.error('[CORRECT] Re-inject failed:', err.message);
+  }
+
+  return { success: true };
 });
 
 // VAD auto-stop — renderer detected silence, trigger stop

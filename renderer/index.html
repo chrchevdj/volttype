@@ -547,6 +547,20 @@
     </div>
   </div>
 
+  <!-- Correction popup — appears after each dictation -->
+  <div id="correction-popup" class="correction-popup hidden">
+    <div class="correction-header">
+      <span class="correction-title">Just typed</span>
+      <span class="correction-timer" id="correction-timer">8s</span>
+      <button class="correction-dismiss" id="correction-dismiss" title="Dismiss">&times;</button>
+    </div>
+    <textarea id="correction-text" class="correction-text" rows="3"></textarea>
+    <div class="correction-actions">
+      <button class="btn-primary btn-small" id="correction-save">Fix &amp; Learn</button>
+      <span class="correction-hint">Edit the text above if something is wrong</span>
+    </div>
+  </div>
+
   <script src="audio.js"></script>
   <script src="app.js"></script>
 </body>

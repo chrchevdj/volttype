@@ -461,7 +461,108 @@ function handleTranscriptionResult({ text, duration: _duration, apiLatency: _api
     }
     if (charCount) charCount.textContent = editor.value.length + ' chars';
   }
+
+  // Show correction popup for non-command transcriptions
+  if (!voiceCommand && text && text.trim().length > 0) {
+    showCorrectionPopup(text);
+  }
 }
+
+// ---- Correction Popup ----
+let correctionTimer = null;
+let correctionCountdown = null;
+let correctionOriginalText = '';
+
+function showCorrectionPopup(text) {
+  const popup = document.getElementById('correction-popup');
+  const textarea = document.getElementById('correction-text');
+  const timerEl = document.getElementById('correction-timer');
+
+  // Clear any existing timer
+  dismissCorrectionPopup(true);
+
+  correctionOriginalText = text;
+  textarea.value = text;
+  textarea.rows = Math.min(5, Math.max(2, text.split('\n').length));
+  popup.classList.remove('hidden', 'edited', 'saving');
+  timerEl.textContent = '8s';
+
+  let secondsLeft = 8;
+  correctionCountdown = setInterval(() => {
+    secondsLeft--;
+    timerEl.textContent = secondsLeft + 's';
+    if (secondsLeft <= 0) {
+      dismissCorrectionPopup();
+    }
+  }, 1000);
+
+  // Pause auto-close when user starts editing
+  textarea.oninput = () => {
+    const changed = textarea.value.trim() !== correctionOriginalText.trim();
+    popup.classList.toggle('edited', changed);
+    if (changed && correctionCountdown) {
+      clearInterval(correctionCountdown);
+      correctionCountdown = null;
+      timerEl.textContent = '';
+    }
+  };
+}
+
+function dismissCorrectionPopup(silent) {
+  const popup = document.getElementById('correction-popup');
+  if (correctionCountdown) {
+    clearInterval(correctionCountdown);
+    correctionCountdown = null;
+  }
+  if (correctionTimer) {
+    clearTimeout(correctionTimer);
+    correctionTimer = null;
+  }
+  if (!silent) {
+    popup.classList.add('hidden');
+  }
+  correctionOriginalText = '';
+}
+
+async function saveCorrection() {
+  const popup = document.getElementById('correction-popup');
+  const textarea = document.getElementById('correction-text');
+  const newText = textarea.value.trim();
+
+  if (!newText || newText === correctionOriginalText.trim()) {
+    dismissCorrectionPopup();
+    return;
+  }
+
+  popup.classList.add('saving');
+
+  try {
+    await vf.correctAndReinject({ originalText: correctionOriginalText, newText });
+    playSuccessSound();
+    loadVocabStats();
+    loadHistory();
+  } catch (err) {
+    console.error('[CORRECTION] Error:', err);
+  }
+
+  dismissCorrectionPopup();
+}
+
+// Wire up correction popup buttons
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('correction-dismiss').addEventListener('click', () => dismissCorrectionPopup());
+  document.getElementById('correction-save').addEventListener('click', () => saveCorrection());
+
+  // Escape key dismisses popup
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const popup = document.getElementById('correction-popup');
+      if (!popup.classList.contains('hidden')) {
+        dismissCorrectionPopup();
+      }
+    }
+  });
+});
 
 function showUpgradeBanner() {
   document.getElementById('upgrade-banner').classList.remove('hidden');
