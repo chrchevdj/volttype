@@ -16,7 +16,8 @@
  */
 const fs = require('fs');
 const path = require('path');
-const { app } = require('electron');
+const { getApp } = require('./electron-runtime');
+const app = getApp();
 
 // Words to ignore when building vocabulary (too common to be useful)
 const STOP_WORDS = new Set([

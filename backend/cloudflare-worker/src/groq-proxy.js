@@ -169,7 +169,7 @@ export async function proxyCommand(request, env) {
   };
 }
 
-function getCleanerPrompt(style, userContext) {
+export function getCleanerPrompt(style, userContext) {
   let prompt;
   if (style === 'punctuated') {
     prompt = `You are a dictation assistant. Fix only punctuation and capitalization.

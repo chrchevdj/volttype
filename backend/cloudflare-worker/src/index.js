@@ -279,7 +279,7 @@ export default {
   },
 };
 
-function json(data, status, request) {
+export function json(data, status, request) {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
@@ -289,7 +289,7 @@ function json(data, status, request) {
   });
 }
 
-async function handleStripeWebhook(request, env) {
+export async function handleStripeWebhook(request, env) {
   if (!env.STRIPE_WEBHOOK_SECRET) {
     return json({ error: 'Stripe webhook secret not configured' }, 500, request);
   }
@@ -363,7 +363,7 @@ async function handleStripeWebhook(request, env) {
   }
 }
 
-async function syncStripeSubscription(subscription, env) {
+export async function syncStripeSubscription(subscription, env) {
   if (!subscription?.id) return;
 
   const customerId = getStripeId(subscription.customer);
@@ -424,7 +424,7 @@ async function syncStripeSubscription(subscription, env) {
   );
 }
 
-async function fetchStripeSubscription(subscriptionId, env) {
+export async function fetchStripeSubscription(subscriptionId, env) {
   const res = await fetch(`https://api.stripe.com/v1/subscriptions/${subscriptionId}`, {
     headers: {
       'Authorization': `Bearer ${env.STRIPE_SECRET_KEY}`,
@@ -440,7 +440,7 @@ async function fetchStripeSubscription(subscriptionId, env) {
   return res.json();
 }
 
-function getPlanFromSubscription(subscription, env) {
+export function getPlanFromSubscription(subscription, env) {
   const metadataPlan = subscription?.metadata?.plan;
   if (metadataPlan === 'basic' || metadataPlan === 'pro') {
     return metadataPlan;
@@ -452,16 +452,16 @@ function getPlanFromSubscription(subscription, env) {
   return null;
 }
 
-function getStripeId(value) {
+export function getStripeId(value) {
   if (!value) return null;
   return typeof value === 'string' ? value : value.id || null;
 }
 
-function unixToIso(value) {
+export function unixToIso(value) {
   return typeof value === 'number' ? new Date(value * 1000).toISOString() : null;
 }
 
-async function getProfileByUserId(userId, env) {
+export async function getProfileByUserId(userId, env) {
   const res = await supabaseRequest(
     `/rest/v1/volttype_profiles?select=id,email,plan,stripe_customer_id&id=eq.${encodeURIComponent(userId)}`,
     env
@@ -469,7 +469,7 @@ async function getProfileByUserId(userId, env) {
   return Array.isArray(res) ? res[0] || null : null;
 }
 
-async function getProfileByCustomerId(customerId, env) {
+export async function getProfileByCustomerId(customerId, env) {
   const res = await supabaseRequest(
     `/rest/v1/volttype_profiles?select=id,email,plan,stripe_customer_id&stripe_customer_id=eq.${encodeURIComponent(customerId)}`,
     env
@@ -477,7 +477,7 @@ async function getProfileByCustomerId(customerId, env) {
   return Array.isArray(res) ? res[0] || null : null;
 }
 
-async function recordWebhookEvent(event, env) {
+export async function recordWebhookEvent(event, env) {
   if (!event?.id) {
     throw new Error('Stripe event missing id');
   }
@@ -500,7 +500,7 @@ async function recordWebhookEvent(event, env) {
   return Array.isArray(result) && result.length > 0;
 }
 
-async function updateProfile(userId, updates, env) {
+export async function updateProfile(userId, updates, env) {
   await supabaseRequest(
     `/rest/v1/volttype_profiles?id=eq.${encodeURIComponent(userId)}`,
     env,
@@ -514,7 +514,7 @@ async function updateProfile(userId, updates, env) {
   );
 }
 
-async function upsertSubscription(record, env) {
+export async function upsertSubscription(record, env) {
   await supabaseRequest(
     '/rest/v1/volttype_subscriptions?on_conflict=stripe_subscription_id',
     env,
@@ -528,7 +528,7 @@ async function upsertSubscription(record, env) {
   );
 }
 
-async function supabaseRequest(path, env, options = {}) {
+export async function supabaseRequest(path, env, options = {}) {
   const res = await fetch(`${env.SUPABASE_URL}${path}`, {
     method: options.method || 'GET',
     headers: {
@@ -552,7 +552,7 @@ async function supabaseRequest(path, env, options = {}) {
   return res.json();
 }
 
-async function verifyStripeWebhookSignature(payload, signatureHeader, secret) {
+export async function verifyStripeWebhookSignature(payload, signatureHeader, secret) {
   if (!signatureHeader || !secret) return false;
 
   const pieces = signatureHeader.split(',');
@@ -585,13 +585,13 @@ async function verifyStripeWebhookSignature(payload, signatureHeader, secret) {
   return signatures.some((value) => timingSafeEqual(value, expected));
 }
 
-function bufferToHex(buffer) {
+export function bufferToHex(buffer) {
   return Array.from(new Uint8Array(buffer))
     .map((byte) => byte.toString(16).padStart(2, '0'))
     .join('');
 }
 
-function timingSafeEqual(a, b) {
+export function timingSafeEqual(a, b) {
   if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) {
     return false;
   }

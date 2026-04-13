@@ -2,7 +2,8 @@
  * Windows auto-start management.
  * Uses Electron's built-in login item settings.
  */
-const { app } = require('electron');
+const { getApp } = require('./electron-runtime');
+const app = getApp();
 
 function setAutoStart(enabled) {
   app.setLoginItemSettings({

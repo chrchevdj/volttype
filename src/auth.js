@@ -4,10 +4,11 @@
  * Handles login, signup, token storage, and auto-refresh.
  * Uses Supabase Auth REST API directly (no SDK dependency).
  */
-const { net } = require('electron');
 const fs = require('fs');
 const path = require('path');
-const { app } = require('electron');
+const { getApp, getNet } = require('./electron-runtime');
+const app = getApp();
+const electronNet = getNet();
 
 const SUPABASE_URL = 'https://ceuymixybyaxpldgggin.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNldXltaXh5YnlheHBsZGdnZ2luIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3ODgwNzYsImV4cCI6MjA4NzM2NDA3Nn0.OprbSZuB-wo2Q_aWnkhC0I7e7iPePT9lD8LT2BrlEWE';
@@ -77,7 +78,7 @@ class Auth {
    * Sign up with email and password.
    */
   async signup(email, password) {
-    const res = await net.fetch(`${SUPABASE_URL}/auth/v1/signup`, {
+    const res = await electronNet.fetch(`${SUPABASE_URL}/auth/v1/signup`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -104,7 +105,7 @@ class Auth {
       // Upsert volttype_profiles row (trigger also creates one, this ensures it exists)
       if (data.user?.id) {
         try {
-          await net.fetch(`${SUPABASE_URL}/rest/v1/volttype_profiles`, {
+          await electronNet.fetch(`${SUPABASE_URL}/rest/v1/volttype_profiles`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -132,7 +133,7 @@ class Auth {
    * Sign in with email and password.
    */
   async login(email, password) {
-    const res = await net.fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+    const res = await electronNet.fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -165,7 +166,7 @@ class Auth {
   async refresh() {
     if (!this._session?.refresh_token) throw new Error('No refresh token');
 
-    const res = await net.fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+    const res = await electronNet.fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

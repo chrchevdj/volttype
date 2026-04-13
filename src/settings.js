@@ -4,7 +4,8 @@
  */
 const fs = require('fs');
 const path = require('path');
-const { app } = require('electron');
+const { getApp } = require('./electron-runtime');
+const app = getApp();
 
 const SCHEMA_VERSION = 3;
 

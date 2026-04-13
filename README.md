@@ -86,3 +86,35 @@ Current launch posture: **Windows beta**. Card payments are live via Stripe. ACH
 npm run build           # Windows installer + portable
 npm run build:portable  # Portable only
 ```
+
+## Testing
+
+VoltType now ships with repeatable unit, integration, UI, and performance test commands.
+
+```bash
+npm run test:unit
+npm run test:integration
+npm run test:coverage
+npm run test:ui
+npm run test:perf
+npm run test:lighthouse
+npm test
+```
+
+What each command does:
+
+- `npm run test:unit` runs fast business-logic and storage tests for the Electron-side modules plus backend helpers.
+- `npm run test:integration` runs request-level integration tests against the Cloudflare Worker routes.
+- `npm run test:coverage` generates a V8 coverage report in `coverage/`.
+- `npm run test:ui` runs Playwright browser automation against the local website experience.
+- `npm run test:perf` runs local `autocannon` smoke/load scenarios and writes results to `performance-results/summary.json`.
+- `npm run test:lighthouse` runs Lighthouse CI against the local website and writes reports to `lighthouse-results/`.
+- `npm test` runs the full automated quality suite end to end.
+
+Notes:
+
+- Playwright uses a lightweight local static server defined in `tests/ui/website-server.js`.
+- The UI suite installs and uses Chromium via `npx playwright install chromium`.
+- Integration coverage now includes an `MSW`-backed auth/API layer for deterministic frontend-style network flows.
+- Lighthouse CI is used for real local page-quality/performance checks on the public website.
+- External providers such as Supabase, Groq, Stripe, and GitHub are isolated behind deterministic test doubles where hitting production services would be unsafe or nondeterministic.

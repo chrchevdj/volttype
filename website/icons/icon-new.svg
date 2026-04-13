@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <!-- Main mark gradient: violet → indigo → blue -->
+    <linearGradient id="vt-mark" x1="80" y1="80" x2="432" y2="432" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"  stop-color="#c4b5fd"/>
+      <stop offset="30%" stop-color="#8b5cf6"/>
+      <stop offset="65%" stop-color="#6d28d9"/>
+      <stop offset="100%" stop-color="#2563eb"/>
+    </linearGradient>
+
+    <!-- Warm accent for inner wave (adds depth, not monotone) -->
+    <linearGradient id="vt-accent" x1="0" y1="0" x2="0" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"  stop-color="#f0abfc"/>
+      <stop offset="100%" stop-color="#8b5cf6"/>
+    </linearGradient>
+
+    <!-- Soft outer glow so the mark has presence on any background -->
+    <filter id="vt-glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Subtle highlight sheen on the I-beam -->
+    <linearGradient id="vt-sheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="white" stop-opacity="0.35"/>
+      <stop offset="50%" stop-color="white" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- NO background square — transparent -->
+
+  <!-- Outer sound wave arcs (faint, warm-to-cool gradient) -->
+  <g filter="url(#vt-glow)" opacity="0.55">
+    <path d="M 132 168 Q 92 256 132 344" fill="none" stroke="url(#vt-mark)" stroke-width="20" stroke-linecap="round"/>
+    <path d="M 380 168 Q 420 256 380 344" fill="none" stroke="url(#vt-mark)" stroke-width="20" stroke-linecap="round"/>
+  </g>
+
+  <!-- Inner sound wave arcs (stronger, pink-to-violet accent for depth) -->
+  <g filter="url(#vt-glow)">
+    <path d="M 180 200 Q 150 256 180 312" fill="none" stroke="url(#vt-accent)" stroke-width="24" stroke-linecap="round"/>
+    <path d="M 332 200 Q 362 256 332 312" fill="none" stroke="url(#vt-accent)" stroke-width="24" stroke-linecap="round"/>
+  </g>
+
+  <!-- I-beam text cursor (the hero mark) -->
+  <g filter="url(#vt-glow)">
+    <rect x="216" y="136" width="80" height="32" rx="16" fill="url(#vt-mark)"/>
+    <rect x="236" y="160" width="40" height="192" rx="20" fill="url(#vt-mark)"/>
+    <rect x="216" y="344" width="80" height="32" rx="16" fill="url(#vt-mark)"/>
+  </g>
+
+  <!-- Subtle top sheen on the I-beam for a premium 3D-lite feel -->
+  <g opacity="0.9">
+    <rect x="216" y="136" width="80" height="16" rx="8" fill="url(#vt-sheen)"/>
+    <rect x="236" y="160" width="40" height="40" rx="20" fill="url(#vt-sheen)"/>
+  </g>
+</svg>

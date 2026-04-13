@@ -11,3 +11,8 @@ Interface*
 MASTER_PROMPT*
 CLAUDE_CODE_MASTER_PROMPT*
 electron-output*
+coverage/
+performance-results/
+test-results/
+playwright-report/
+lighthouse-results/

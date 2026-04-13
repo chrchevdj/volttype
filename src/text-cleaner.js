@@ -11,7 +11,8 @@
  *
  * Uses Groq's free LLM API (same key as Whisper).
  */
-const { net } = require('electron');
+const { getNet } = require('./electron-runtime');
+const net = getNet();
 
 // Voice command patterns — user says these to trigger AI processing
 const VOICE_COMMANDS = [

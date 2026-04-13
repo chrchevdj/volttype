@@ -4,7 +4,7 @@
     {
       "name": "website",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["serve", "website", "-l", "3456"],
+      "runtimeArgs": ["serve", "website", "-l", "3456", "--no-clipboard"],
       "port": 3456
     }
   ]
