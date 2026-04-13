@@ -47,7 +47,7 @@
         </button>
         <button class="nav-item" data-page="notebook">
           <span class="nav-icon">&#x1F4DD;</span>
-          <span>Notebook</span>
+          <span>AI Notes</span>
         </button>
         <button class="nav-item" data-page="settings">
           <span class="nav-icon">&#x2699;</span>
@@ -312,17 +312,51 @@
         </div>
       </div>
 
-      <!-- NOTEBOOK PAGE -->
+      <!-- NOTEBOOK PAGE — AI Notes Workspace -->
       <div class="page" id="page-notebook">
         <div class="page-header">
-          <h1>Notebook</h1>
-          <p class="subtitle">Test voice typing here — text appears below as you dictate</p>
+          <h1>AI Notes</h1>
+          <p class="subtitle">Dictate your thoughts, then transform them with AI</p>
         </div>
-        <div class="scratchpad-area">
-          <textarea id="scratchpad-editor" placeholder="Dictate or type here to test..."></textarea>
-          <div class="scratchpad-actions">
-            <button class="btn-secondary" id="btn-scratchpad-clear">Clear</button>
-            <button class="btn-primary" id="btn-scratchpad-copy">Copy All</button>
+
+        <div class="notes-workspace">
+          <!-- Input area -->
+          <div class="notes-input-area">
+            <textarea id="notes-editor" placeholder="Dictate or type your raw thoughts, meeting notes, or ideas here..."></textarea>
+            <div class="notes-input-actions">
+              <button class="btn-secondary btn-small" id="btn-notes-clear">Clear</button>
+              <button class="btn-secondary btn-small" id="btn-notes-copy-input">Copy</button>
+              <span class="notes-char-count" id="notes-char-count">0 chars</span>
+            </div>
+          </div>
+
+          <!-- AI action buttons -->
+          <div class="notes-ai-bar">
+            <span class="notes-ai-label">Transform with AI:</span>
+            <button class="notes-ai-btn" data-action="summarize_notes">Summarize</button>
+            <button class="notes-ai-btn" data-action="action_items">Action Items</button>
+            <button class="notes-ai-btn" data-action="follow_ups">Follow-ups</button>
+            <button class="notes-ai-btn" data-action="meeting_notes">Meeting Notes</button>
+            <button class="notes-ai-btn" data-action="email_draft">Email Draft</button>
+          </div>
+
+          <!-- Output area -->
+          <div class="notes-output-area hidden" id="notes-output-area">
+            <div class="notes-output-header">
+              <span class="notes-output-label" id="notes-output-label">Result</span>
+              <div class="notes-output-actions">
+                <button class="btn-secondary btn-small" id="btn-notes-copy-output">Copy</button>
+                <button class="btn-secondary btn-small" id="btn-notes-inject">Paste to App</button>
+                <button class="btn-secondary btn-small" id="btn-notes-save-template">Save as Template</button>
+              </div>
+            </div>
+            <div class="notes-output-content" id="notes-output-content"></div>
+          </div>
+
+          <!-- Processing indicator -->
+          <div class="notes-processing hidden" id="notes-processing">
+            <div class="notes-spinner"></div>
+            <span>Processing with AI...</span>
           </div>
         </div>
       </div>

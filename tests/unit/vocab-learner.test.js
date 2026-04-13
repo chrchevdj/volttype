@@ -40,6 +40,34 @@ describe('VocabLearner', () => {
     expect(learner.getCleanerContext()).toContain('"jon" should be "John"');
   });
 
+  it('learns corrections even when text has punctuation differences', async () => {
+    const VocabLearner = (await import('../../src/vocab-learner.js')).default;
+    const learner = new VocabLearner();
+
+    // Simulates real use: original has period, corrected has different word with period
+    learner.learnCorrection(
+      'I spoke with Brent Puso today.',
+      'I spoke with BrandPulso today.'
+    );
+
+    const corrections = learner.getCorrections();
+    expect(corrections['brent']).toBe('BrandPulso');
+    expect(corrections['puso']).toBeUndefined(); // "puso" maps to nothing — it's part of multi-word swap
+    expect(learner.getStats().totalCorrections).toBe(1);
+  });
+
+  it('handles case-only corrections by learning personal terms', async () => {
+    const VocabLearner = (await import('../../src/vocab-learner.js')).default;
+    const learner = new VocabLearner();
+
+    // Case-only changes don't create word corrections (lowercase match),
+    // but the corrected capitalization IS learned as a personal term
+    learner.learnCorrection('meeting with myclienta team', 'meeting with MyClienta team');
+
+    expect(learner.getTerms()).toContain('MyClienta');
+    expect(learner.getStats().totalCorrections).toBe(1);
+  });
+
   it('updates style notes and prunes low-frequency vocabulary over time', async () => {
     const VocabLearner = (await import('../../src/vocab-learner.js')).default;
     const learner = new VocabLearner();

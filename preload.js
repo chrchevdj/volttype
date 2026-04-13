@@ -46,6 +46,7 @@ contextBridge.exposeInMainWorld('volttype', {
   updateSnippet: (data) => ipcRenderer.invoke('update-snippet', data),
   removeSnippet: (id) => ipcRenderer.invoke('remove-snippet', id),
   injectSnippet: (id) => ipcRenderer.invoke('inject-snippet', id),
+  aiTransform: (data) => ipcRenderer.invoke('ai-transform', data),
 
   // Upgrade / checkout
   checkout: (plan) => ipcRenderer.invoke('checkout', plan),

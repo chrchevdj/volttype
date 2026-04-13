@@ -799,6 +799,17 @@ ipcMain.handle('inject-snippet', async (event, id) => {
   return false;
 });
 
+// AI Notes workspace
+ipcMain.handle('ai-transform', async (event, { text, action }) => {
+  if (!text || !action) return { text: '' };
+  try {
+    const result = await textCleaner.executeCommand(action, text);
+    return { text: result || '' };
+  } catch (err) {
+    return { text: '', error: err.message };
+  }
+});
+
 // Window controls
 ipcMain.on('window-minimize', () => mainWindow.minimize());
 ipcMain.on('window-maximize', () => {

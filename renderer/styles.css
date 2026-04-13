@@ -770,6 +770,146 @@ kbd {
 }
 .scratchpad-actions { display: flex; gap: 12px; }
 
+/* ---- AI Notes Workspace ---- */
+.notes-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: calc(100vh - 160px);
+}
+.notes-input-area {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-height: 150px;
+}
+#notes-editor {
+  width: 100%;
+  flex: 1;
+  min-height: 140px;
+  background: var(--bg-card-solid);
+  border: var(--glass-border);
+  border-radius: var(--radius);
+  padding: 22px;
+  color: var(--text-primary);
+  font-size: 15px;
+  line-height: 1.9;
+  resize: vertical;
+  font-family: inherit;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.25s;
+}
+#notes-editor:focus {
+  outline: none;
+  border-color: rgba(124,58,237,0.3);
+  box-shadow: 0 0 0 4px var(--accent-glow), var(--shadow-md);
+}
+.notes-input-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.notes-char-count {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.notes-ai-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  background: var(--bg-card-solid);
+  border: var(--glass-border);
+  border-radius: var(--radius);
+}
+.notes-ai-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-right: 4px;
+}
+.notes-ai-btn {
+  background: rgba(124,58,237,0.1);
+  border: 1px solid rgba(124,58,237,0.2);
+  color: var(--text-primary);
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.notes-ai-btn:hover {
+  background: rgba(124,58,237,0.2);
+  border-color: rgba(124,58,237,0.4);
+  transform: translateY(-1px);
+}
+.notes-ai-btn:active { transform: translateY(0); }
+.notes-ai-btn.active {
+  background: rgba(124,58,237,0.3);
+  border-color: rgba(124,58,237,0.5);
+}
+.notes-ai-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+.notes-output-area {
+  background: var(--bg-card-solid);
+  border: var(--glass-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  flex: 1;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+}
+.notes-output-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-bottom: var(--glass-border);
+}
+.notes-output-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+}
+.notes-output-actions { display: flex; gap: 8px; }
+.notes-output-content {
+  padding: 20px;
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  overflow-y: auto;
+  flex: 1;
+}
+.notes-processing {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 20px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+.notes-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(124,58,237,0.2);
+  border-top-color: rgba(124,58,237,0.8);
+  border-radius: 50%;
+  animation: notes-spin 0.8s linear infinite;
+}
+@keyframes notes-spin { to { transform: rotate(360deg); } }
+
 /* ---- Vocabulary Learning ---- */
 .vocab-terms-bar {
   display: flex;

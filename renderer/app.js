@@ -71,6 +71,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupDictionaryHandlers();
   setupSnippetHandlers();
   setupScratchpadHandlers();
+  setupNotesHandlers();
   setupSettingsHandlers();
 
   // Listen for IPC events from main
@@ -448,15 +449,17 @@ function handleTranscriptionResult({ text, duration: _duration, apiLatency: _api
   // Update dictation count
   updateDictationCount();
 
-  // If on scratchpad, append text
+  // If on notebook, append text to notes editor
   if (currentPage === 'notebook') {
-    const editor = document.getElementById('scratchpad-editor');
+    const editor = document.getElementById('notes-editor');
+    const charCount = document.getElementById('notes-char-count');
     if (voiceCommand) {
       // Voice command rewrites the last text — replace last portion
       editor.value = text;
     } else {
       editor.value += (editor.value ? ' ' : '') + text;
     }
+    if (charCount) charCount.textContent = editor.value.length + ' chars';
   }
 }
 
@@ -809,14 +812,105 @@ async function loadSnippets() {
   });
 }
 
-// ---- Scratchpad page ----
-function setupScratchpadHandlers() {
-  document.getElementById('btn-scratchpad-clear').addEventListener('click', () => {
-    document.getElementById('scratchpad-editor').value = '';
+// ---- Scratchpad page (legacy, kept for compat) ----
+function setupScratchpadHandlers() {}
+
+// ---- AI Notes Workspace ----
+function setupNotesHandlers() {
+  const editor = document.getElementById('notes-editor');
+  const charCount = document.getElementById('notes-char-count');
+  const outputArea = document.getElementById('notes-output-area');
+  const outputContent = document.getElementById('notes-output-content');
+  const outputLabel = document.getElementById('notes-output-label');
+  const processing = document.getElementById('notes-processing');
+
+  // Character count
+  editor.addEventListener('input', () => {
+    charCount.textContent = editor.value.length + ' chars';
   });
-  document.getElementById('btn-scratchpad-copy').addEventListener('click', () => {
-    const text = document.getElementById('scratchpad-editor').value;
-    navigator.clipboard.writeText(text);
+
+  // Clear
+  document.getElementById('btn-notes-clear').addEventListener('click', () => {
+    editor.value = '';
+    charCount.textContent = '0 chars';
+    outputArea.classList.add('hidden');
+  });
+
+  // Copy input
+  document.getElementById('btn-notes-copy-input').addEventListener('click', () => {
+    navigator.clipboard.writeText(editor.value);
+  });
+
+  // Copy output
+  document.getElementById('btn-notes-copy-output').addEventListener('click', () => {
+    navigator.clipboard.writeText(outputContent.textContent);
+  });
+
+  // Paste to app (inject via snippet)
+  document.getElementById('btn-notes-inject').addEventListener('click', async () => {
+    const text = outputContent.textContent;
+    if (text) {
+      await vf.addSnippet({ name: '_temp_inject', text, category: 'temp' });
+      const snippets = await vf.getSnippets();
+      const temp = snippets.find(s => s.name === '_temp_inject');
+      if (temp) {
+        await vf.injectSnippet(temp.id);
+        await vf.removeSnippet(temp.id);
+      }
+    }
+  });
+
+  // Save as template
+  document.getElementById('btn-notes-save-template').addEventListener('click', async () => {
+    const text = outputContent.textContent;
+    if (!text) return;
+    const name = prompt('Template name:');
+    if (!name) return;
+    await vf.addSnippet({ name, text, category: 'ai-notes' });
+    alert('Saved as template!');
+  });
+
+  // AI action buttons
+  const actionLabels = {
+    summarize_notes: 'Summary',
+    action_items: 'Action Items',
+    follow_ups: 'Follow-ups',
+    meeting_notes: 'Meeting Notes',
+    email_draft: 'Email Draft',
+  };
+
+  document.querySelectorAll('.notes-ai-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const text = editor.value.trim();
+      if (!text) return;
+
+      const action = btn.dataset.action;
+
+      // Show processing
+      processing.classList.remove('hidden');
+      outputArea.classList.add('hidden');
+      document.querySelectorAll('.notes-ai-btn').forEach(b => b.disabled = true);
+
+      try {
+        const result = await vf.aiTransform({ text, action });
+        if (result.text) {
+          outputLabel.textContent = actionLabels[action] || 'Result';
+          outputContent.textContent = result.text;
+          outputArea.classList.remove('hidden');
+        } else if (result.error) {
+          outputLabel.textContent = 'Error';
+          outputContent.textContent = 'Error: ' + result.error;
+          outputArea.classList.remove('hidden');
+        }
+      } catch (err) {
+        outputLabel.textContent = 'Error';
+        outputContent.textContent = 'Error: ' + (err.message || 'AI processing failed');
+        outputArea.classList.remove('hidden');
+      } finally {
+        processing.classList.add('hidden');
+        document.querySelectorAll('.notes-ai-btn').forEach(b => b.disabled = false);
+      }
+    });
   });
 }
 

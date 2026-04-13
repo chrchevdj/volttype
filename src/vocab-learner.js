@@ -188,19 +188,22 @@ class VocabLearner {
     if (!originalText || !correctedText) return;
     if (originalText.trim() === correctedText.trim()) return;
 
-    const origWords = originalText.toLowerCase().split(/\s+/);
-    const corrWords = correctedText.split(/\s+/);
-    const corrWordsLower = corrWords.map(w => w.toLowerCase());
+    // Strip punctuation from words before comparing (fixes false negatives from trailing periods, commas, etc.)
+    const stripPunct = w => w.replace(/^[^a-zA-ZÀ-ÿ]+|[^a-zA-ZÀ-ÿ]+$/g, '');
 
-    // Find words that were changed (simple diff by position + fuzzy matching)
+    const origRaw = originalText.split(/\s+/).map(w => stripPunct(w)).filter(w => w.length > 0);
+    const corrRaw = correctedText.split(/\s+/).map(w => stripPunct(w)).filter(w => w.length > 0);
+    const origWords = origRaw.map(w => w.toLowerCase());
+    const corrWordsLower = corrRaw.map(w => w.toLowerCase());
+
     // Strategy: find words in original that don't appear in corrected, and vice versa
     const origSet = new Set(origWords);
     const corrSet = new Set(corrWordsLower);
 
     // Words removed from original (the wrong ones)
     const removed = origWords.filter(w => !corrSet.has(w) && !STOP_WORDS.has(w) && w.length >= 3);
-    // Words added in corrected (the right ones)
-    const added = corrWords.filter(w => !origSet.has(w.toLowerCase()) && !STOP_WORDS.has(w.toLowerCase()) && w.length >= 3);
+    // Words added in corrected (the right ones — preserve original case)
+    const added = corrRaw.filter(w => !origSet.has(w.toLowerCase()) && !STOP_WORDS.has(w.toLowerCase()) && w.length >= 3);
 
     // If there are clear 1:1 replacements, learn them
     if (removed.length > 0 && added.length > 0 && removed.length <= 3 && added.length <= 3) {

@@ -198,6 +198,12 @@ class TextCleaner {
       translate: extra
         ? `Translate the following text into ${extra}. Output ONLY the translation, nothing else.`
         : null,
+      // AI Notes workspace commands
+      summarize_notes: `Summarize the following text into 3-5 concise bullet points capturing the key information. Start each bullet with "\u2022 ". Output ONLY the bullet points.`,
+      action_items: `Extract all action items, to-do tasks, and commitments from the following text. Format as a numbered list starting each with a checkbox "\u2610". If no clear actions exist, suggest 3 logical next steps. Output ONLY the list.`,
+      follow_ups: `Based on the following text, generate 3-5 follow-up questions or tasks that would be logical next steps. Format as a numbered list. Output ONLY the list.`,
+      meeting_notes: `Format the following raw text as structured meeting notes with these sections:\n\nKey Points:\nDecisions Made:\nAction Items:\nNext Steps:\n\nExtract information from the text to fill each section. Output ONLY the formatted notes.`,
+      email_draft: `Turn the following rough text into a polished, professional email. Start with "Subject:" line, then the email body. Keep the original intent. Output ONLY the email.`,
     };
 
     return prompts[command] || null;
