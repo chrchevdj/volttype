@@ -47,11 +47,20 @@
 - **Version 1.1.0**
 - **APK building on EAS** — build ID: c6a12f26-8955-4242-be18-eef3bacbe5a3
 
+### Auto-Correction Popup (Inline Learning)
+- **Correction popup** — after each dictation, a floating panel shows the injected text
+- If text is correct → auto-closes in 8 seconds (or press Escape)
+- If text is wrong → edit it, click "Fix & Learn" → VoltType learns the correction AND replaces the text in the target app
+- Uses `replaceAndInject()` — selects the old text via Shift+Left, pastes corrected text
+- No more going to Dashboard to edit history entries — corrections happen inline
+
 ### Commits This Session
 - `ee2f065` — password toggle, seamless auth flow, remove gray borders, add test suite
 - `5033026` — ESLint, pre-push hook, npm run ci pipeline
 - `8ae9ba7` — AI Notes Workspace, corrections fix, templates integration
 - `aeb947b` — Android: history screen, bottom tabs, offline detection, production polish
+- `c20af5a` — HANDOVER update with progress and pending tasks
+- `1b7b690` — Auto-correction popup for inline learning
 
 ## What Was Done — Session 2026-04-09
 
