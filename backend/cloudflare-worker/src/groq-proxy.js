@@ -4,10 +4,13 @@
  */
 
 const GROQ_TRANSCRIBE_URL = 'https://api.groq.com/openai/v1/audio/transcriptions';
+const GROQ_TRANSLATE_URL = 'https://api.groq.com/openai/v1/audio/translations';
 const GROQ_CHAT_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 /**
  * Proxy audio transcription to Groq Whisper.
+ * Parses the incoming multipart form, then re-builds it for Groq.
+ * This avoids streaming-body quirks (e.g. React Native chunked FormData).
  */
 export async function proxyTranscribe(request, env) {
   const contentType = request.headers.get('Content-Type');
@@ -15,19 +18,53 @@ export async function proxyTranscribe(request, env) {
     return { error: 'Content-Type must be multipart/form-data', status: 400 };
   }
 
-  // Forward the request body directly to Groq
-  const groqRes = await fetch(GROQ_TRANSCRIBE_URL, {
+  // Parse incoming form-data
+  let incoming;
+  try {
+    incoming = await request.formData();
+  } catch (err) {
+    console.error('[TRANSCRIBE] Failed to parse form-data:', err.message);
+    return { error: 'Invalid multipart payload', status: 400 };
+  }
+
+  const file = incoming.get('file');
+  if (!file || typeof file === 'string') {
+    return { error: 'Missing "file" field', status: 400 };
+  }
+
+  // Re-build form-data for Groq (handles RN quirks cleanly)
+  const out = new FormData();
+  const fileName = file.name || 'recording.m4a';
+  const fileType = file.type || 'audio/m4a';
+  out.append('file', new Blob([await file.arrayBuffer()], { type: fileType }), fileName);
+
+  // "translate" task uses Groq's /audio/translations endpoint (any lang → English).
+  // whisper-large-v3 supports translations; whisper-large-v3-turbo does not.
+  const task = incoming.get('task') || 'transcribe';
+  const isTranslate = task === 'translate';
+  const defaultModel = isTranslate ? 'whisper-large-v3' : 'whisper-large-v3-turbo';
+  out.append('model', incoming.get('model') || defaultModel);
+
+  if (!isTranslate) {
+    const language = incoming.get('language');
+    if (language) out.append('language', language);
+  }
+  out.append('response_format', incoming.get('response_format') || 'verbose_json');
+  out.append('temperature', incoming.get('temperature') || '0.0');
+
+  const endpoint = isTranslate ? GROQ_TRANSLATE_URL : GROQ_TRANSCRIBE_URL;
+  const groqRes = await fetch(endpoint, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${env.GROQ_API_KEY}`,
-      'Content-Type': contentType,
     },
-    body: request.body,
+    body: out,
   });
 
   const data = await groqRes.json();
 
   if (!groqRes.ok) {
+    console.error('[TRANSCRIBE] Groq error:', groqRes.status, JSON.stringify(data));
     return {
       error: data?.error?.message || `Groq API error ${groqRes.status}`,
       status: groqRes.status,

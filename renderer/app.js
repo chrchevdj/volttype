@@ -1054,6 +1054,7 @@ function setupSettingsHandlers() {
   saveSetting('setting-language', 'language');
   saveSetting('setting-hotkey', 'hotkey');
   saveSetting('setting-output-style', 'outputStyle');
+  saveSetting('setting-translate-to-english', 'translateToEnglish');
   saveSetting('setting-injection', 'injectionMode');
   saveSetting('setting-start-minimized', 'startMinimized');
   saveSetting('setting-start-windows', 'startWithWindows');
@@ -1071,6 +1072,7 @@ function applySettings(s) {
   setVal('setting-hotkey', s.hotkey);
   setVal('setting-output-style', s.outputStyle || 'cleaned');
   setVal('setting-injection', s.injectionMode);
+  setChecked('setting-translate-to-english', s.translateToEnglish);
   setChecked('setting-start-minimized', s.startMinimized);
   setChecked('setting-start-windows', s.startWithWindows);
   setChecked('setting-sounds', s.playSounds);

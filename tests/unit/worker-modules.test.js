@@ -48,6 +48,7 @@ describe('Cloudflare worker support modules', () => {
     fetchMock
       .mockResolvedValueOnce(createJsonResponse('basic'))
       .mockResolvedValueOnce(createJsonResponse(1750))
+      .mockResolvedValueOnce(createJsonResponse(0))            // weekly words
       .mockResolvedValueOnce(createJsonResponse({ ok: true }));
 
     const { checkUsageLimit, logUsage } = await import('../../backend/cloudflare-worker/src/usage.js');
@@ -64,8 +65,28 @@ describe('Cloudflare worker support modules', () => {
       remainingSeconds: 50,
     });
 
-    await logUsage('user-1', 42, 'whisper', 'transcribe', env);
-    expect(fetchMock).toHaveBeenCalledTimes(3);
+    await logUsage('user-1', 42, 'whisper', 'transcribe', env, 12);
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+  });
+
+  it('enforces weekly word quota for free tier', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch');
+    fetchMock
+      .mockResolvedValueOnce(createJsonResponse('free'))       // plan
+      .mockResolvedValueOnce(createJsonResponse(0))            // daily seconds
+      .mockResolvedValueOnce(createJsonResponse(2050));        // weekly words (exceeds 2000 limit)
+
+    const { checkUsageLimit } = await import('../../backend/cloudflare-worker/src/usage.js');
+    const env = { SUPABASE_URL: 'https://supabase.example', SUPABASE_SERVICE_KEY: 'service-key' };
+
+    const usage = await checkUsageLimit('user-1', env);
+    expect(usage).toMatchObject({
+      allowed: false,
+      plan: 'free',
+      usedWords: 2050,
+      limitWords: 2000,
+      reason: 'weekly_words',
+    });
   });
 
   it('proxies Groq transcription, cleaning, and command requests', async () => {
@@ -78,11 +99,12 @@ describe('Cloudflare worker support modules', () => {
     const { proxyTranscribe, proxyClean, proxyCommand, getCleanerPrompt } = await import('../../backend/cloudflare-worker/src/groq-proxy.js');
     const env = { GROQ_API_KEY: 'gsk_test' };
 
+    const fd = new FormData();
+    fd.append('file', new Blob(['fake-audio'], { type: 'audio/m4a' }), 'recording.m4a');
+    fd.append('language', 'en');
     const transcribe = await proxyTranscribe(new Request('https://api.example/v1/transcribe', {
       method: 'POST',
-      headers: { 'Content-Type': 'multipart/form-data; boundary=test' },
-      body: 'payload',
-      duplex: 'half',
+      body: fd,
     }), env);
     const clean = await proxyClean(new Request('https://api.example/v1/clean', {
       method: 'POST',

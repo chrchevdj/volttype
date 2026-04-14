@@ -23,6 +23,7 @@ const DEFAULTS = {
   showOverlay: true,
   playSounds: true,
   outputStyle: 'punctuated',  // 'raw' | 'punctuated' | 'cleaned'
+  translateToEnglish: false,  // when true, dictation in any language is typed in English
   theme: 'dark',
 };
 

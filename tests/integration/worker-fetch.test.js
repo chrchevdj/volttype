@@ -16,6 +16,7 @@ vi.mock('../../backend/cloudflare-worker/src/auth.js', () => ({
 vi.mock('../../backend/cloudflare-worker/src/usage.js', () => ({
   checkUsageLimit: moduleState.checkUsageLimit,
   logUsage: moduleState.logUsage,
+  countWords: (text) => (typeof text === 'string' ? text.trim().split(/\s+/).filter(Boolean).length : 0),
 }));
 
 vi.mock('../../backend/cloudflare-worker/src/groq-proxy.js', () => ({

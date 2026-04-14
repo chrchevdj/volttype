@@ -11,7 +11,7 @@
 
 import { corsHeaders, handleOptions } from './cors.js';
 import { verifyToken } from './auth.js';
-import { checkUsageLimit, logUsage } from './usage.js';
+import { checkUsageLimit, logUsage, countWords } from './usage.js';
 import { proxyTranscribe, proxyClean, proxyCommand } from './groq-proxy.js';
 
 export default {
@@ -48,15 +48,21 @@ export default {
 
     // --- POST /v1/transcribe ---
     if (path === '/v1/transcribe' && request.method === 'POST') {
-      // Check usage limit
+      // Check usage limit (daily minutes + weekly words for free tier)
       const usage = await checkUsageLimit(user.userId, env);
       if (!usage.allowed) {
+        const isWeekly = usage.reason === 'weekly_words';
         return json({
-          error: 'Daily limit reached',
+          error: isWeekly
+            ? 'Weekly word limit reached'
+            : 'Daily limit reached',
           plan: usage.plan,
+          reason: usage.reason,
           usedSeconds: usage.usedSeconds,
           limitSeconds: usage.limitSeconds,
-          upgrade: 'Upgrade your plan for more minutes at volttype.com',
+          usedWords: usage.usedWords,
+          limitWords: usage.limitWords,
+          upgrade: 'Upgrade your plan for unlimited dictation at volttype.com',
         }, 429, request);
       }
 
@@ -66,15 +72,18 @@ export default {
         return json({ error: result.error }, result.status, request);
       }
 
-      // Log usage
-      await logUsage(user.userId, result.duration || 0, 'whisper-large-v3-turbo', 'transcribe', env);
+      // Log usage (seconds + words)
+      const words = countWords(result.text);
+      await logUsage(user.userId, result.duration || 0, 'whisper-large-v3-turbo', 'transcribe', env, words);
 
       return json({
         text: result.text,
         duration: result.duration,
         usage: {
           thisRequest: result.duration,
-          remaining: usage.remainingSeconds - (result.duration || 0),
+          words,
+          remaining: usage.remainingSeconds === -1 ? -1 : usage.remainingSeconds - (result.duration || 0),
+          remainingWords: usage.remainingWords === -1 ? -1 : Math.max(0, usage.remainingWords - words),
         },
       }, 200, request);
     }
@@ -113,21 +122,33 @@ export default {
         usedSeconds: usage.usedSeconds,
         limitSeconds: usage.limitSeconds,
         remainingSeconds: usage.remainingSeconds,
+        usedWords: usage.usedWords,
+        limitWords: usage.limitWords,
+        remainingWords: usage.remainingWords,
       }, 200, request);
     }
 
     // --- POST /v1/checkout ---
     if (path === '/v1/checkout' && request.method === 'POST') {
       try {
-        const { plan } = await request.json();
+        const { plan, interval = 'month' } = await request.json();
         if (!['basic', 'pro'].includes(plan)) {
           return json({ error: 'Invalid plan selected' }, 400, request);
         }
+        if (!['month', 'year'].includes(interval)) {
+          return json({ error: 'Invalid billing interval' }, 400, request);
+        }
 
-        const priceId = plan === 'pro' ? env.STRIPE_PRICE_PRO : env.STRIPE_PRICE_BASIC;
+        // Select the correct price ID based on plan + interval
+        let priceId;
+        if (plan === 'pro') {
+          priceId = interval === 'year' ? env.STRIPE_PRICE_PRO_ANNUAL : env.STRIPE_PRICE_PRO;
+        } else {
+          priceId = interval === 'year' ? env.STRIPE_PRICE_BASIC_ANNUAL : env.STRIPE_PRICE_BASIC;
+        }
 
         if (!priceId || !env.STRIPE_SECRET_KEY) {
-          return json({ error: 'Payment not configured' }, 500, request);
+          return json({ error: 'Payment not configured for this plan/interval' }, 500, request);
         }
 
         const existingProfile = await getProfileByUserId(user.userId, env);
@@ -135,13 +156,15 @@ export default {
           'mode': 'subscription',
           'line_items[0][price]': priceId,
           'line_items[0][quantity]': '1',
-          'success_url': `https://volttype.com/?payment=success&plan=${plan}`,
-          'cancel_url': `https://volttype.com/?payment=cancelled&plan=${plan}`,
+          'success_url': `https://volttype.com/?payment=success&plan=${plan}&interval=${interval}`,
+          'cancel_url': `https://volttype.com/?payment=cancelled&plan=${plan}&interval=${interval}`,
           'client_reference_id': user.userId,
           'metadata[user_id]': user.userId,
           'metadata[plan]': plan,
+          'metadata[interval]': interval,
           'subscription_data[metadata][user_id]': user.userId,
           'subscription_data[metadata][plan]': plan,
+          'subscription_data[metadata][interval]': interval,
           'allow_promotion_codes': 'true',
           'billing_address_collection': 'auto',
           'payment_method_collection': 'if_required',
@@ -447,8 +470,8 @@ export function getPlanFromSubscription(subscription, env) {
   }
 
   const priceId = subscription?.items?.data?.[0]?.price?.id || null;
-  if (priceId === env.STRIPE_PRICE_PRO) return 'pro';
-  if (priceId === env.STRIPE_PRICE_BASIC) return 'basic';
+  if (priceId === env.STRIPE_PRICE_PRO || priceId === env.STRIPE_PRICE_PRO_ANNUAL) return 'pro';
+  if (priceId === env.STRIPE_PRICE_BASIC || priceId === env.STRIPE_PRICE_BASIC_ANNUAL) return 'basic';
   return null;
 }
 

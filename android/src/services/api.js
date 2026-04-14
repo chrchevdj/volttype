@@ -35,15 +35,25 @@ async function authFetch(path, options = {}) {
  * @param {string} language — ISO language code (default "en")
  * @returns {{ text: string, duration: number, usage: object }}
  */
-export async function transcribe(fileUri, language = 'en') {
+export async function transcribe(fileUri, language = 'en', options = {}) {
+  const { translateToEnglish = false } = options;
   const formData = new FormData();
   formData.append('file', {
     uri: fileUri,
     type: 'audio/m4a',
     name: 'recording.m4a',
   });
-  formData.append('model', 'whisper-large-v3-turbo');
-  formData.append('language', language);
+  if (translateToEnglish) {
+    // Whisper's native translate task: any language → English
+    formData.append('task', 'translate');
+    formData.append('model', 'whisper-large-v3');
+  } else {
+    formData.append('model', 'whisper-large-v3-turbo');
+    // Omit language → Whisper auto-detects (supports all 99 languages)
+    if (language && language !== 'auto') {
+      formData.append('language', language);
+    }
+  }
   formData.append('response_format', 'verbose_json');
   formData.append('temperature', '0.0');
 

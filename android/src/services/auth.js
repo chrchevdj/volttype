@@ -31,6 +31,8 @@ async function saveSession(data) {
 
 /**
  * Sign up a new user.
+ * Returns { session: true } if auto-logged-in, or { session: false, needsConfirmation: true }
+ * if Supabase email-confirmation is enabled.
  */
 export async function signup(email, password) {
   const res = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
@@ -43,15 +45,26 @@ export async function signup(email, password) {
   });
   const data = await res.json();
   if (!res.ok) {
-    throw new Error(data.error_description || data.msg || 'Signup failed');
+    const msg = data.error_description || data.msg || data.message || 'Signup failed';
+    // Already-registered user — hint them to log in instead
+    if (/already|registered|exists/i.test(msg)) {
+      const err = new Error('An account with this email already exists. Please sign in instead.');
+      err.code = 'USER_EXISTS';
+      throw err;
+    }
+    throw new Error(msg);
   }
   // If email confirmation is disabled, we get a session immediately
   if (data.access_token) {
     await saveSession(data);
-  } else if (data.session?.access_token) {
-    await saveSession(data.session);
+    return { session: true };
   }
-  return data;
+  if (data.session?.access_token) {
+    await saveSession(data.session);
+    return { session: true };
+  }
+  // Email confirmation required — user must click link in email before login
+  return { session: false, needsConfirmation: true };
 }
 
 /**
@@ -71,7 +84,14 @@ export async function login(email, password) {
   );
   const data = await res.json();
   if (!res.ok) {
-    throw new Error(data.error_description || data.msg || 'Login failed');
+    const msg = data.error_description || data.msg || data.message || 'Login failed';
+    if (/not confirmed|confirm/i.test(msg)) {
+      throw new Error('Please confirm your email address first. Check your inbox for the confirmation link.');
+    }
+    if (/invalid/i.test(msg) || /credentials/i.test(msg)) {
+      throw new Error('Invalid email or password. If you forgot your password, reset it at volttype.com.');
+    }
+    throw new Error(msg);
   }
   await saveSession(data);
   return data;

@@ -28,10 +28,12 @@ export default function LoginScreen({ navigation }) {
   const [password, setPassword] = useState('');
   const [isSignup, setIsSignup] = useState(false);
   const [error, setError] = useState('');
+  const [info, setInfo] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
     setError('');
+    setInfo('');
     if (!email.trim() || !password) {
       setError('Enter email and password');
       return;
@@ -44,12 +46,22 @@ export default function LoginScreen({ navigation }) {
     setLoading(true);
     try {
       if (isSignup) {
-        await signup(email.trim(), password);
+        const result = await signup(email.trim(), password);
+        if (result && result.needsConfirmation) {
+          setInfo(`We sent a confirmation link to ${email.trim()}. Open it to activate your account, then sign in.`);
+          setIsSignup(false);
+          setPassword('');
+          return;
+        }
+        navigation.replace('Main');
       } else {
         await login(email.trim(), password);
+        navigation.replace('Main');
       }
-      navigation.replace('Main');
     } catch (err) {
+      if (err.code === 'USER_EXISTS') {
+        setIsSignup(false);
+      }
       setError(err.message);
     } finally {
       setLoading(false);
@@ -68,6 +80,12 @@ export default function LoginScreen({ navigation }) {
         {error ? (
           <View style={styles.errorBox}>
             <Text style={styles.errorText}>{error}</Text>
+          </View>
+        ) : null}
+
+        {info ? (
+          <View style={styles.infoBox}>
+            <Text style={styles.infoText}>{info}</Text>
           </View>
         ) : null}
 
@@ -164,6 +182,21 @@ const styles = StyleSheet.create({
     color: COLORS.red,
     fontSize: 13,
     textAlign: 'center',
+  },
+  infoBox: {
+    backgroundColor: 'rgba(56,189,156,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(56,189,156,0.3)',
+    borderRadius: 10,
+    padding: 10,
+    width: '100%',
+    marginBottom: 12,
+  },
+  infoText: {
+    color: COLORS.accent,
+    fontSize: 13,
+    textAlign: 'center',
+    lineHeight: 18,
   },
   input: {
     width: '100%',

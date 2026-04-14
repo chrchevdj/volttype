@@ -496,6 +496,35 @@
     .testimonial-stars { color: #f59e0b; font-size: 14px; margin-bottom: 12px; letter-spacing: 2px; }
 
     /* Pricing */
+    .billing-toggle {
+      display: inline-flex; gap: 4px; padding: 4px;
+      background: var(--card-bg); border: 1px solid var(--border-subtle);
+      border-radius: 999px; margin: 0 auto 32px;
+      justify-content: center;
+    }
+    .billing-toggle-container { display: flex; justify-content: center; margin-bottom: 32px; }
+    .billing-toggle-btn {
+      background: transparent; border: none; cursor: pointer;
+      padding: 8px 20px; font-size: 14px; font-weight: 600;
+      color: var(--text-secondary); border-radius: 999px;
+      transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px;
+    }
+    .billing-toggle-btn.active {
+      background: linear-gradient(135deg, var(--purple), var(--blue));
+      color: white; box-shadow: 0 2px 8px rgba(124,58,237,0.25);
+    }
+    .billing-save-badge {
+      background: rgba(16,185,129,0.15); color: #10b981;
+      font-size: 11px; font-weight: 700; padding: 2px 8px;
+      border-radius: 999px;
+    }
+    .billing-toggle-btn.active .billing-save-badge {
+      background: rgba(255,255,255,0.2); color: white;
+    }
+    .price-sub {
+      font-size: 12px; color: var(--text-secondary);
+      margin-bottom: 12px; min-height: 16px;
+    }
     .pricing-grid {
       display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 24px; max-width: 960px; margin: 0 auto;
@@ -1172,13 +1201,23 @@
   <section class="section" id="pricing">
     <h2 class="section-title" data-i18n="priceTitle">Simple Pricing</h2>
     <p class="section-sub">Start with cards for the fastest setup today. Bank debit can be enabled later for eligible regions and plans.</p>
+    <div class="billing-toggle-container">
+      <div class="billing-toggle">
+        <button class="billing-toggle-btn active" data-interval="month" type="button">Monthly</button>
+        <button class="billing-toggle-btn" data-interval="year" type="button">
+          Annual
+          <span class="billing-save-badge">Save 17%</span>
+        </button>
+      </div>
+    </div>
+
     <div class="pricing-grid">
       <div class="price-card">
-        <div class="price-name">Free Trial</div>
+        <div class="price-name">Free</div>
         <div class="price-amount">$0<span>/mo</span></div>
         <div class="price-desc">Try voice typing and AI note capture</div>
         <ul class="price-features">
-          <li>10 minutes/day limit</li>
+          <li>2,000 words/week</li>
           <li>Voice typing in any app</li>
           <li>Smart punctuation</li>
           <li>AI notes workspace</li>
@@ -1188,7 +1227,8 @@
       </div>
       <div class="price-card popular">
         <div class="price-name">Basic</div>
-        <div class="price-amount">$4.99<span>/mo</span></div>
+        <div class="price-amount" data-monthly="$4.99" data-yearly="$4.16">$4.99<span class="price-suffix" data-monthly-suffix="/mo" data-yearly-suffix="/mo billed yearly">/mo</span></div>
+        <div class="price-sub" data-monthly-sub="Billed monthly" data-yearly-sub="$49.99 billed yearly">Billed monthly</div>
         <div class="price-desc">For daily writing, notes, and follow-ups</div>
         <ul class="price-features">
           <li>30 minutes/day</li>
@@ -1201,7 +1241,8 @@
       </div>
       <div class="price-card">
         <div class="price-name">Pro</div>
-        <div class="price-amount">$8.99<span>/mo</span></div>
+        <div class="price-amount" data-monthly="$8.99" data-yearly="$7.49">$8.99<span class="price-suffix" data-monthly-suffix="/mo" data-yearly-suffix="/mo billed yearly">/mo</span></div>
+        <div class="price-sub" data-monthly-sub="Billed monthly" data-yearly-sub="$89.99 billed yearly">Billed monthly</div>
         <div class="price-desc">For power users and heavy note workflows</div>
         <ul class="price-features">
           <li>Unlimited minutes</li>
@@ -1766,6 +1807,7 @@
 
     // --- Checkout ---
     async function startCheckout(plan) {
+      const interval = document.querySelector('.billing-toggle-btn.active')?.dataset.interval || 'month';
       try {
         const res = await fetch(`${API_URL}/v1/checkout`, {
           method: 'POST',
@@ -1773,7 +1815,7 @@
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ plan }),
+          body: JSON.stringify({ plan, interval }),
         });
         const data = await res.json();
         if (data.url) {
@@ -1900,6 +1942,26 @@
       document.getElementById('hero-signup-btn').addEventListener('click', () => showAuthModal('signup'));
       document.querySelectorAll('[data-plan]').forEach((button) => {
         button.addEventListener('click', () => handlePricing(button.dataset.plan));
+      });
+
+      // Billing interval toggle (Monthly / Annual)
+      function setBillingInterval(interval) {
+        document.querySelectorAll('.billing-toggle-btn').forEach((btn) => {
+          btn.classList.toggle('active', btn.dataset.interval === interval);
+        });
+        document.querySelectorAll('.price-amount[data-monthly]').forEach((el) => {
+          const price = interval === 'year' ? el.dataset.yearly : el.dataset.monthly;
+          const suffixEl = el.querySelector('.price-suffix');
+          const suffix = interval === 'year' ? suffixEl.dataset.yearlySuffix : suffixEl.dataset.monthlySuffix;
+          el.childNodes[0].nodeValue = price;
+          suffixEl.textContent = suffix;
+        });
+        document.querySelectorAll('.price-sub[data-monthly-sub]').forEach((el) => {
+          el.textContent = interval === 'year' ? el.dataset.yearlySub : el.dataset.monthlySub;
+        });
+      }
+      document.querySelectorAll('.billing-toggle-btn').forEach((btn) => {
+        btn.addEventListener('click', () => setBillingInterval(btn.dataset.interval));
       });
       document.getElementById('modal-toggle-btn').addEventListener('click', toggleAuthMode);
       document.getElementById('modal-resend-btn').addEventListener('click', resendVerification);

@@ -12,9 +12,11 @@ ADMIN_EMAIL = "crcaway@gmail.com"
 # SUPABASE_SERVICE_KEY  - Supabase service role key (from Supabase dashboard)
 # SUPABASE_JWT_SECRET   - For verifying user JWTs (from Supabase dashboard)
 # STRIPE_SECRET_KEY     - sk_live_... from Stripe (see .env.master)
-# STRIPE_PRICE_BASIC    - price_... Basic plan ($4.99/mo) - create in Stripe dashboard
-# STRIPE_PRICE_PRO      - price_... Pro plan ($8.99/mo) - create in Stripe dashboard
-# STRIPE_WEBHOOK_SECRET - whsec_... from Stripe webhook endpoint signing secret
+# STRIPE_PRICE_BASIC         - price_... Basic monthly ($4.99/mo)
+# STRIPE_PRICE_PRO           - price_... Pro monthly ($8.99/mo)
+# STRIPE_PRICE_BASIC_ANNUAL  - price_... Basic annual ($49.99/yr ~ 17% off)
+# STRIPE_PRICE_PRO_ANNUAL    - price_... Pro annual ($89.99/yr ~ 17% off)
+# STRIPE_WEBHOOK_SECRET      - whsec_... from Stripe webhook endpoint signing secret
 # ADMIN_EMAIL           - email allowed to access /v1/admin/stats
 # Note: Checkout now uses Stripe's dashboard-configured payment methods.
 # Keep cards enabled by default. Add ACH Direct Debit for eligible US subscriptions

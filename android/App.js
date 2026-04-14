@@ -4,6 +4,7 @@ import { ActivityIndicator, View, Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import LoginScreen from './src/screens/LoginScreen';
 import HomeScreen from './src/screens/HomeScreen';
@@ -22,6 +23,7 @@ const TAB_COLORS = {
 };
 
 function MainTabs() {
+  const insets = useSafeAreaInsets();
   return (
     <Tab.Navigator
       screenOptions={{
@@ -30,9 +32,9 @@ function MainTabs() {
           backgroundColor: TAB_COLORS.bg,
           borderTopColor: TAB_COLORS.border,
           borderTopWidth: 1,
-          paddingBottom: 8,
+          paddingBottom: 8 + insets.bottom,
           paddingTop: 8,
-          height: 60,
+          height: 60 + insets.bottom,
         },
         tabBarActiveTintColor: TAB_COLORS.active,
         tabBarInactiveTintColor: TAB_COLORS.inactive,
@@ -97,15 +99,17 @@ export default function App() {
   }
 
   return (
-    <NavigationContainer>
-      <StatusBar style="light" />
-      <Stack.Navigator
-        initialRouteName={authenticated ? 'Main' : 'Login'}
-        screenOptions={{ headerShown: false }}
-      >
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Main" component={MainTabs} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <SafeAreaProvider>
+      <NavigationContainer>
+        <StatusBar style="light" />
+        <Stack.Navigator
+          initialRouteName={authenticated ? 'Main' : 'Login'}
+          screenOptions={{ headerShown: false }}
+        >
+          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="Main" component={MainTabs} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </SafeAreaProvider>
   );
 }

@@ -510,7 +510,8 @@ ipcMain.handle('audio-captured', async (event, { audioBase64, mimeType }) => {
       audioBuffer,
       settings.get('language'),
       mimeType,
-      learnedPrompt
+      learnedPrompt,
+      { translateToEnglish: !!settings.get('translateToEnglish') }
     );
 
     let text = result.text;

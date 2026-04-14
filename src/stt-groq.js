@@ -25,12 +25,16 @@ class GroqSTT {
    * @param {Buffer} audioBuffer - WebM/WAV audio data
    * @param {string} language - Language code (e.g., 'en')
    * @param {string} mimeType - MIME type of the audio (e.g., 'audio/webm')
+   * @param {string} prompt - Optional prompt for Whisper
+   * @param {object} options - { translateToEnglish?: boolean }
    * @returns {Promise<{text: string, duration: number}>}
    */
-  async transcribe(audioBuffer, language = 'en', mimeType = 'audio/webm', prompt = '') {
+  async transcribe(audioBuffer, language = 'en', mimeType = 'audio/webm', prompt = '', options = {}) {
+    const { translateToEnglish = false } = options;
+
     // Use Worker backend if user is logged in (no personal API key needed)
     if (this._authToken && !this._apiKey) {
-      return this._transcribeViaWorker(audioBuffer, language, mimeType, prompt);
+      return this._transcribeViaWorker(audioBuffer, language, mimeType, prompt, { translateToEnglish });
     }
 
     if (!this._apiKey && !this._authToken) {
@@ -58,19 +62,22 @@ class GroqSTT {
     formParts.push(audioBuffer);
     formParts.push(Buffer.from('\r\n'));
 
-    // Model part
+    // Model part — translate task requires whisper-large-v3 (not turbo)
+    const modelName = translateToEnglish ? 'whisper-large-v3' : 'whisper-large-v3-turbo';
     formParts.push(Buffer.from(
       `--${boundary}\r\n` +
       `Content-Disposition: form-data; name="model"\r\n\r\n` +
-      `whisper-large-v3-turbo\r\n`
+      `${modelName}\r\n`
     ));
 
-    // Language part
-    formParts.push(Buffer.from(
-      `--${boundary}\r\n` +
-      `Content-Disposition: form-data; name="language"\r\n\r\n` +
-      `${language}\r\n`
-    ));
+    // Language part (omit for "auto" or when translating → Whisper detects automatically)
+    if (language && language !== 'auto' && !translateToEnglish) {
+      formParts.push(Buffer.from(
+        `--${boundary}\r\n` +
+        `Content-Disposition: form-data; name="language"\r\n\r\n` +
+        `${language}\r\n`
+      ));
+    }
 
     // Response format
     formParts.push(Buffer.from(
@@ -101,9 +108,13 @@ class GroqSTT {
 
     const startTime = Date.now();
 
+    const endpoint = translateToEnglish
+      ? 'https://api.groq.com/openai/v1/audio/translations'
+      : 'https://api.groq.com/openai/v1/audio/transcriptions';
+
     try {
       // Use Electron's net module (handles proxies and certificates better)
-      const response = await net.fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+      const response = await net.fetch(endpoint, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${this._apiKey}`,
@@ -140,18 +151,24 @@ class GroqSTT {
   /**
    * Transcribe via VoltType Worker backend (for logged-in users without their own key).
    */
-  async _transcribeViaWorker(audioBuffer, language, mimeType, prompt) {
-    console.log('[WORKER] Transcribing via backend...', audioBuffer.length, 'bytes');
+  async _transcribeViaWorker(audioBuffer, language, mimeType, prompt, options = {}) {
+    const { translateToEnglish = false } = options;
+    console.log('[WORKER] Transcribing via backend...', audioBuffer.length, 'bytes', translateToEnglish ? '[translate]' : '');
 
     const ext = mimeType.includes('webm') ? 'webm' : mimeType.includes('wav') ? 'wav' : 'webm';
     const boundary = '----VoltTypeBoundary' + Date.now().toString(36);
+    const modelName = translateToEnglish ? 'whisper-large-v3' : 'whisper-large-v3-turbo';
 
     const formParts = [];
     formParts.push(Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="audio.${ext}"\r\nContent-Type: ${mimeType}\r\n\r\n`));
     formParts.push(audioBuffer);
     formParts.push(Buffer.from('\r\n'));
-    formParts.push(Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="model"\r\n\r\nwhisper-large-v3-turbo\r\n`));
-    formParts.push(Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="language"\r\n\r\n${language}\r\n`));
+    formParts.push(Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="model"\r\n\r\n${modelName}\r\n`));
+    if (translateToEnglish) {
+      formParts.push(Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="task"\r\n\r\ntranslate\r\n`));
+    } else if (language && language !== 'auto') {
+      formParts.push(Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="language"\r\n\r\n${language}\r\n`));
+    }
     if (prompt) {
       formParts.push(Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="prompt"\r\n\r\n${prompt}\r\n`));
     }
