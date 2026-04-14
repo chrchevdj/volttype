@@ -525,6 +525,27 @@
       font-size: 12px; color: var(--text-secondary);
       margin-bottom: 12px; min-height: 16px;
     }
+    .discount-card {
+      max-width: 720px; margin: 32px auto 0;
+      padding: 20px 24px; border-radius: var(--radius);
+      background: linear-gradient(135deg, rgba(124,58,237,0.06), rgba(59,130,246,0.06));
+      border: 1px solid rgba(124,58,237,0.2);
+      display: flex; gap: 16px; align-items: flex-start;
+    }
+    .discount-icon { font-size: 32px; line-height: 1; flex-shrink: 0; }
+    .discount-content h3 {
+      font-size: 16px; font-weight: 700; margin: 0 0 6px;
+      color: var(--text-primary);
+    }
+    .discount-content p {
+      font-size: 14px; color: var(--text-secondary);
+      line-height: 1.55; margin: 0;
+    }
+    .discount-content a { color: var(--purple); font-weight: 600; text-decoration: none; }
+    .discount-content a:hover { text-decoration: underline; }
+    @media (max-width: 600px) {
+      .discount-card { flex-direction: column; gap: 8px; padding: 16px; }
+    }
     .pricing-grid {
       display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 24px; max-width: 960px; margin: 0 auto;
@@ -1253,6 +1274,15 @@
           <li>Priority support</li>
         </ul>
         <button class="btn-price btn-price-primary" data-plan="pro" type="button">Upgrade to Pro</button>
+      </div>
+    </div>
+
+    <!-- Discount card -->
+    <div class="discount-card">
+      <div class="discount-icon">&#x1F393;</div>
+      <div class="discount-content">
+        <h3>Student &amp; Accessibility Discount &mdash; 50% off</h3>
+        <p>We offer half-price plans for students, teachers, and anyone using VoltType as an accessibility tool (low vision, RSI, mobility, dyslexia). Email <a href="mailto:support@volttype.com?subject=Discount%20code%20request">support@volttype.com</a> with a quick note about your situation and we&rsquo;ll send you a promo code to use at checkout. No verification paperwork &mdash; we trust you.</p>
       </div>
     </div>
   </section>
