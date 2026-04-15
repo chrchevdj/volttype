@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C /c/Users/crcaw/Desktop/Freelancing/VoltType log --oneline -15)"
+    ]
+  }
+}

@@ -734,6 +734,16 @@
     .strength-label { font-size: 11px; color: var(--text-secondary); }
     .modal-terms { font-size: 11px; color: #94a3b8; text-align: center; margin-top: 12px; }
     .modal-terms a { color: #6366f1; text-decoration: none; }
+    .modal-forgot { text-align: center; margin-top: 10px; }
+    .modal-forgot.hidden { display: none; }
+    .modal-link-btn {
+      background: none; border: none;
+      color: var(--purple); cursor: pointer;
+      font-size: 13px; text-decoration: underline;
+      padding: 4px 8px;
+    }
+    .modal-link-btn:hover { opacity: 0.8; }
+    .modal-reset.hidden { display: none; }
     .modal-verify { text-align: center; padding: 8px 0; }
     .verify-icon { font-size: 48px; margin-bottom: 12px; }
     .modal-verify h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: var(--text); }
@@ -1512,12 +1522,29 @@
 
         <button class="modal-btn" id="modal-submit" type="button">Create Account</button>
 
+        <div class="modal-forgot hidden" id="modal-forgot-wrap">
+          <button id="modal-forgot-btn" type="button" class="modal-link-btn">Forgot your password?</button>
+        </div>
+
         <div class="modal-toggle">
           <span id="modal-toggle-text">Already have an account?</span>
           <button id="modal-toggle-btn" type="button">Sign In</button>
         </div>
 
         <p class="modal-terms">By signing up, you agree to our <a href="terms-of-service.html">Terms</a> and <a href="privacy-policy.html">Privacy Policy</a>.</p>
+      </div>
+
+      <!-- Password reset request state -->
+      <div class="modal-reset hidden" id="modal-reset">
+        <div class="modal-error hidden" id="modal-reset-error" aria-live="polite"></div>
+        <div class="modal-success hidden" id="modal-reset-success" aria-live="polite"></div>
+        <p class="modal-sub">Enter your email and we&rsquo;ll send you a link to reset your password.</p>
+        <label class="sr-only" for="modal-reset-email">Email address</label>
+        <input type="email" class="modal-input" id="modal-reset-email" name="reset-email" placeholder="Email address&hellip;" autocomplete="email" spellcheck="false">
+        <button class="modal-btn" id="modal-reset-submit" type="button">Send Reset Link</button>
+        <div class="modal-toggle">
+          <button id="modal-reset-back-btn" type="button">&larr; Back to sign in</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1602,23 +1629,32 @@
     }
 
     // --- Show/hide modal ---
+    function clearModalMessages() {
+      document.getElementById('modal-error').classList.add('hidden');
+      document.getElementById('modal-success').classList.add('hidden');
+      document.getElementById('modal-reset-error').classList.add('hidden');
+      document.getElementById('modal-reset-success').classList.add('hidden');
+      document.getElementById('modal-error').textContent = '';
+      document.getElementById('modal-reset-error').textContent = '';
+    }
+
     function showAuthModal(mode, plan) {
       authMode = mode || 'signup';
       pendingPlan = plan || null;
       const modal = document.getElementById('auth-modal');
       modal.classList.remove('hidden');
-      document.getElementById('modal-error').classList.add('hidden');
-      document.getElementById('modal-success').classList.add('hidden');
+      clearModalMessages();
       document.getElementById('modal-email').value = '';
       document.getElementById('modal-password').value = '';
       document.getElementById('modal-password').type = 'password';
       document.getElementById('eye-open').classList.remove('hidden');
       document.getElementById('eye-closed').classList.add('hidden');
       document.getElementById('modal-name').value = '';
-      // Reset to form view (hide verify screen)
+      document.getElementById('modal-reset-email').value = '';
+      // Reset view state
       document.getElementById('modal-form').classList.remove('hidden');
       document.getElementById('modal-verify').classList.add('hidden');
-      // Hide strength bar
+      document.getElementById('modal-reset').classList.add('hidden');
       document.getElementById('password-strength').classList.add('hidden');
       updateModalUI();
     }
@@ -1639,6 +1675,7 @@
     function updateModalUI() {
       const nameField = document.getElementById('modal-name');
       const strengthEl = document.getElementById('password-strength');
+      const forgotWrap = document.getElementById('modal-forgot-wrap');
       if (authMode === 'signup') {
         document.getElementById('modal-title').textContent = 'Create Account';
         document.getElementById('modal-sub').textContent = 'Start voice typing for free';
@@ -1648,6 +1685,7 @@
         nameField.classList.remove('hidden');
         document.getElementById('modal-password').placeholder = 'Password (min 8 characters)';
         document.getElementById('modal-password').autocomplete = 'new-password';
+        if (forgotWrap) forgotWrap.classList.add('hidden');
       } else {
         document.getElementById('modal-title').textContent = 'Welcome Back';
         document.getElementById('modal-sub').textContent = 'Sign in to your VoltType account';
@@ -1658,21 +1696,78 @@
         if (strengthEl) strengthEl.classList.add('hidden');
         document.getElementById('modal-password').placeholder = 'Password';
         document.getElementById('modal-password').autocomplete = 'current-password';
+        if (forgotWrap) forgotWrap.classList.remove('hidden');
       }
     }
 
     function toggleAuthMode() {
       authMode = authMode === 'signup' ? 'login' : 'signup';
-      document.getElementById('modal-error').classList.add('hidden');
-      document.getElementById('modal-success').classList.add('hidden');
+      clearModalMessages();
       updateModalUI();
     }
 
     function switchToSignin() {
       document.getElementById('modal-form').classList.remove('hidden');
       document.getElementById('modal-verify').classList.add('hidden');
+      document.getElementById('modal-reset').classList.add('hidden');
+      clearModalMessages();
       authMode = 'login';
       updateModalUI();
+    }
+
+    // --- Password reset request ---
+    function showResetRequest() {
+      clearModalMessages();
+      document.getElementById('modal-form').classList.add('hidden');
+      document.getElementById('modal-verify').classList.add('hidden');
+      document.getElementById('modal-reset').classList.remove('hidden');
+      document.getElementById('modal-title').textContent = 'Reset Password';
+      document.getElementById('modal-sub').textContent = '';
+      // Prefill with whatever email is already typed
+      const typed = document.getElementById('modal-email').value.trim();
+      if (typed) document.getElementById('modal-reset-email').value = typed;
+      document.getElementById('modal-reset-email').focus();
+    }
+
+    async function sendPasswordReset() {
+      const email = document.getElementById('modal-reset-email').value.trim();
+      const errEl = document.getElementById('modal-reset-error');
+      const successEl = document.getElementById('modal-reset-success');
+      const btn = document.getElementById('modal-reset-submit');
+      errEl.classList.add('hidden');
+      successEl.classList.add('hidden');
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        errEl.textContent = 'Please enter a valid email address';
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Sending…';
+      try {
+        const redirectTo = `${window.location.origin}/reset-password.html`;
+        const res = await fetch(`${SUPABASE_URL}/auth/v1/recover`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+          body: JSON.stringify({ email, redirect_to: redirectTo }),
+        });
+        // Supabase always returns 200 for /recover (to prevent email enumeration),
+        // so we show success regardless.
+        if (!res.ok && res.status !== 200) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error_description || data.msg || 'Could not send reset email');
+        }
+        successEl.textContent = `If ${email} has a VoltType account, a reset link is on its way. Check your inbox (and spam).`;
+        successEl.classList.remove('hidden');
+      } catch (err) {
+        errEl.textContent = err.message;
+        errEl.classList.remove('hidden');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Send Reset Link';
+      }
     }
 
     async function resendVerification() {
@@ -1996,6 +2091,12 @@
       document.getElementById('modal-toggle-btn').addEventListener('click', toggleAuthMode);
       document.getElementById('modal-resend-btn').addEventListener('click', resendVerification);
       document.getElementById('modal-back-btn').addEventListener('click', switchToSignin);
+      document.getElementById('modal-forgot-btn').addEventListener('click', showResetRequest);
+      document.getElementById('modal-reset-back-btn').addEventListener('click', switchToSignin);
+      document.getElementById('modal-reset-submit').addEventListener('click', sendPasswordReset);
+      document.getElementById('modal-reset-email').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') sendPasswordReset();
+      });
 
       // Modal
       document.getElementById('modal-close').addEventListener('click', hideAuthModal);

@@ -81,6 +81,94 @@ test('handles confirmation-required signup and resend flow', async ({ page }) =>
   await expect(page.locator('#site-message')).toContainText('Verification email resent');
 });
 
+test('opens password reset flow from sign-in and sends a reset email', async ({ page }) => {
+  let recoverCalled = false;
+  let recoverBody = null;
+
+  await page.route('https://ceuymixybyaxpldgggin.supabase.co/auth/v1/recover', async (route) => {
+    recoverCalled = true;
+    try { recoverBody = JSON.parse(route.request().postData() || '{}'); } catch { /* ignore parse error */ }
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({}),
+    });
+  });
+
+  await page.goto('/');
+  await page.locator('#hero-signup-btn').click();
+  // Switch to Sign In mode so "Forgot your password?" is visible
+  await page.locator('#modal-toggle-btn').click();
+  await expect(page.locator('#modal-forgot-wrap')).toBeVisible();
+
+  await page.locator('#modal-forgot-btn').click();
+  await expect(page.locator('#modal-reset')).toBeVisible();
+  await expect(page.locator('#modal-form')).toBeHidden();
+
+  // Invalid email -> validation error
+  await page.locator('#modal-reset-email').fill('not-an-email');
+  await page.locator('#modal-reset-submit').click();
+  await expect(page.locator('#modal-reset-error')).toContainText('valid email');
+
+  // Valid email -> success message
+  await page.locator('#modal-reset-email').fill('user@example.com');
+  await page.locator('#modal-reset-submit').click();
+  await expect(page.locator('#modal-reset-success')).toContainText('reset link is on its way');
+  expect(recoverCalled).toBe(true);
+  expect(recoverBody).toMatchObject({ email: 'user@example.com' });
+  expect(recoverBody.redirect_to).toContain('/reset-password.html');
+
+  // Back button returns to sign-in form
+  await page.locator('#modal-reset-back-btn').click();
+  await expect(page.locator('#modal-form')).toBeVisible();
+  await expect(page.locator('#modal-reset')).toBeHidden();
+  await expect(page.locator('#modal-title')).toHaveText('Welcome Back');
+});
+
+test('reset-password.html updates password when recovery token is present', async ({ page }) => {
+  let putCalled = false;
+  let putBody = null;
+  let authHeader = null;
+
+  await page.route('https://ceuymixybyaxpldgggin.supabase.co/auth/v1/user', async (route) => {
+    if (route.request().method() === 'PUT') {
+      putCalled = true;
+      try { putBody = JSON.parse(route.request().postData() || '{}'); } catch { /* ignore parse error */ }
+      authHeader = route.request().headers()['authorization'];
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ id: 'user-1', email: 'reset@example.com' }),
+      });
+    } else {
+      await route.continue();
+    }
+  });
+
+  await page.goto('/reset-password.html#access_token=recovery-token&refresh_token=rt&type=recovery');
+  await expect(page.locator('h1')).toHaveText('Set a new password');
+
+  // Mismatch
+  await page.locator('#new-password').fill('StrongPass123');
+  await page.locator('#confirm-password').fill('Different123');
+  await page.locator('#submit-btn').click();
+  await expect(page.locator('#error')).toContainText('do not match');
+
+  // Match
+  await page.locator('#confirm-password').fill('StrongPass123');
+  await page.locator('#submit-btn').click();
+  await expect(page.locator('#success')).toContainText('Password updated');
+  expect(putCalled).toBe(true);
+  expect(putBody).toEqual({ password: 'StrongPass123' });
+  expect(authHeader).toBe('Bearer recovery-token');
+});
+
+test('reset-password.html rejects missing or invalid token', async ({ page }) => {
+  await page.goto('/reset-password.html');
+  await expect(page.locator('#error')).toContainText('invalid or has expired');
+  await expect(page.locator('#reset-form')).toBeHidden();
+});
+
 test('falls back from signup to login for an existing user', async ({ page }) => {
   await page.route('https://ceuymixybyaxpldgggin.supabase.co/auth/v1/signup', async (route) => {
     await route.fulfill({
