@@ -12,6 +12,7 @@ describe('Cloudflare worker support modules', () => {
       id: 'user-1',
       email: 'test@example.com',
       role: 'authenticated',
+      app_metadata: { products: ['volttype'] },
     }));
 
     const { verifyToken } = await import('../../backend/cloudflare-worker/src/auth.js');
@@ -26,7 +27,34 @@ describe('Cloudflare worker support modules', () => {
       userId: 'user-1',
       email: 'test@example.com',
       role: 'authenticated',
+      appMetadata: { products: ['volttype'] },
     });
+  });
+
+  it('identifies product membership and calls the add-product RPC', async () => {
+    const { hasProduct, addUserProduct } = await import('../../backend/cloudflare-worker/src/auth.js');
+
+    expect(hasProduct(null, 'volttype')).toBe(false);
+    expect(hasProduct({}, 'volttype')).toBe(false);
+    expect(hasProduct({ appMetadata: {} }, 'volttype')).toBe(false);
+    expect(hasProduct({ appMetadata: { products: ['lifirent'] } }, 'volttype')).toBe(false);
+    expect(hasProduct({ appMetadata: { products: ['volttype', 'lifirent'] } }, 'volttype')).toBe(true);
+
+    const fetchMock = vi.spyOn(globalThis, 'fetch');
+    fetchMock.mockResolvedValueOnce(createJsonResponse(['lifirent', 'volttype']));
+
+    const result = await addUserProduct('user-1', 'volttype', {
+      SUPABASE_URL: 'https://supabase.example',
+      SUPABASE_SERVICE_KEY: 'service-key',
+    });
+    expect(result).toEqual(['lifirent', 'volttype']);
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://supabase.example/rest/v1/rpc/volttype_add_user_product',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ p_user_id: 'user-1', p_product: 'volttype' }),
+      }),
+    );
   });
 
   it('enforces CORS rules for allowed and blocked origins', async () => {

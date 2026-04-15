@@ -7,10 +7,17 @@ const moduleState = vi.hoisted(() => ({
   proxyTranscribe: vi.fn(),
   proxyClean: vi.fn(),
   proxyCommand: vi.fn(),
+  addUserProduct: vi.fn(),
 }));
 
 vi.mock('../../backend/cloudflare-worker/src/auth.js', () => ({
   verifyToken: moduleState.verifyToken,
+  hasProduct: (user, product) => {
+    if (!user) return false;
+    const products = user.appMetadata?.products;
+    return Array.isArray(products) && products.includes(product);
+  },
+  addUserProduct: moduleState.addUserProduct,
 }));
 
 vi.mock('../../backend/cloudflare-worker/src/usage.js', () => ({
@@ -44,7 +51,7 @@ describe('worker fetch integration', () => {
 
   it('processes successful transcription, cleaning, command, and usage flows', async () => {
     const worker = (await import('../../backend/cloudflare-worker/src/index.js')).default;
-    moduleState.verifyToken.mockResolvedValue({ userId: 'user-1', email: 'test@example.com' });
+    moduleState.verifyToken.mockResolvedValue({ userId: 'user-1', email: 'test@example.com', appMetadata: { products: ['volttype'] } });
     moduleState.checkUsageLimit
       .mockResolvedValueOnce({
         allowed: true,
@@ -113,7 +120,7 @@ describe('worker fetch integration', () => {
     const fetchMock = vi.spyOn(globalThis, 'fetch');
     const worker = (await import('../../backend/cloudflare-worker/src/index.js')).default;
 
-    moduleState.verifyToken.mockResolvedValue({ userId: 'user-1', email: 'user@example.com' });
+    moduleState.verifyToken.mockResolvedValue({ userId: 'user-1', email: 'user@example.com', appMetadata: { products: ['volttype'] } });
     moduleState.checkUsageLimit.mockResolvedValueOnce({
       allowed: false,
       plan: 'free',
@@ -148,7 +155,7 @@ describe('worker fetch integration', () => {
     }), { ADMIN_EMAIL: 'admin@example.com' });
     expect(forbiddenStats.status).toBe(403);
 
-    moduleState.verifyToken.mockResolvedValueOnce({ userId: 'admin-1', email: 'admin@example.com' });
+    moduleState.verifyToken.mockResolvedValueOnce({ userId: 'admin-1', email: 'admin@example.com', appMetadata: { products: ['volttype'] } });
     fetchMock
       .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }))
       .mockResolvedValueOnce(new Response(JSON.stringify([
@@ -172,5 +179,60 @@ describe('worker fetch integration', () => {
       activeSubscriptions: 1,
       downloads: 10,
     });
+  });
+
+  it('blocks authenticated users who are not tagged for volttype', async () => {
+    const worker = (await import('../../backend/cloudflare-worker/src/index.js')).default;
+    moduleState.verifyToken.mockResolvedValueOnce({
+      userId: 'lifirent-user',
+      email: 'tenant@lifirent.com',
+      appMetadata: { products: ['lifirent'] },
+    });
+
+    const res = await worker.fetch(new Request('https://api.example/v1/usage', {
+      headers: { Authorization: 'Bearer token' },
+    }), {});
+    expect(res.status).toBe(403);
+    await expect(res.json()).resolves.toMatchObject({ error: 'not_a_volttype_user' });
+  });
+
+  it('allows join-product without a volttype tag and adds the tag', async () => {
+    const worker = (await import('../../backend/cloudflare-worker/src/index.js')).default;
+    moduleState.verifyToken.mockResolvedValueOnce({
+      userId: 'lifirent-user',
+      email: 'tenant@lifirent.com',
+      appMetadata: { products: ['lifirent'] },
+    });
+    moduleState.addUserProduct.mockResolvedValueOnce(['lifirent', 'volttype']);
+
+    const res = await worker.fetch(new Request('https://api.example/v1/auth/join-product', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer token', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ product: 'volttype' }),
+    }), {
+      SUPABASE_URL: 'https://supabase.example',
+      SUPABASE_SERVICE_KEY: 'service-key',
+    });
+
+    expect(res.status).toBe(200);
+    await expect(res.json()).resolves.toEqual({ ok: true, products: ['lifirent', 'volttype'] });
+    expect(moduleState.addUserProduct).toHaveBeenCalledWith('lifirent-user', 'volttype', expect.any(Object));
+  });
+
+  it('rejects join-product for non-volttype products from this API', async () => {
+    const worker = (await import('../../backend/cloudflare-worker/src/index.js')).default;
+    moduleState.verifyToken.mockResolvedValueOnce({
+      userId: 'user-1',
+      email: 'a@b.com',
+      appMetadata: { products: ['lifirent'] },
+    });
+
+    const res = await worker.fetch(new Request('https://api.example/v1/auth/join-product', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer token', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ product: 'lifirent' }),
+    }), {});
+
+    expect(res.status).toBe(400);
   });
 });

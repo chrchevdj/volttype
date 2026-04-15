@@ -1827,7 +1827,10 @@
         const bodyData = { email, password };
         if (authMode === 'signup') {
           const name = document.getElementById('modal-name').value.trim();
-          if (name) bodyData.data = { full_name: name };
+          // Tag the signup with the product so the BEFORE INSERT trigger
+          // on auth.users writes app_metadata.products = ['volttype']
+          bodyData.data = { signup_product: 'volttype' };
+          if (name) bodyData.data.full_name = name;
         }
 
         const res = await fetch(endpoint, {
@@ -1865,6 +1868,54 @@
                 })
               });
             } catch(e) { /* ignore — trigger handles base row */ }
+          }
+
+          // Product isolation: check whether this user is tagged for VoltType.
+          // If they authenticated but the JWT doesn't claim volttype in
+          // app_metadata.products, they came from another product (LifiRent,
+          // etc.) and must explicitly opt in.
+          const payloadCheck = decodeJWT(data.access_token);
+          const userProducts = payloadCheck?.app_metadata?.products || [];
+          const isVoltTypeUser = Array.isArray(userProducts) && userProducts.includes('volttype');
+
+          if (authMode === 'login' && !isVoltTypeUser) {
+            errEl.innerHTML = 'This email is registered with another product. ' +
+              '<button id="join-volttype-inline" type="button" style="background:none;border:none;color:var(--purple);text-decoration:underline;cursor:pointer;font:inherit;">Add VoltType to this account?</button>';
+            errEl.classList.remove('hidden');
+            const joinBtn = document.getElementById('join-volttype-inline');
+            if (joinBtn) {
+              joinBtn.addEventListener('click', async () => {
+                joinBtn.disabled = true;
+                joinBtn.textContent = 'Joining…';
+                try {
+                  const joinRes = await fetch(`${API_URL}/v1/auth/join-product`, {
+                    method: 'POST',
+                    headers: {
+                      'Authorization': `Bearer ${data.access_token}`,
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ product: 'volttype' }),
+                  });
+                  if (!joinRes.ok) {
+                    const j = await joinRes.json().catch(() => ({}));
+                    throw new Error(j.error || j.message || 'Could not join VoltType');
+                  }
+                  errEl.classList.add('hidden');
+                  successEl.textContent = 'Welcome to VoltType! You are signed in.';
+                  successEl.classList.remove('hidden');
+                  showSiteMessage('VoltType added to your account.', 'success');
+                  // Force a fresh token so JWT carries the new product tag
+                  await refreshSession();
+                  setTimeout(hideAuthModal, 2000);
+                } catch (err) {
+                  errEl.textContent = err.message;
+                }
+              });
+            }
+            // Don't auto-hide — let the user click the inline button.
+            btn.disabled = false;
+            updateModalUI();
+            return;
           }
 
           // If there's a pending paid plan, start checkout

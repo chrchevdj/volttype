@@ -10,9 +10,13 @@
  */
 
 import { corsHeaders, handleOptions } from './cors.js';
-import { verifyToken } from './auth.js';
+import { verifyToken, hasProduct, addUserProduct } from './auth.js';
 import { checkUsageLimit, logUsage, countWords } from './usage.js';
 import { proxyTranscribe, proxyClean, proxyCommand } from './groq-proxy.js';
+
+// Routes that require an authenticated user but do NOT require the user
+// to already be tagged as a VoltType user. Everything else needs the tag.
+const PRODUCT_TAG_OPT_OUT = new Set(['/v1/auth/join-product']);
 
 export default {
   async fetch(request, env) {
@@ -38,6 +42,34 @@ export default {
     const user = await verifyToken(request, env);
     if (!user) {
       return json({ error: 'Unauthorized — invalid or expired token' }, 401, request);
+    }
+
+    // Product isolation: block users who aren't tagged for VoltType,
+    // except for the opt-in endpoint itself.
+    if (!PRODUCT_TAG_OPT_OUT.has(path) && !hasProduct(user, 'volttype')) {
+      return json({
+        error: 'not_a_volttype_user',
+        message: 'This account is not enrolled for VoltType. Call /v1/auth/join-product to opt in.',
+      }, 403, request);
+    }
+
+    // --- POST /v1/auth/join-product ---
+    // Adds 'volttype' to the user's app_metadata.products list. Used when a
+    // user authenticated for another product (LifiRent, JOBALARM, etc.) wants
+    // to start using VoltType without re-signing up.
+    if (path === '/v1/auth/join-product' && request.method === 'POST') {
+      let body = {};
+      try { body = await request.json(); } catch { /* ignore */ }
+      const product = body.product || 'volttype';
+      if (product !== 'volttype') {
+        return json({ error: 'Only volttype is supported from this API' }, 400, request);
+      }
+      try {
+        const products = await addUserProduct(user.userId, product, env);
+        return json({ ok: true, products }, 200, request);
+      } catch (err) {
+        return json({ error: err.message }, 500, request);
+      }
     }
 
     // --- Request size limit (10MB max for audio) ---
