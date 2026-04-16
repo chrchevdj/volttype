@@ -31,8 +31,9 @@ const COLORS = {
 const HISTORY_KEY = 'volttype_history';
 
 function formatTime(seconds) {
-  const m = Math.floor(seconds / 60);
-  const s = Math.floor(seconds % 60);
+  const clamped = Math.max(0, seconds);
+  const m = Math.floor(clamped / 60);
+  const s = Math.floor(clamped % 60);
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 

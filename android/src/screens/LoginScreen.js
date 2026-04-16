@@ -169,7 +169,8 @@ export default function LoginScreen({ navigation }) {
   return (
     <KeyboardAvoidingView
       style={styles.root}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior="padding"
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 24}
     >
       {/* Soft purple→blue glow in the background, like the website's gradient hero. */}
       <LinearGradient
@@ -384,10 +385,10 @@ const styles = StyleSheet.create({
   },
   scrollInner: {
     flexGrow: 1,
-    justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
-    paddingTop: 60,
+    paddingTop: 80,
+    paddingBottom: 120,
   },
 
   /* Brand row */
