@@ -1500,8 +1500,13 @@
         <div class="modal-error hidden" id="modal-error" aria-live="polite"></div>
         <div class="modal-success hidden" id="modal-success" aria-live="polite"></div>
 
-        <!-- Honeypot anti-bot field — hidden from humans -->
-        <input type="text" id="modal-website" name="website" autocomplete="off" spellcheck="false" tabindex="-1" style="position:absolute;left:-9999px;opacity:0;height:0;width:0;">
+        <!-- Honeypot anti-bot field.
+             Wrapped in display:none and given a random-ish name so password managers / browser
+             autofill ignore it. Human users never see or touch this; bots fill it blindly. -->
+        <div style="display:none !important" aria-hidden="true">
+          <label for="vt-hp-field-j38f">Leave this field empty</label>
+          <input type="text" id="vt-hp-field-j38f" name="vt_hp_j38f" autocomplete="off" spellcheck="false" tabindex="-1">
+        </div>
 
         <label class="sr-only" for="modal-name">Full name</label>
         <input type="text" class="modal-input hidden" id="modal-name" name="name" placeholder="Full name…" autocomplete="name">
@@ -1519,6 +1524,9 @@
             <span class="strength-label" id="strength-label"></span>
           </div>
         </div>
+        <!-- Confirm password — signup only -->
+        <label class="sr-only" for="modal-password-confirm">Confirm password</label>
+        <input type="password" class="modal-input hidden" id="modal-password-confirm" name="password-confirm" placeholder="Confirm password…" autocomplete="new-password">
 
         <button class="modal-btn" id="modal-submit" type="button">Create Account</button>
 
@@ -1584,6 +1592,7 @@
     let token = localStorage.getItem('vt_token');
     let pendingPlan = null;
     let pendingEmail = ''; // persists email so Resend works after form is hidden
+    let modalOpenedAt = 0; // timestamp of when the auth modal last opened (for bot-time check)
 
     // ── JWT auto-refresh ──────────────────────────────────────
     async function refreshSession() {
@@ -1650,7 +1659,11 @@
       document.getElementById('eye-open').classList.remove('hidden');
       document.getElementById('eye-closed').classList.add('hidden');
       document.getElementById('modal-name').value = '';
+      const confirmField = document.getElementById('modal-password-confirm');
+      if (confirmField) confirmField.value = '';
       document.getElementById('modal-reset-email').value = '';
+      // Reset honeypot open-time so a fast bot still gets blocked
+      modalOpenedAt = Date.now();
       // Reset view state
       document.getElementById('modal-form').classList.remove('hidden');
       document.getElementById('modal-verify').classList.add('hidden');
@@ -1674,6 +1687,7 @@
 
     function updateModalUI() {
       const nameField = document.getElementById('modal-name');
+      const confirmField = document.getElementById('modal-password-confirm');
       const strengthEl = document.getElementById('password-strength');
       const forgotWrap = document.getElementById('modal-forgot-wrap');
       if (authMode === 'signup') {
@@ -1683,6 +1697,7 @@
         document.getElementById('modal-toggle-text').textContent = 'Already have an account?';
         document.getElementById('modal-toggle-btn').textContent = 'Sign in';
         nameField.classList.remove('hidden');
+        if (confirmField) confirmField.classList.remove('hidden');
         document.getElementById('modal-password').placeholder = 'Password (min 8 characters)';
         document.getElementById('modal-password').autocomplete = 'new-password';
         if (forgotWrap) forgotWrap.classList.add('hidden');
@@ -1693,6 +1708,10 @@
         document.getElementById('modal-toggle-text').textContent = "Don't have an account?";
         document.getElementById('modal-toggle-btn').textContent = 'Create one';
         nameField.classList.add('hidden');
+        if (confirmField) {
+          confirmField.classList.add('hidden');
+          confirmField.value = '';
+        }
         if (strengthEl) strengthEl.classList.add('hidden');
         document.getElementById('modal-password').placeholder = 'Password';
         document.getElementById('modal-password').autocomplete = 'current-password';
@@ -1804,8 +1823,18 @@
       errEl.classList.add('hidden');
       successEl.classList.add('hidden');
 
-      // Honeypot check — bots fill hidden fields
-      if (document.getElementById('modal-website').value) { errEl.textContent = 'Signup blocked.'; errEl.classList.remove('hidden'); return; }
+      // Honeypot — hidden field wrapped in display:none with a non-semantic name
+      // so autofill / password managers don't trip it. Combined with a minimum
+      // form-fill time of 1.2s to catch bots that ignore the honeypot too.
+      // Playwright sets window.__VT_TEST_MODE to skip the timing check.
+      const hpField = document.getElementById('vt-hp-field-j38f');
+      const formAge = Date.now() - (modalOpenedAt || 0);
+      const skipTimeCheck = typeof window !== 'undefined' && window.__VT_TEST_MODE === true;
+      if ((hpField && hpField.value) || (!skipTimeCheck && formAge < 1200)) {
+        errEl.textContent = 'Please try again in a moment.';
+        errEl.classList.remove('hidden');
+        return;
+      }
 
       if (!email || !password) { errEl.textContent = 'Enter email and password'; errEl.classList.remove('hidden'); return; }
 
@@ -1815,6 +1844,22 @@
 
       const minLen = authMode === 'signup' ? 8 : 6;
       if (password.length < minLen) { errEl.textContent = `Password must be at least ${minLen} characters`; errEl.classList.remove('hidden'); return; }
+
+      // Signup-only: confirm password must match
+      if (authMode === 'signup') {
+        const confirmField = document.getElementById('modal-password-confirm');
+        const confirmValue = confirmField ? confirmField.value : '';
+        if (!confirmValue) {
+          errEl.textContent = 'Please confirm your password';
+          errEl.classList.remove('hidden');
+          return;
+        }
+        if (confirmValue !== password) {
+          errEl.textContent = 'Passwords do not match';
+          errEl.classList.remove('hidden');
+          return;
+        }
+      }
 
       btn.disabled = true;
       btn.textContent = 'Please wait…';
@@ -1840,7 +1885,20 @@
         });
         const data = await res.json();
 
-        if (!res.ok) throw new Error(data.error_description || data.msg || 'Authentication failed');
+        if (!res.ok) {
+          let message = data.error_description || data.msg || data.error || 'Authentication failed';
+          // Humanize the most common failures
+          if (/invalid login credentials/i.test(message)) {
+            message = authMode === 'login'
+              ? 'Incorrect email or password. If you forgot your password, use the reset link below.'
+              : 'Could not sign up — check your email and password and try again.';
+          } else if (/email rate limit|too many/i.test(message)) {
+            message = 'Too many attempts. Please wait a minute and try again.';
+          } else if (/user already registered/i.test(message)) {
+            message = 'An account already exists for this email. Try signing in instead.';
+          }
+          throw new Error(message);
+        }
 
         if (data.access_token) {
           token = data.access_token;
@@ -1937,33 +1995,20 @@
           // Supabase returns 200 + user but no token for existing emails (to prevent enumeration).
           // If the user object has an empty identities array, the email is already registered.
           if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
-            // Email already registered — seamlessly switch to login and auto-submit
+            // Email already registered — switch to Sign In mode and show a clear message.
+            // We don't auto-submit because the password they typed may not match their existing
+            // password (plus auto-submit would surprise them).
             authMode = 'login';
             updateModalUI();
-            btn.disabled = true;
-            btn.textContent = 'Signing in…';
-            try {
-              const loginRes = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
-                body: JSON.stringify({ email, password }),
-              });
-              const loginData = await loginRes.json();
-              if (!loginRes.ok) throw new Error(loginData.error_description || loginData.msg || 'Sign in failed');
-              if (loginData.access_token) {
-                token = loginData.access_token;
-                localStorage.setItem('vt_token', loginData.access_token);
-                localStorage.setItem('vt_refresh', loginData.refresh_token);
-                updateNavAuth();
-                successEl.textContent = 'Welcome back! You are signed in.';
-                successEl.classList.remove('hidden');
-                showSiteMessage('Signed in successfully.', 'success');
-                setTimeout(hideAuthModal, 2000);
-              }
-            } catch (loginErr) {
-              errEl.textContent = loginErr.message;
-              errEl.classList.remove('hidden');
-            }
+            document.getElementById('modal-email').value = email;
+            document.getElementById('modal-password').value = '';
+            document.getElementById('modal-password').focus();
+            errEl.innerHTML = `An account already exists for <strong>${email}</strong>. ` +
+              `Enter your password to sign in, or <button id="forgot-inline" type="button" ` +
+              `style="background:none;border:none;color:var(--purple);text-decoration:underline;cursor:pointer;font:inherit;padding:0;">reset it</button>.`;
+            errEl.classList.remove('hidden');
+            const forgotBtn = document.getElementById('forgot-inline');
+            if (forgotBtn) forgotBtn.addEventListener('click', showResetRequest);
           } else {
             // Genuine email confirmation needed
             pendingEmail = email;

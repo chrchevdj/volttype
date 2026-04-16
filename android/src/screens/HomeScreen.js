@@ -13,6 +13,7 @@ import * as Clipboard from 'expo-clipboard';
 import { Audio } from 'expo-av';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { transcribe, cleanText, getUsage } from '../services/api';
+import { joinVoltType } from '../services/auth';
 
 const COLORS = {
   bg: '#0c1222',
@@ -106,11 +107,50 @@ export default function HomeScreen({ navigation }) {
       const usage = await getUsage();
       setRemaining(usage.remainingSeconds);
       setOffline(false);
-    } catch {
+    } catch (err) {
+      if (err && err.code === 'NOT_A_VOLTTYPE_USER') {
+        promptJoinVoltType();
+        return;
+      }
+      if (err && err.code === 'NOT_AUTHENTICATED') {
+        redirectToLogin();
+        return;
+      }
       // Check if it's a connectivity issue
       const online = await checkConnectivity();
       setOffline(!online);
     }
+  }
+
+  function redirectToLogin() {
+    Alert.alert('Session expired', 'Please sign in again.', [{
+      text: 'OK',
+      onPress: () => {
+        navigation.getParent()?.reset({ index: 0, routes: [{ name: 'Login' }] });
+      },
+    }]);
+  }
+
+  function promptJoinVoltType() {
+    Alert.alert(
+      'Add VoltType to this account',
+      'This account is signed up for another product but not VoltType yet. Add VoltType now to start dictating.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Add VoltType',
+          onPress: async () => {
+            try {
+              await joinVoltType();
+              Alert.alert('Welcome!', 'VoltType is now active on your account.');
+              loadUsage();
+            } catch (e) {
+              Alert.alert('Could not add VoltType', e.message || 'Please try again.');
+            }
+          },
+        },
+      ],
+    );
   }
 
   async function startRecording() {
@@ -193,26 +233,16 @@ export default function HomeScreen({ navigation }) {
         await saveToHistory(finalText, languageRef.current);
       }
     } catch (err) {
-      if (err.message === 'LIMIT_REACHED') {
+      if (err && err.code === 'LIMIT_REACHED') {
         setRemaining(0);
         Alert.alert(
           'Daily limit reached',
           'Upgrade your plan for more minutes at volttype.com',
         );
-      } else if (err.message === 'Not authenticated') {
-        Alert.alert(
-          'Session expired',
-          'Please sign in again.',
-          [{
-            text: 'OK',
-            onPress: () => {
-              navigation.getParent()?.reset({
-                index: 0,
-                routes: [{ name: 'Login' }],
-              });
-            },
-          }],
-        );
+      } else if (err && err.code === 'NOT_A_VOLTTYPE_USER') {
+        promptJoinVoltType();
+      } else if (err && (err.code === 'NOT_AUTHENTICATED' || err.message === 'Not authenticated')) {
+        redirectToLogin();
       } else {
         // Could be a network error
         const online = await checkConnectivity();
@@ -223,7 +253,7 @@ export default function HomeScreen({ navigation }) {
             'Could not reach the server. Please check your internet connection.',
           );
         } else {
-          Alert.alert('Error', err.message);
+          Alert.alert('Error', err.message || 'Something went wrong');
         }
       }
     } finally {

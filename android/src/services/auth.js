@@ -31,22 +31,38 @@ async function saveSession(data) {
 
 /**
  * Sign up a new user.
- * Returns { session: true } if auto-logged-in, or { session: false, needsConfirmation: true }
- * if Supabase email-confirmation is enabled.
+ *
+ * Tags the signup with `signup_product: 'volttype'` so the BEFORE INSERT
+ * trigger on auth.users writes `app_metadata.products = ['volttype']`.
+ * Without this tag the Cloudflare Worker rejects transcribe requests with
+ * `not_a_volttype_user`.
+ *
+ * Returns:
+ *   { session: true } if auto-logged-in,
+ *   { session: false, needsConfirmation: true } if email confirmation is on,
+ *   throws Error with code='USER_EXISTS' if email is already registered.
  */
-export async function signup(email, password) {
+export async function signup(email, password, fullName) {
+  const body = {
+    email,
+    password,
+    data: { signup_product: 'volttype' },
+  };
+  if (fullName && fullName.trim()) {
+    body.data.full_name = fullName.trim();
+  }
+
   const res = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       apikey: SUPABASE_ANON_KEY,
     },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify(body),
   });
   const data = await res.json();
   if (!res.ok) {
     const msg = data.error_description || data.msg || data.message || 'Signup failed';
-    // Already-registered user — hint them to log in instead
     if (/already|registered|exists/i.test(msg)) {
       const err = new Error('An account with this email already exists. Please sign in instead.');
       err.code = 'USER_EXISTS';
@@ -54,7 +70,16 @@ export async function signup(email, password) {
     }
     throw new Error(msg);
   }
-  // If email confirmation is disabled, we get a session immediately
+
+  // Supabase returns 200 + user with empty identities array for existing
+  // emails (email-enumeration guard). Treat this as USER_EXISTS.
+  if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+    const err = new Error('An account with this email already exists. Please sign in instead.');
+    err.code = 'USER_EXISTS';
+    throw err;
+  }
+
+  // Auto-login if email confirmation is disabled
   if (data.access_token) {
     await saveSession(data);
     return { session: true };
@@ -63,8 +88,55 @@ export async function signup(email, password) {
     await saveSession(data.session);
     return { session: true };
   }
-  // Email confirmation required — user must click link in email before login
+  // Email confirmation required — user must click link in email
   return { session: false, needsConfirmation: true };
+}
+
+/**
+ * Request a password reset email. Supabase always returns 200 to prevent
+ * email enumeration, so we don't check result.
+ */
+export async function requestPasswordReset(email) {
+  await fetch(`${SUPABASE_URL}/auth/v1/recover`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      apikey: SUPABASE_ANON_KEY,
+    },
+    body: JSON.stringify({
+      email,
+      redirect_to: 'https://volttype.com/reset-password.html',
+    }),
+  });
+  return { ok: true };
+}
+
+/**
+ * Add the 'volttype' product tag to the currently-authenticated user.
+ * Used when a user signed up from another product (LifiRent, etc.) but now
+ * wants to use VoltType. Called via the Cloudflare Worker which calls the
+ * volttype_add_user_product Supabase RPC with service-role auth.
+ */
+export async function joinVoltType() {
+  const token = await AsyncStorage.getItem(TOKEN_KEY);
+  if (!token) throw new Error('Not signed in');
+
+  const res = await fetch('https://volttype-api.crcaway.workers.dev/v1/auth/join-product', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ product: 'volttype' }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.error || data.message || 'Could not add VoltType');
+  }
+  // The access_token we have still claims the OLD app_metadata (no volttype
+  // tag). Force a token refresh so the new tag is in the JWT.
+  await refreshSession();
+  return data;
 }
 
 /**

@@ -13,6 +13,8 @@ test.beforeEach(async ({ page }) => {
       }),
     });
   });
+  // Skip the 1.2s bot-time check so tests don't have to wait
+  await page.addInitScript(() => { window.__VT_TEST_MODE = true; });
 });
 
 test('renders the landing page and updates download targets', async ({ page }) => {
@@ -72,6 +74,7 @@ test('handles confirmation-required signup and resend flow', async ({ page }) =>
   await page.locator('#modal-name').fill('New User');
   await page.locator('#modal-email').fill('new@example.com');
   await page.locator('#modal-password').fill('strong-pass');
+  await page.locator('#modal-password-confirm').fill('strong-pass');
   await page.locator('#modal-submit').click();
 
   await expect(page.locator('#modal-verify')).toBeVisible();
@@ -79,6 +82,21 @@ test('handles confirmation-required signup and resend flow', async ({ page }) =>
 
   await page.locator('#modal-resend-btn').click();
   await expect(page.locator('#site-message')).toContainText('Verification email resent');
+});
+
+test('requires confirm password to match on signup', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('#hero-signup-btn').click();
+  await page.locator('#modal-name').fill('Test User');
+  await page.locator('#modal-email').fill('new@example.com');
+  await page.locator('#modal-password').fill('strong-pass');
+  // Missing confirm
+  await page.locator('#modal-submit').click();
+  await expect(page.locator('#modal-error')).toContainText('confirm your password');
+  // Mismatch
+  await page.locator('#modal-password-confirm').fill('different-pass');
+  await page.locator('#modal-submit').click();
+  await expect(page.locator('#modal-error')).toContainText('Passwords do not match');
 });
 
 test('opens password reset flow from sign-in and sends a reset email', async ({ page }) => {
@@ -169,36 +187,51 @@ test('reset-password.html rejects missing or invalid token', async ({ page }) =>
   await expect(page.locator('#reset-form')).toBeHidden();
 });
 
-test('falls back from signup to login for an existing user', async ({ page }) => {
+test('switches to sign-in mode and warns when signup email already exists', async ({ page }) => {
   await page.route('https://ceuymixybyaxpldgggin.supabase.co/auth/v1/signup', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({
+        // Empty identities array = Supabase's signal for "already registered"
         user: { id: 'user-1', email: 'existing@example.com', identities: [] },
-      }),
-    });
-  });
-
-  await page.route('https://ceuymixybyaxpldgggin.supabase.co/auth/v1/token?grant_type=password', async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        access_token: 'header.' + Buffer.from(JSON.stringify({ email: 'existing@example.com' })).toString('base64') + '.sig',
-        refresh_token: 'refresh-token',
-        user: { id: 'user-1', email: 'existing@example.com' },
       }),
     });
   });
 
   await page.goto('/');
   await page.locator('#hero-signup-btn').click();
+  await page.locator('#modal-name').fill('Already There');
   await page.locator('#modal-email').fill('existing@example.com');
-  await page.locator('#modal-password').fill('existing-pass');
+  await page.locator('#modal-password').fill('any-pass-1');
+  await page.locator('#modal-password-confirm').fill('any-pass-1');
   await page.locator('#modal-submit').click();
 
-  await expect(page.locator('#modal-success')).toContainText('Welcome back');
-  await expect(page.locator('#nav-user')).toBeVisible();
-  await expect(page.locator('#nav-user-email')).toContainText('existing@example.com');
+  // Should flip to Sign In mode with a clear error explaining the email already exists
+  await expect(page.locator('#modal-title')).toHaveText('Welcome Back');
+  await expect(page.locator('#modal-error')).toContainText('existing@example.com');
+  await expect(page.locator('#modal-error')).toContainText('already exists');
+  // Confirm-password field should be hidden now
+  await expect(page.locator('#modal-password-confirm')).toBeHidden();
+  // Email should be preserved
+  await expect(page.locator('#modal-email')).toHaveValue('existing@example.com');
+});
+
+test('humanizes invalid login credentials error', async ({ page }) => {
+  await page.route('https://ceuymixybyaxpldgggin.supabase.co/auth/v1/token?grant_type=password', async (route) => {
+    await route.fulfill({
+      status: 400,
+      contentType: 'application/json',
+      body: JSON.stringify({ error: 'invalid_grant', error_description: 'Invalid login credentials' }),
+    });
+  });
+
+  await page.goto('/');
+  await page.locator('#hero-signup-btn').click();
+  await page.locator('#modal-toggle-btn').click(); // switch to Sign In
+  await page.locator('#modal-email').fill('user@example.com');
+  await page.locator('#modal-password').fill('wrong-pass-1');
+  await page.locator('#modal-submit').click();
+
+  await expect(page.locator('#modal-error')).toContainText('Incorrect email or password');
 });

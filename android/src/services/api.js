@@ -28,6 +28,37 @@ async function authFetch(path, options = {}) {
 }
 
 /**
+ * Parse a Worker response and throw a typed error for known failure modes.
+ * - 401 → NOT_AUTHENTICATED
+ * - 403 with error:'not_a_volttype_user' → NOT_A_VOLTTYPE_USER
+ * - 429 → LIMIT_REACHED
+ */
+async function assertOk(res, fallbackMsg) {
+  if (res.ok) return;
+  let data = {};
+  try { data = await res.json(); } catch { /* no body */ }
+
+  if (res.status === 401) {
+    const err = new Error('Your session expired. Please sign in again.');
+    err.code = 'NOT_AUTHENTICATED';
+    throw err;
+  }
+  if (res.status === 403 && data.error === 'not_a_volttype_user') {
+    const err = new Error(
+      'This account is not enrolled in VoltType yet. Tap "Add VoltType" to continue.',
+    );
+    err.code = 'NOT_A_VOLTTYPE_USER';
+    throw err;
+  }
+  if (res.status === 429) {
+    const err = new Error('Daily limit reached — upgrade at volttype.com for more time.');
+    err.code = 'LIMIT_REACHED';
+    throw err;
+  }
+  throw new Error(data.error || data.message || fallbackMsg);
+}
+
+/**
  * POST /v1/transcribe
  *
  * Sends an audio file (URI) to the transcription endpoint.
@@ -63,16 +94,8 @@ export async function transcribe(fileUri, language = 'en', options = {}) {
     // Let fetch set the multipart Content-Type with boundary
   });
 
-  const data = await res.json();
-
-  if (res.status === 429) {
-    throw new Error('LIMIT_REACHED');
-  }
-  if (!res.ok) {
-    throw new Error(data.error || 'Transcription failed');
-  }
-
-  return data;
+  await assertOk(res, 'Transcription failed');
+  return res.json();
 }
 
 /**
@@ -89,12 +112,8 @@ export async function cleanText(text, style = 'clean') {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ text, style }),
   });
-
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data.error || 'Cleanup failed');
-  }
-  return data;
+  await assertOk(res, 'Cleanup failed');
+  return res.json();
 }
 
 /**
@@ -105,9 +124,6 @@ export async function cleanText(text, style = 'clean') {
  */
 export async function getUsage() {
   const res = await authFetch('/usage');
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data.error || 'Failed to fetch usage');
-  }
-  return data;
+  await assertOk(res, 'Failed to fetch usage');
+  return res.json();
 }
