@@ -2,7 +2,7 @@
   "expo": {
     "name": "VoltType",
     "slug": "volttype",
-    "version": "1.1.2",
+    "version": "1.1.3",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -38,6 +38,13 @@
         "expo-av",
         {
           "microphonePermission": "VoltType needs microphone access for voice dictation."
+        }
+      ],
+      [
+        "expo-share-intent",
+        {
+          "androidIntentFilters": ["text/*", "audio/*"],
+          "androidMultiIntentFilters": ["audio/*"]
         }
       ]
     ],

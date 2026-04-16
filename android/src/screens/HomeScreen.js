@@ -12,6 +12,7 @@ import {
 import * as Clipboard from 'expo-clipboard';
 import { Audio } from 'expo-av';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useShareIntentContext } from 'expo-share-intent';
 import { transcribe, cleanText, getUsage } from '../services/api';
 import { joinVoltType } from '../services/auth';
 
@@ -82,6 +83,11 @@ export default function HomeScreen({ navigation }) {
   const languageRef = useRef('en');
   const outputStyleRef = useRef('clean');
 
+  // Share sheet: populated when another app shares text or an audio file to
+  // VoltType. We read from the provider context (wired in App.js) rather than
+  // calling useShareIntent() directly, so every screen sees the same instance.
+  const { hasShareIntent, shareIntent, resetShareIntent } = useShareIntentContext();
+
   const limitReached = remaining != null && remaining <= 0;
 
   // Load usage and settings on mount + when returning from Settings
@@ -94,6 +100,82 @@ export default function HomeScreen({ navigation }) {
     loadSettings();
     return unsubscribe;
   }, [navigation]);
+
+  // React to content shared into VoltType from other apps.
+  //  - Audio file (voice recorder, WhatsApp voice note, etc.) → auto-transcribe
+  //  - Text (article, note, email selection) → prefill the result box so the
+  //    user can copy/clean/append to it. Keeps VoltType useful beyond its own
+  //    recording flow.
+  useEffect(() => {
+    if (!hasShareIntent || !shareIntent) return;
+    handleShareIntent(shareIntent);
+    resetShareIntent();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasShareIntent]);
+
+  async function handleShareIntent(intent) {
+    // Files take priority — if an audio file came in, transcribe it.
+    const files = Array.isArray(intent.files) ? intent.files : [];
+    const audioFile = files.find((f) => {
+      const mime = (f.mimeType || f.type || '').toLowerCase();
+      return mime.startsWith('audio/');
+    });
+    if (audioFile) {
+      await transcribeSharedAudio(audioFile.path || audioFile.uri);
+      return;
+    }
+    // Otherwise, if text was shared, drop it in the result box.
+    const text = intent.text || intent.webUrl;
+    if (text) {
+      setResultText((prev) => (prev ? prev + '\n\n' + text : text));
+    }
+  }
+
+  async function transcribeSharedAudio(uri) {
+    if (!uri) return;
+    if (limitReached) {
+      Alert.alert(
+        'Daily limit reached',
+        'Upgrade your plan for more minutes at volttype.com',
+      );
+      return;
+    }
+    setProcessing(true);
+    try {
+      const result = await transcribe(uri, languageRef.current);
+      if (result.text) {
+        let finalText = result.text;
+        try {
+          const cleaned = await cleanText(result.text, outputStyleRef.current);
+          if (cleaned.text) finalText = cleaned.text;
+        } catch {
+          // Cleanup failed — use raw transcription
+        }
+        setResultText((prev) => (prev ? prev + ' ' + finalText : finalText));
+        setSessionCount((c) => c + 1);
+        if (result.usage?.remaining != null) {
+          setRemaining(result.usage.remaining);
+        }
+        await saveToHistory(finalText, languageRef.current);
+      }
+    } catch (err) {
+      if (err && err.code === 'LIMIT_REACHED') {
+        setRemaining(0);
+        Alert.alert(
+          'Daily limit reached',
+          'Upgrade your plan for more minutes at volttype.com',
+        );
+      } else if (err && err.code === 'NOT_A_VOLTTYPE_USER') {
+        promptJoinVoltType();
+      } else if (err && (err.code === 'NOT_AUTHENTICATED' || err.message === 'Not authenticated')) {
+        redirectToLogin();
+      } else {
+        Alert.alert('Could not transcribe', err.message || 'Please try again.');
+      }
+    } finally {
+      setProcessing(false);
+    }
+  }
 
   async function loadSettings() {
     const lang = await AsyncStorage.getItem('volttype_language');
