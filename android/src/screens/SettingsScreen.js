@@ -218,7 +218,7 @@ export default function SettingsScreen({ navigation }) {
           ))}
         </View>
 
-        <Text style={styles.version}>VoltType v1.1.2</Text>
+        <Text style={styles.version}>VoltType v1.1.4</Text>
       </ScrollView>
     </View>
   );
