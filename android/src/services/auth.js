@@ -247,3 +247,87 @@ export async function isLoggedIn() {
 
   return true;
 }
+
+/**
+ * Decode a JWT payload (no signature verification — just reads the body).
+ * Used to extract user email / id for UI display.
+ */
+function decodeJwtPayload(token) {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    // base64url → base64
+    const b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    // Pad base64
+    const padded = b64 + '=='.slice(0, (4 - (b64.length % 4)) % 4);
+    // atob is available in React Native / Hermes via global
+    const decoded = typeof atob === 'function'
+      ? atob(padded)
+      : Buffer.from(padded, 'base64').toString('binary');
+    return JSON.parse(decoded);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Return the email of the currently signed-in user, or null if not signed in.
+ * Reads the JWT payload (no network call).
+ */
+export async function getCurrentUserEmail() {
+  const token = await AsyncStorage.getItem(TOKEN_KEY);
+  if (!token) return null;
+  const payload = decodeJwtPayload(token);
+  return payload?.email || null;
+}
+
+/**
+ * Hard-validate the stored session by calling the API.
+ *
+ * This is the authoritative check run at app launch. It protects against:
+ *  - Stale tokens restored from Android Auto Backup on another device
+ *  - Tokens for users that have been deleted / banned server-side
+ *  - Refresh tokens rotated on another device (all prior sessions invalidated)
+ *
+ * Behaviour:
+ *  - No stored token         → returns false (go to Login)
+ *  - Token valid             → returns true
+ *  - Token expired, refresh  → retries once with the refreshed token
+ *  - API 401                 → nukes local session, returns false
+ *  - Network error           → returns true (don't log users out when offline;
+ *                              the first real API call will redirect if needed)
+ */
+export async function validateSession() {
+  const token = await AsyncStorage.getItem(TOKEN_KEY);
+  if (!token) return false;
+
+  // If token is expired, refresh it first
+  const expiryStr = await AsyncStorage.getItem(EXPIRY_KEY);
+  const expiry = expiryStr ? Number(expiryStr) : 0;
+  let currentToken = token;
+  if (Date.now() >= expiry) {
+    const refreshed = await refreshSession();
+    if (!refreshed) return false;
+    currentToken = refreshed;
+  }
+
+  // Call the API with the token to prove it's still valid server-side.
+  try {
+    const res = await fetch('https://volttype-api.crcaway.workers.dev/v1/usage', {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${currentToken}` },
+    });
+    if (res.status === 401) {
+      // Server rejected the token — this is a backup-restore or revoked session.
+      await logout();
+      return false;
+    }
+    // Any other status (200, 403 not_a_volttype_user, 429 limit_reached, etc.)
+    // means the token itself is valid — the user IS authenticated.
+    return true;
+  } catch {
+    // Offline / network error — don't log the user out. The next live API call
+    // will handle auth properly.
+    return true;
+  }
+}

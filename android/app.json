@@ -2,7 +2,7 @@
   "expo": {
     "name": "VoltType",
     "slug": "volttype",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -23,6 +23,7 @@
         "backgroundColor": "#0c1222"
       },
       "edgeToEdgeEnabled": false,
+      "allowBackup": false,
       "permissions": [
         "RECORD_AUDIO",
         "android.permission.RECORD_AUDIO",

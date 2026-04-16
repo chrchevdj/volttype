@@ -11,20 +11,29 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { login, signup, requestPasswordReset } from '../services/auth';
 
+// Palette pulled from website index.html so the Android login matches the web modal.
 const COLORS = {
-  bg: '#0c1222',
-  card: 'rgba(22,33,55,0.85)',
-  accent: '#38bd9c',
-  accent2: '#3b82f6',
-  text: '#e2e8f0',
-  text2: '#94a3b8',
+  bg: '#1a1254',             // page background (web dark --bg)
+  card: 'rgba(255,255,255,0.06)', // web dark --card-bg
+  cardBorder: 'rgba(255,255,255,0.10)',
+  purple: '#7c3aed',         // web --purple
+  blue: '#3b82f6',            // web --blue
+  text: '#e2e8f0',           // web dark --text
+  text2: '#a8b3d1',
   text3: '#64748b',
+  placeholder: '#6b7492',
+  inputBg: 'rgba(0,0,0,0.25)',   // web dark --input-bg
+  inputBorder: 'rgba(255,255,255,0.12)', // web dark --input-border
   red: '#f87171',
   amber: '#f59e0b',
   green: '#22c55e',
-  border: 'rgba(255,255,255,0.08)',
+  errorBg: 'rgba(220,38,38,0.12)',
+  errorBorder: 'rgba(248,113,113,0.30)',
+  successBg: 'rgba(34,197,94,0.10)',
+  successBorder: 'rgba(34,197,94,0.30)',
 };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -142,23 +151,57 @@ export default function LoginScreen({ navigation }) {
     if (mode === 'forgot') return handleForgotPassword();
   }
 
+  const heroTitle =
+    mode === 'signup' ? 'Create your account'
+    : mode === 'forgot' ? 'Reset your password'
+    : 'Welcome back';
+
+  const heroSub =
+    mode === 'signup' ? 'Start dictating in 99+ languages.'
+    : mode === 'forgot' ? "We'll email you a reset link."
+    : 'Sign in to keep dictating.';
+
+  const submitLabel =
+    mode === 'signup' ? 'Create Account'
+    : mode === 'forgot' ? 'Send Reset Link'
+    : 'Sign In';
+
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={styles.root}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+      {/* Soft purple→blue glow in the background, like the website's gradient hero. */}
+      <LinearGradient
+        colors={[COLORS.purple, COLORS.blue]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.backgroundGlow}
+        pointerEvents="none"
+      />
+      <View style={styles.backgroundOverlay} pointerEvents="none" />
+
       <ScrollView
         contentContainerStyle={styles.scrollInner}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
+        {/* Brand — matches the website logo treatment (gradient text on dark bg). */}
+        <View style={styles.brandRow}>
+          <LinearGradient
+            colors={[COLORS.purple, COLORS.blue]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.brandDot}
+          >
+            <Text style={styles.brandDotText}>V</Text>
+          </LinearGradient>
+          <Text style={styles.brandText}>VoltType</Text>
+        </View>
+
         <View style={styles.card}>
-          <Text style={styles.title}>VoltType</Text>
-          <Text style={styles.subtitle}>
-            {mode === 'signup' && 'Create your account'}
-            {mode === 'signin' && 'Sign in to your account'}
-            {mode === 'forgot' && 'Reset your password'}
-          </Text>
+          <Text style={styles.title}>{heroTitle}</Text>
+          <Text style={styles.subtitle}>{heroSub}</Text>
 
           {error ? (
             <View style={styles.errorBox}>
@@ -177,7 +220,7 @@ export default function LoginScreen({ navigation }) {
             <TextInput
               style={styles.input}
               placeholder="Full name (optional)"
-              placeholderTextColor={COLORS.text3}
+              placeholderTextColor={COLORS.placeholder}
               value={fullName}
               onChangeText={setFullName}
               autoCapitalize="words"
@@ -188,7 +231,7 @@ export default function LoginScreen({ navigation }) {
           <TextInput
             style={styles.input}
             placeholder="Email address"
-            placeholderTextColor={COLORS.text3}
+            placeholderTextColor={COLORS.placeholder}
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
@@ -204,7 +247,7 @@ export default function LoginScreen({ navigation }) {
                 <TextInput
                   style={[styles.input, styles.passwordInput]}
                   placeholder={mode === 'signup' ? 'Password (min 8 characters)' : 'Password'}
-                  placeholderTextColor={COLORS.text3}
+                  placeholderTextColor={COLORS.placeholder}
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
@@ -244,7 +287,7 @@ export default function LoginScreen({ navigation }) {
                 <TextInput
                   style={styles.input}
                   placeholder="Confirm password"
-                  placeholderTextColor={COLORS.text3}
+                  placeholderTextColor={COLORS.placeholder}
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
                   secureTextEntry={!showPassword}
@@ -256,21 +299,25 @@ export default function LoginScreen({ navigation }) {
             </>
           )}
 
+          {/* Submit — gradient button to match the web modal's primary CTA. */}
           <TouchableOpacity
-            style={styles.submitBtn}
             onPress={onSubmit}
             disabled={loading}
-            activeOpacity={0.8}
+            activeOpacity={0.85}
+            style={[styles.submitWrap, loading && styles.submitDisabled]}
           >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.submitText}>
-                {mode === 'signup' && 'Create Account'}
-                {mode === 'signin' && 'Sign In'}
-                {mode === 'forgot' && 'Send Reset Link'}
-              </Text>
-            )}
+            <LinearGradient
+              colors={[COLORS.purple, COLORS.blue]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.submitBtn}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.submitText}>{submitLabel}</Text>
+              )}
+            </LinearGradient>
           </TouchableOpacity>
 
           {/* Forgot password link — signin only */}
@@ -286,7 +333,7 @@ export default function LoginScreen({ navigation }) {
               <>
                 <Text style={styles.toggleLabel}>Already have an account?</Text>
                 <TouchableOpacity onPress={() => switchMode('signin')}>
-                  <Text style={styles.toggleLink}>Sign in</Text>
+                  <Text style={styles.toggleLink}>Sign In</Text>
                 </TouchableOpacity>
               </>
             )}
@@ -294,7 +341,7 @@ export default function LoginScreen({ navigation }) {
               <>
                 <Text style={styles.toggleLabel}>Don't have an account?</Text>
                 <TouchableOpacity onPress={() => switchMode('signup')}>
-                  <Text style={styles.toggleLink}>Create one</Text>
+                  <Text style={styles.toggleLink}>Sign Up</Text>
                 </TouchableOpacity>
               </>
             )}
@@ -307,7 +354,7 @@ export default function LoginScreen({ navigation }) {
 
           {mode === 'signup' && (
             <Text style={styles.terms}>
-              By creating an account, you agree to our Terms of Service and Privacy Policy.
+              By signing up, you agree to our Terms of Service and Privacy Policy.
             </Text>
           )}
         </View>
@@ -317,74 +364,126 @@ export default function LoginScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  root: {
     flex: 1,
     backgroundColor: COLORS.bg,
+  },
+  backgroundGlow: {
+    position: 'absolute',
+    top: -140,
+    left: -80,
+    right: -80,
+    height: 420,
+    borderRadius: 420,
+    opacity: 0.45,
+  },
+  backgroundOverlay: {
+    position: 'absolute',
+    inset: 0,
+    backgroundColor: 'rgba(26,18,84,0.55)',
   },
   scrollInner: {
     flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
+    paddingTop: 60,
   },
+
+  /* Brand row */
+  brandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 28,
+  },
+  brandDot: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  brandDotText: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: '#fff',
+  },
+  brandText: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#fff',
+    letterSpacing: 0.2,
+  },
+
+  /* Card — mirrors the web modal shape (rounded, soft shadow, translucent card bg). */
   card: {
     backgroundColor: COLORS.card,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: COLORS.cardBorder,
     borderRadius: 20,
-    padding: 28,
+    paddingVertical: 28,
+    paddingHorizontal: 24,
     width: '100%',
-    maxWidth: 380,
-    alignItems: 'stretch',
+    maxWidth: 400,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 10,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '900',
-    color: COLORS.accent,
-    marginBottom: 4,
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#fff',
     textAlign: 'center',
+    marginBottom: 6,
   },
   subtitle: {
     fontSize: 14,
-    color: COLORS.text3,
-    marginBottom: 20,
+    color: COLORS.text2,
     textAlign: 'center',
+    marginBottom: 20,
   },
+
+  /* Alerts */
   errorBox: {
-    backgroundColor: 'rgba(248,113,113,0.12)',
+    backgroundColor: COLORS.errorBg,
     borderWidth: 1,
-    borderColor: 'rgba(248,113,113,0.3)',
+    borderColor: COLORS.errorBorder,
     borderRadius: 10,
     padding: 10,
     marginBottom: 12,
   },
   errorText: {
-    color: COLORS.red,
+    color: '#fca5a5',
     fontSize: 13,
     textAlign: 'center',
   },
   infoBox: {
-    backgroundColor: 'rgba(56,189,156,0.12)',
+    backgroundColor: COLORS.successBg,
     borderWidth: 1,
-    borderColor: 'rgba(56,189,156,0.3)',
+    borderColor: COLORS.successBorder,
     borderRadius: 10,
     padding: 10,
     marginBottom: 12,
   },
   infoText: {
-    color: COLORS.accent,
+    color: '#86efac',
     fontSize: 13,
     textAlign: 'center',
     lineHeight: 18,
   },
+
+  /* Inputs */
   input: {
     width: '100%',
-    padding: 12,
-    paddingHorizontal: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
     marginBottom: 12,
-    backgroundColor: 'rgba(12,18,34,0.8)',
+    backgroundColor: COLORS.inputBg,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: COLORS.inputBorder,
     borderRadius: 10,
     color: COLORS.text,
     fontSize: 15,
@@ -396,21 +495,23 @@ const styles = StyleSheet.create({
   },
   passwordInput: {
     flex: 1,
-    paddingRight: 60,
+    paddingRight: 64,
   },
   showBtn: {
     position: 'absolute',
-    right: 12,
+    right: 10,
     top: 0,
     bottom: 12,
     justifyContent: 'center',
-    paddingHorizontal: 4,
+    paddingHorizontal: 8,
   },
   showBtnText: {
-    color: COLORS.accent,
+    color: COLORS.purple,
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
   },
+
+  /* Strength meter */
   strengthRow: {
     marginTop: -6,
     marginBottom: 10,
@@ -427,51 +528,73 @@ const styles = StyleSheet.create({
   },
   strengthLabel: {
     fontSize: 11,
+    fontWeight: '600',
   },
-  submitBtn: {
+
+  /* Submit — gradient button */
+  submitWrap: {
     width: '100%',
-    padding: 13,
-    backgroundColor: COLORS.accent,
-    borderRadius: 10,
-    alignItems: 'center',
     marginTop: 4,
     marginBottom: 10,
+    borderRadius: 10,
+    overflow: 'hidden',
+    shadowColor: COLORS.purple,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  submitDisabled: {
+    opacity: 0.75,
+  },
+  submitBtn: {
+    paddingVertical: 13,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   submitText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '700',
+    letterSpacing: 0.2,
   },
+
+  /* Forgot row */
   forgotRow: {
     alignItems: 'center',
     marginBottom: 10,
   },
   forgotLink: {
     fontSize: 13,
-    color: COLORS.accent,
+    color: COLORS.text2,
     fontWeight: '500',
+    textDecorationLine: 'underline',
   },
+
+  /* Mode toggle */
   toggleRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 6,
-    marginTop: 8,
+    marginTop: 14,
   },
   toggleLabel: {
-    fontSize: 13,
-    color: COLORS.text3,
+    fontSize: 14,
+    color: COLORS.text2,
   },
   toggleLink: {
-    fontSize: 13,
-    color: COLORS.accent,
-    fontWeight: '600',
+    fontSize: 14,
+    color: COLORS.purple,
+    fontWeight: '700',
+    textDecorationLine: 'underline',
   },
   terms: {
     fontSize: 11,
     color: COLORS.text3,
     textAlign: 'center',
-    marginTop: 12,
+    marginTop: 14,
     lineHeight: 16,
   },
 });

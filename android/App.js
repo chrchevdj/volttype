@@ -10,7 +10,7 @@ import LoginScreen from './src/screens/LoginScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import HistoryScreen from './src/screens/HistoryScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
-import { isLoggedIn } from './src/services/auth';
+import { validateSession } from './src/services/auth';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -83,7 +83,10 @@ export default function App() {
   const [authenticated, setAuthenticated] = useState(false);
 
   useEffect(() => {
-    isLoggedIn().then((loggedIn) => {
+    // Hard-validate the session against the API. This protects against
+    // stale tokens restored from Android Auto Backup on another device,
+    // revoked sessions, and deleted accounts.
+    validateSession().then((loggedIn) => {
       setAuthenticated(loggedIn);
       setChecking(false);
     });

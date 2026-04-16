@@ -8,7 +8,7 @@ import {
   Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { logout } from '../services/auth';
+import { logout, getCurrentUserEmail } from '../services/auth';
 
 const COLORS = {
   bg: '#0c1222',
@@ -94,13 +94,16 @@ const OUTPUT_STYLES = [
 export default function SettingsScreen({ navigation }) {
   const [language, setLanguage] = useState('en');
   const [outputStyle, setOutputStyle] = useState('clean');
+  const [email, setEmail] = useState(null);
 
   useEffect(() => {
     (async () => {
       const savedLang = await AsyncStorage.getItem('volttype_language');
       const savedStyle = await AsyncStorage.getItem('volttype_output_style');
+      const currentEmail = await getCurrentUserEmail();
       if (savedLang) setLanguage(savedLang);
       if (savedStyle) setOutputStyle(savedStyle);
+      setEmail(currentEmail);
     })();
   }, []);
 
@@ -138,6 +141,26 @@ export default function SettingsScreen({ navigation }) {
       </View>
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+        {/* Account — tells the user WHO is signed in (prevents confusion
+            after an update / backup restore where the app opens straight to Home). */}
+        <Text style={styles.sectionTitle}>Account</Text>
+        <View style={styles.accountCard}>
+          <View style={styles.accountAvatar}>
+            <Text style={styles.accountAvatarText}>
+              {email ? email.charAt(0).toUpperCase() : '?'}
+            </Text>
+          </View>
+          <View style={styles.accountInfo}>
+            <Text style={styles.accountLabel}>Signed in as</Text>
+            <Text style={styles.accountEmail} numberOfLines={1} ellipsizeMode="middle">
+              {email || 'Unknown account'}
+            </Text>
+          </View>
+          <TouchableOpacity style={styles.accountSignOutBtn} onPress={handleLogout}>
+            <Text style={styles.accountSignOutText}>Sign Out</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Language */}
         <Text style={styles.sectionTitle}>Language</Text>
         <View style={styles.card}>
@@ -195,12 +218,7 @@ export default function SettingsScreen({ navigation }) {
           ))}
         </View>
 
-        {/* Sign Out */}
-        <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-          <Text style={styles.logoutText}>Sign Out</Text>
-        </TouchableOpacity>
-
-        <Text style={styles.version}>VoltType v1.1.0</Text>
+        <Text style={styles.version}>VoltType v1.1.2</Text>
       </ScrollView>
     </View>
   );
@@ -276,20 +294,63 @@ const styles = StyleSheet.create({
     color: COLORS.accent,
     fontWeight: '700',
   },
-  logoutBtn: {
-    marginTop: 20,
-    padding: 14,
-    borderRadius: 10,
-    backgroundColor: 'rgba(248,113,113,0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(248,113,113,0.25)',
+  /* Account card (top of Settings) */
+  accountCard: {
+    flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: COLORS.card,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 20,
+    gap: 12,
   },
-  logoutText: {
-    color: COLORS.red,
-    fontSize: 15,
+  accountAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(124,58,237,0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(124,58,237,0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  accountAvatarText: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#a78bfa',
+  },
+  accountInfo: {
+    flex: 1,
+    minWidth: 0,
+  },
+  accountLabel: {
+    fontSize: 11,
+    color: COLORS.text3,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 2,
+  },
+  accountEmail: {
+    fontSize: 14,
+    color: COLORS.text,
     fontWeight: '600',
   },
+  accountSignOutBtn: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: 'rgba(248,113,113,0.12)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(248,113,113,0.25)',
+  },
+  accountSignOutText: {
+    color: COLORS.red,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+
   version: {
     textAlign: 'center',
     color: COLORS.text3,
