@@ -58,7 +58,17 @@ jobs:
       - name: Install Linux build deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y libarchive-tools rpm fakeroot
+          sudo apt-get install -y \
+            libarchive-tools \
+            rpm \
+            fakeroot \
+            libx11-dev \
+            libxtst-dev \
+            libxt-dev \
+            libxkbfile-dev \
+            libxkbcommon-dev \
+            libxinerama-dev \
+            libxrandr-dev
 
       - name: Rebuild native modules for Electron
         run: npx electron-rebuild
