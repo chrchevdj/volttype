@@ -1,0 +1,158 @@
+name: Build Android APK
+
+# Automatically build a fresh installable APK on every push to master that
+# touches the Android app. The APK URL appears in the workflow Summary — no
+# manual `eas build` step needed anymore.
+#
+# One-time setup required:
+#   1. Go to https://expo.dev/settings/access-tokens, create a new token.
+#   2. Add it as a GitHub repo secret called EXPO_TOKEN
+#      (Settings → Secrets and variables → Actions → New repository secret).
+# Once the secret exists, every future push to master under android/** fires
+# this workflow.
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'android/**'
+      - '.github/workflows/android-build.yml'
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: 'EAS build profile (preview = APK, production = AAB)'
+        required: true
+        default: 'preview'
+        type: choice
+        options:
+          - preview
+          - production
+
+jobs:
+  build:
+    name: Build preview APK via EAS
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Full history so EAS can record the real commit hash / message
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install EAS CLI
+        run: npm install -g eas-cli@latest
+
+      - name: Verify EXPO_TOKEN is set
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "::error::EXPO_TOKEN secret is not set. Create one at https://expo.dev/settings/access-tokens and add it under Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+          echo "EXPO_TOKEN is configured."
+
+      - name: Install Android project dependencies
+        working-directory: android
+        run: npm ci
+
+      - name: Trigger EAS build (non-blocking)
+        id: eas
+        working-directory: android
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          BUILD_PROFILE: ${{ github.event.inputs.profile || 'preview' }}
+        run: |
+          set -e
+          echo "Triggering EAS build for profile: $BUILD_PROFILE"
+          npx eas build \
+            --platform android \
+            --profile "$BUILD_PROFILE" \
+            --non-interactive \
+            --no-wait 2>&1 | tee build-output.log
+
+          BUILD_URL=$(grep -oE 'https://expo\.dev/accounts/[^[:space:]]+/builds/[a-f0-9-]+' build-output.log | head -1)
+          BUILD_ID=$(echo "$BUILD_URL" | grep -oE '[a-f0-9-]+$' || true)
+
+          if [ -z "$BUILD_URL" ]; then
+            echo "::error::Could not extract build URL from EAS output. See step logs."
+            exit 1
+          fi
+
+          echo "build_url=$BUILD_URL" >> "$GITHUB_OUTPUT"
+          echo "build_id=$BUILD_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Wait for build to finish and capture APK URL
+        id: poll
+        working-directory: android
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          BUILD_ID: ${{ steps.eas.outputs.build_id }}
+        run: |
+          set -e
+          # Poll every 30s, up to 25 minutes. EAS queue + build typically
+          # takes 4–20 min depending on how busy the queue is. Filter by the
+          # specific BUILD_ID we triggered, so a concurrent build doesn't
+          # confuse the status.
+          for i in $(seq 1 50); do
+            sleep 30
+            JSON=$(npx eas build:list --platform android --limit 10 --json --non-interactive 2>/dev/null || echo '[]')
+            RESULT=$(echo "$JSON" | node -e "
+              const id = process.env.BUILD_ID;
+              const d = JSON.parse(require('fs').readFileSync(0,'utf8'));
+              const b = (d || []).find(x => x.id === id);
+              if (!b) { console.log('UNKNOWN||'); process.exit(0); }
+              const url = (b.artifacts && b.artifacts.buildUrl) || '';
+              const ver = b.appVersion || '';
+              console.log(\`\${b.status}|\${url}|\${ver}\`);
+            ")
+            STATUS=$(echo "$RESULT" | cut -d'|' -f1)
+            APK_URL=$(echo "$RESULT" | cut -d'|' -f2)
+            VERSION=$(echo "$RESULT" | cut -d'|' -f3)
+            echo "[poll $i/50] status=$STATUS id=$BUILD_ID"
+            case "$STATUS" in
+              FINISHED)
+                echo "apk_url=$APK_URL" >> "$GITHUB_OUTPUT"
+                echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+                exit 0
+                ;;
+              ERRORED|CANCELED)
+                echo "::error::EAS build ended with status $STATUS"
+                exit 1
+                ;;
+            esac
+          done
+          echo "::warning::EAS build did not finish in 25 minutes. Check the build URL manually."
+          exit 1
+
+      - name: Write summary with APK link
+        if: always()
+        env:
+          BUILD_URL: ${{ steps.eas.outputs.build_url }}
+          APK_URL: ${{ steps.poll.outputs.apk_url }}
+          VERSION: ${{ steps.poll.outputs.version }}
+          PROFILE: ${{ github.event.inputs.profile || 'preview' }}
+        run: |
+          {
+            echo "## VoltType Android build"
+            echo ""
+            echo "- **Profile:** \`$PROFILE\`"
+            echo "- **Version:** \`$VERSION\`"
+            echo "- **Commit:** \`${{ github.sha }}\`"
+            echo "- **EAS build page:** $BUILD_URL"
+            if [ -n "$APK_URL" ]; then
+              echo "- **APK download:** $APK_URL"
+              echo ""
+              echo "Open on phone → allow install from unknown sources → tap install."
+            else
+              echo ""
+              echo "Build is still running or did not finish in time. Check the EAS build page."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
