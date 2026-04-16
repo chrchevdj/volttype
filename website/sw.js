@@ -1,4 +1,4 @@
-const CACHE_NAME = 'volttype-v3';
+const CACHE_NAME = 'volttype-v4';
 const SHELL = [
   '/',
   '/index.html',
