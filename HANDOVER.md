@@ -1,8 +1,60 @@
 # VoltType — Handover Document
 
-**Last Updated:** 2026-04-16
-**Status:** Windows beta with local offline STT engine (whisper.cpp). Website deployed. Marketing launch ready.
+**Last Updated:** 2026-04-18
+**Status:** Desktop app feature-complete with local offline STT. Ready to rebuild .exe and ship.
 **Scorecard:** A (96/100) at https://scorecard.myclienta.com
+
+---
+
+## LOCAL OFFLINE STT — Current Priority Status
+
+**Overall progress: ~85% complete. Code is done. Needs real-world testing + .exe rebuild.**
+
+### What's DONE (working, tested, committed, pushed)
+- [x] `src/stt-local.js` — whisper.cpp v1.8.4 subprocess engine, same interface as GroqSTT
+- [x] `src/model-manager.js` — auto-downloads whisper.cpp binary (GitHub) + GGML models (HuggingFace)
+- [x] Audio pipeline: WebM/Opus → ffmpeg → 16kHz mono WAV → whisper.cpp → text
+- [x] 4 model variants: tiny.en (75MB), base.en (142MB), small.en (466MB), small (466MB multilingual)
+- [x] Settings UI: engine dropdown (Cloud/Local), model selector, download/delete buttons, progress bar
+- [x] IPC wiring in main.js — 4 handlers: local-stt-status, local-stt-download, local-stt-delete, local-stt-init
+- [x] Auto-init on startup if engine=local and model is cached
+- [x] Engine routing in audio-captured handler (cloud vs local, transparent swap)
+- [x] End-to-end test passed: tiny.en transcribes 2s audio in ~1.5s on 4 CPU threads
+- [x] Removed 3 dead sherpa-onnx npm packages + ~452MB old ONNX model files
+- [x] 59 tests passing (26 new for local STT), 0 lint errors
+- [x] Committed and pushed as `608903c` on master
+
+### What's LEFT to finish local STT
+- [ ] **Test with real voice** — only tested with synthetic silence WAV so far. Need to launch the Electron app, switch to Local engine, download base.en model via the UI, and dictate real speech to verify quality
+- [ ] **Rebuild .exe** — `npm run build` to create new installer with local STT feature included
+- [ ] **ffmpeg bundling** — currently relies on ffmpeg being on PATH. For distribution, need to bundle ffmpeg.exe with the app (or use ffmpeg-static npm package). Without this, users who don't have ffmpeg installed can't use local mode
+- [ ] **Error UX** — if ffmpeg is missing, show a clear message in the UI telling the user to install it (or auto-download it)
+
+### Why whisper.cpp (not sherpa-onnx)
+We tried sherpa-onnx first. Two approaches both failed:
+1. **sherpa-onnx WASM** — can't access real filesystem (NODEFS buggy), crashes with OOM loading 100MB+ models into MEMFS
+2. **sherpa-onnx-node native addon** — `.node` file blocked by Windows Application Control (WDAC) policy on this machine
+whisper.cpp subprocess works because it's a regular .exe (not a native addon), same pattern as ffmpeg.
+
+### Key files for local STT
+| File | What it does |
+|------|-------------|
+| `src/stt-local.js` | LocalSTT class — converts audio via ffmpeg, runs whisper-cli subprocess, parses output |
+| `src/model-manager.js` | Downloads/caches whisper.cpp binary + GGML model files, tracks download progress |
+| `main.js` lines 76-100 | LocalSTT initialization + model manager setup |
+| `main.js` lines 534-554 | Engine routing (local vs cloud) in audio-captured handler |
+| `main.js` lines 895-946 | 4 IPC handlers for model management |
+| `preload.js` lines 64-68 | 5 IPC bridges exposed to renderer |
+| `renderer/index.html` lines 388-411 | Local STT settings panel UI |
+| `renderer/app.js` lines 1065-1185 | UI logic for local panel, download, status |
+| `src/settings.js` | Added `localModelVariant` default setting |
+
+### Cached files on disk
+- Binary: `%APPDATA%/VoltType/whisper-bin/whisper-cli.exe` + DLLs (already downloaded)
+- Model: `%APPDATA%/VoltType/whisper-models/ggml-tiny.en.bin` (78MB, already downloaded)
+- Old ONNX subdirectories (`base.en/`, `tiny.en/`) were deleted — only flat GGML .bin files now
+
+---
 
 ## Project Overview
 - **Name:** VoltType
@@ -326,3 +378,30 @@ cd android && npx eas build --platform android --profile production
 - Stripe Webhook: https://volttype-api.crcaway.workers.dev/v1/webhooks/stripe
 - Google Search Console: verified, sitemap submitted
 - All credentials: `.env.master` at `C:\Users\crcaw\Desktop\Freelancing\.env.master`
+
+
+
+
+
+
+
+
+
+
+### Session — 2026-04-18
+- feat: local offline STT engine via whisper.cpp subprocess
+Changed files:
+  - .github/workflows/android-build.yml
+  - CODEMAP.md
+  - HANDOVER.md
+  - main.js
+  - package.json
+  - preload.js
+  - renderer/app.js
+  - renderer/index.html
+  - renderer/styles.css
+  - src/model-manager.js
+  - src/settings.js
+  - src/stt-local.js
+  - tests/unit/model-manager.test.js
+  - tests/unit/stt-local.test.js
