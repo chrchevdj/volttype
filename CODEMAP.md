@@ -4,9 +4,9 @@
 > to understand the codebase without opening individual files.
 
 ## Stats
-- **77** source files across **4** categories
-- **0** files have @file header comments, **77** do not
-- **29** external packages used
+- **81** source files across **4** categories
+- **0** files have @file header comments, **81** do not
+- **33** external packages used
 
 ## File Map
 
@@ -23,7 +23,7 @@
 | `eslint.config.js` | — | — |
 | `playwright.config.js` | — | — |
 
-### Tests (16 files)
+### Tests (18 files)
 
 | File | Description | Imports |
 |------|-------------|----------|
@@ -35,16 +35,18 @@
 | `tests/support/helpers.js` | — | — |
 | `tests/ui/website-server.js` | — | — |
 | `tests/ui/website.spec.js` | — | — |
+| `tests/unit/model-manager.test.js` | — | — |
 | `tests/unit/settings.test.js` | — | ../support/helpers.js, ../mocks/electron.js |
 | `tests/unit/startup.test.js` | — | ../mocks/electron.js |
 | `tests/unit/storage-modules.test.js` | — | ../support/helpers.js, ../mocks/electron.js |
+| `tests/unit/stt-local.test.js` | — | ../../src/stt-local.js |
 | `tests/unit/text-cleaner.test.js` | — | ../support/helpers.js, ../mocks/electron.js |
 | `tests/unit/vocab-learner.test.js` | — | ../support/helpers.js, ../mocks/electron.js |
 | `tests/unit/worker-helpers.test.js` | — | ../support/helpers.js |
 | `tests/unit/worker-modules.test.js` | — | ../support/helpers.js |
 | `vitest.config.js` | — | — |
 
-### Other (58 files)
+### Other (60 files)
 
 | File | Description | Imports |
 |------|-------------|----------|
@@ -97,11 +99,13 @@
 | `src/hotkey.js` | — | — |
 | `src/icons.js` | — | png-utils |
 | `src/injector.js` | — | — |
+| `src/model-manager.js` | — | — |
 | `src/png-utils.js` | — | — |
 | `src/settings.js` | — | electron-runtime |
 | `src/snippets.js` | — | electron-runtime |
 | `src/startup.js` | — | electron-runtime |
 | `src/stt-groq.js` | — | — |
+| `src/stt-local.js` | — | — |
 | `src/text-cleaner.js` | — | electron-runtime |
 | `src/vocab-learner.js` | — | electron-runtime |
 | `start.js` | — | — |
@@ -109,7 +113,7 @@
 
 ## External Packages
 
-`@eslint`, `@playwright`, `@react-native-async-storage`, `@react-navigation`, `autocannon`, `child_process`, `electron`, `electron-updater`, `expo`, `expo-av`, `expo-clipboard`, `expo-linear-gradient`, `expo-share-intent`, `expo-status-bar`, `fs`, `globals`, `msw`, `node:child_process`, `node:fs`, `node:http`, `node:os`, `node:path`, `path`, `react`, `react-native`, `react-native-safe-area-context`, `uiohook-napi`, `vitest`, `zlib`
+`@eslint`, `@playwright`, `@react-native-async-storage`, `@react-navigation`, `autocannon`, `child_process`, `electron`, `electron-updater`, `expo`, `expo-av`, `expo-clipboard`, `expo-linear-gradient`, `expo-share-intent`, `expo-status-bar`, `fs`, `globals`, `http`, `https`, `module`, `msw`, `node:child_process`, `node:fs`, `node:http`, `node:os`, `node:path`, `os`, `path`, `react`, `react-native`, `react-native-safe-area-context`, `uiohook-napi`, `vitest`, `zlib`
 
 ## Key Internal Dependencies
 
