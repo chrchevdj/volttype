@@ -13,6 +13,7 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 const http = require('http');
+const os = require('os');
 const { execFile } = require('child_process');
 
 // GGML model variants — quantized for small size + fast inference.
@@ -122,10 +123,15 @@ class ModelManager {
     if (fs.existsSync(modelPath) && fs.statSync(modelPath).size > model.size * 0.9) {
       console.log(`[MODEL] ${variant} already cached.`);
     } else {
-      console.log(`[MODEL] Downloading ${model.label} (~${Math.round(model.size / 1e6)} MB)...`);
+      const totalMB = Math.round(model.size / 1e6);
+      console.log(`[MODEL] Downloading ${model.label} (~${totalMB} MB)...`);
+      const dlStart = Date.now();
       await this._downloadFile(model.url, modelPath, (bytes) => {
         const percent = Math.round((bytes / model.size) * 100);
-        const label = `Downloading ${model.label}: ${percent}%`;
+        const downloadedMB = (bytes / 1e6).toFixed(1);
+        const elapsedSec = (Date.now() - dlStart) / 1000;
+        const speedMBs = elapsedSec > 0 ? (bytes / 1e6 / elapsedSec).toFixed(1) : '?';
+        const label = `Downloading: ${downloadedMB} / ${totalMB} MB (${speedMBs} MB/s)`;
         if (this._onProgress) this._onProgress(Math.min(percent, 99), label);
       });
     }
@@ -234,6 +240,30 @@ class ModelManager {
       totalSizeMB: Math.round(model.size / 1e6),
       ready: this.isModelReady(key),
     }));
+  }
+
+  /** Recommend a model variant based on CPU capabilities. */
+  getRecommendedVariant() {
+    const cpus = os.cpus();
+    const cores = cpus.length;
+    const speedMHz = cpus[0]?.speed || 0;
+    // Very weak (2 cores or slow): tiny.en
+    // Normal (4-6 cores): base.en
+    // Strong (8+ cores, fast): small.en
+    if (cores <= 2 || speedMHz < 1500) return 'tiny.en';
+    if (cores >= 8 && speedMHz >= 2500) return 'small.en';
+    return 'base.en';
+  }
+
+  /** Get CPU info for display. */
+  getCpuInfo() {
+    const cpus = os.cpus();
+    return {
+      cores: cpus.length,
+      model: cpus[0]?.model || 'Unknown',
+      speedMHz: cpus[0]?.speed || 0,
+      recommended: this.getRecommendedVariant(),
+    };
   }
 
   /** Delete a downloaded model. */

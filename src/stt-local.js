@@ -53,7 +53,7 @@ class LocalSTT {
     // Verify ffmpeg is available
     const ffmpegPath = this._findFfmpeg();
     if (!ffmpegPath) {
-      throw new Error('ffmpeg not found. Install ffmpeg or add it to PATH.');
+      throw new Error('ffmpeg not found. Local STT needs ffmpeg to convert audio. It should be bundled with VoltType — if you see this error, please reinstall the app or install ffmpeg manually (ffmpeg.org).');
     }
 
     this._ready = true;

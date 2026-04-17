@@ -896,6 +896,7 @@ ipcMain.handle('local-stt-status', () => ({
   ready: localSTT ? localSTT.isReady : false,
   models: modelManager.listModels(),
   currentVariant: settings.get('localModelVariant') || 'base.en',
+  cpu: modelManager.getCpuInfo(),
 }));
 
 ipcMain.handle('local-stt-download', async (event, variant = 'base.en') => {

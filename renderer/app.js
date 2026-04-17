@@ -1179,6 +1179,19 @@ async function refreshLocalSttStatus() {
       deleteBtn.classList.add('hidden');
       window._localSttReady = false;
     }
+
+    // Show CPU info + recommendation
+    const cpuEl = document.getElementById('local-cpu-info');
+    if (cpuEl && status.cpu) {
+      const rec = status.cpu.recommended;
+      const recLabel = {
+        'tiny.en': 'Tiny (fastest)',
+        'base.en': 'Base (recommended)',
+        'small.en': 'Small (best quality)',
+      }[rec] || rec;
+      cpuEl.textContent = status.cpu.cores + ' cores — recommended: ' + recLabel;
+      cpuEl.title = status.cpu.model;
+    }
   } catch (err) {
     console.error('[APP] Failed to get local STT status:', err);
     window._localSttReady = false;
