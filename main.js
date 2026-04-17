@@ -2,7 +2,7 @@
  * VoltType — Electron Main Process
  *
  * Local-first Windows dictation app with global hotkey activation.
- * Uses Groq Whisper API (free) for speech-to-text.
+ * Supports both Groq Whisper API (cloud) and local whisper.cpp (offline).
  */
 const { app, BrowserWindow, globalShortcut, ipcMain, session, Tray, Menu } = require('electron');
 const path = require('path');
@@ -12,6 +12,8 @@ const History = require('./src/history');
 const Dictionary = require('./src/dictionary');
 const Snippets = require('./src/snippets');
 const GroqSTT = require('./src/stt-groq');
+const LocalSTT = require('./src/stt-local');
+const modelManager = require('./src/model-manager');
 const { injectText, replaceAndInject, saveForegroundWindow, cleanup: cleanupInjector } = require('./src/injector');
 const { setAutoStart, getAutoStartEnabled } = require('./src/startup');
 const { createIdleIcon, createRecordingIcon, createProcessingIcon } = require('./src/icons');
@@ -45,6 +47,7 @@ let history = null;
 let dictionary = null;
 let snippets = null;
 let sttEngine = null;
+let localSTT = null;
 let textCleaner = null;
 let vocabLearner = null;
 let auth = null;
@@ -70,9 +73,31 @@ app.whenReady().then(() => {
   dictionary = new Dictionary();
   snippets = new Snippets();
   sttEngine = new GroqSTT(settings.get('groqApiKey'));
+  localSTT = new LocalSTT();
   textCleaner = new TextCleaner(settings.get('groqApiKey'));
   vocabLearner = new VocabLearner();
   auth = new Auth();
+
+  // Initialize model manager for local STT
+  modelManager.init();
+  modelManager.onProgress((percent, label) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('model-download-progress', { percent, label });
+    }
+  });
+
+  // Auto-initialize local STT if engine is set to 'local' and model is ready
+  if (settings.get('engine') === 'local') {
+    const variant = settings.get('localModelVariant') || 'base.en';
+    if (modelManager.isModelReady(variant)) {
+      const paths = modelManager.getModelPaths(variant);
+      localSTT.init(paths, variant).then(() => {
+        console.log('[MAIN] Local STT auto-initialized');
+      }).catch(err => {
+        console.error('[MAIN] Local STT auto-init failed:', err.message);
+      });
+    }
+  }
 
   // Auto-grant microphone permission
   session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
@@ -498,21 +523,35 @@ ipcMain.handle('audio-captured', async (event, { audioBase64, mimeType }) => {
       return { success: false, error: 'Too short' };
     }
 
-    // Set auth token for Worker backend (if logged in)
-    sttEngine.setAuthToken(auth.getToken());
-
     // Build Whisper prompt — ONLY personal terms and corrections (not recent history)
     const learnedPrompt = vocabLearner.getWhisperPrompt();
     if (learnedPrompt) console.log(`[STT] Whisper prompt: "${learnedPrompt.slice(0, 80)}..."`);
 
-    // Transcribe (uses Worker if logged in, direct Groq if has own API key)
-    const result = await sttEngine.transcribe(
-      audioBuffer,
-      settings.get('language'),
-      mimeType,
-      learnedPrompt,
-      { translateToEnglish: !!settings.get('translateToEnglish') }
-    );
+    // Route to local or cloud STT based on settings
+    const engineMode = settings.get('engine') || 'groq';
+    let result;
+
+    if (engineMode === 'local' && localSTT && localSTT.isReady) {
+      console.log('[STT] Using LOCAL engine (whisper.cpp)');
+      result = await localSTT.transcribe(
+        audioBuffer,
+        settings.get('language'),
+        mimeType,
+        learnedPrompt,
+        { translateToEnglish: !!settings.get('translateToEnglish') }
+      );
+    } else {
+      // Cloud mode (Groq) — set auth token for Worker backend
+      console.log('[STT] Using CLOUD engine (Groq)');
+      sttEngine.setAuthToken(auth.getToken());
+      result = await sttEngine.transcribe(
+        audioBuffer,
+        settings.get('language'),
+        mimeType,
+        learnedPrompt,
+        { translateToEnglish: !!settings.get('translateToEnglish') }
+      );
+    }
 
     let text = result.text;
 
@@ -650,7 +689,7 @@ ipcMain.handle('audio-captured', async (event, { audioBase64, mimeType }) => {
 
 // Settings
 ipcMain.handle('get-settings', () => settings.getAll());
-ipcMain.handle('update-settings', (event, partial) => {
+ipcMain.handle('update-settings', async (event, partial) => {
   settings.update(partial);
   // Re-apply changed settings
   if (partial.groqApiKey !== undefined) {
@@ -662,6 +701,19 @@ ipcMain.handle('update-settings', (event, partial) => {
   }
   if (partial.startWithWindows !== undefined) {
     setAutoStart(partial.startWithWindows);
+  }
+  // If engine switched to local, auto-init LocalSTT if model ready
+  if (partial.engine === 'local') {
+    const variant = settings.get('localModelVariant') || 'base.en';
+    if (modelManager.isModelReady(variant) && !localSTT.isReady) {
+      try {
+        const paths = modelManager.getModelPaths(variant);
+        await localSTT.init(paths, variant);
+        console.log('[MAIN] Local STT initialized after engine switch');
+      } catch (err) {
+        console.error('[MAIN] Local STT init failed:', err.message);
+      }
+    }
   }
   return settings.getAll();
 });
@@ -834,6 +886,58 @@ ipcMain.handle('ai-transform', async (event, { text, action }) => {
     return { text: result || '' };
   } catch (err) {
     return { text: '', error: err.message };
+  }
+});
+
+// --------------------------------------------------
+// Local STT model management
+// --------------------------------------------------
+ipcMain.handle('local-stt-status', () => ({
+  ready: localSTT ? localSTT.isReady : false,
+  models: modelManager.listModels(),
+  currentVariant: settings.get('localModelVariant') || 'base.en',
+}));
+
+ipcMain.handle('local-stt-download', async (event, variant = 'base.en') => {
+  try {
+    console.log(`[MAIN] Downloading local model: ${variant}`);
+    const paths = await modelManager.ensureModel(variant);
+    // Auto-init after download
+    await localSTT.init(paths, variant);
+    settings.update({ localModelVariant: variant });
+    console.log(`[MAIN] Local model ready: ${variant}`);
+    return { success: true, variant };
+  } catch (err) {
+    console.error('[MAIN] Model download failed:', err.message);
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle('local-stt-delete', (event, variant = 'base.en') => {
+  try {
+    modelManager.deleteModel(variant);
+    // Reset local STT if this was the active variant
+    if (settings.get('localModelVariant') === variant && localSTT) {
+      localSTT.destroy();
+    }
+    console.log(`[MAIN] Deleted model: ${variant}`);
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle('local-stt-init', async (event, variant) => {
+  try {
+    if (!modelManager.isModelReady(variant)) {
+      return { success: false, error: 'Model not downloaded yet' };
+    }
+    const paths = modelManager.getModelPaths(variant);
+    await localSTT.init(paths, variant);
+    settings.update({ localModelVariant: variant, engine: 'local' });
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message };
   }
 });
 

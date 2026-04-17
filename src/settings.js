@@ -16,6 +16,7 @@ const DEFAULTS = {
   language: 'en',
   engine: 'groq',          // 'groq' | 'local'
   groqApiKey: '',
+  localModelVariant: 'base.en',  // 'base.en' | 'small'
   localModelPath: '',       // path to whisper.cpp model file
   startMinimized: false,
   startWithWindows: false,

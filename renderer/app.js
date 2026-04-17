@@ -33,6 +33,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   settings = await vf.getSettings();
   applySettings(settings);
 
+  // Check local STT status for engine display
+  try {
+    const localStatus = await vf.getLocalSttStatus();
+    window._localSttReady = localStatus.ready;
+  } catch { window._localSttReady = false; }
+
   // Init audio with VAD
   const micOk = await audio.init();
   updateMicStatus(micOk);
@@ -709,7 +715,17 @@ function updateQuickStart() {
   // Engine status
   const engineStatus = document.getElementById('engine-status');
   const engineLabel = document.getElementById('display-engine');
-  if (settings.engine === 'groq') {
+  if (settings.engine === 'local') {
+    engineLabel.textContent = 'Local (Offline)';
+    // Check if local model is ready via cached status
+    if (window._localSttReady) {
+      engineStatus.textContent = 'Ready';
+      engineStatus.className = 'card-status ok';
+    } else {
+      engineStatus.textContent = 'No Model';
+      engineStatus.className = 'card-status warn';
+    }
+  } else {
     engineLabel.textContent = 'Groq Whisper';
     if (hasKey) {
       engineStatus.textContent = 'Ready';
@@ -718,10 +734,6 @@ function updateQuickStart() {
       engineStatus.textContent = 'No Key';
       engineStatus.className = 'card-status error';
     }
-  } else {
-    engineLabel.textContent = 'Local (whisper.cpp)';
-    engineStatus.textContent = 'Beta';
-    engineStatus.className = 'card-status warn';
   }
 
   // Hotkey display — primary is always Ctrl+Space (hold-to-talk), toggle is configurable
@@ -1050,7 +1062,73 @@ function setupSettingsHandlers() {
     updateQuickStart();
   });
 
-  saveSetting('setting-engine', 'engine');
+  // Engine change — toggle local/cloud panels
+  const engineSelect = document.getElementById('setting-engine');
+  engineSelect.addEventListener('change', async () => {
+    const engine = engineSelect.value;
+    await vf.updateSettings({ engine });
+    settings.engine = engine;
+    toggleLocalPanel(engine === 'local');
+    updateQuickStart();
+    if (engine === 'local') {
+      await refreshLocalSttStatus();
+    }
+  });
+
+  // Local model variant change
+  document.getElementById('setting-local-model').addEventListener('change', async () => {
+    const variant = document.getElementById('setting-local-model').value;
+    await vf.updateSettings({ localModelVariant: variant });
+    settings.localModelVariant = variant;
+    await refreshLocalSttStatus();
+  });
+
+  // Download model button
+  document.getElementById('btn-download-model').addEventListener('click', async () => {
+    const variant = document.getElementById('setting-local-model').value;
+    const btn = document.getElementById('btn-download-model');
+    btn.disabled = true;
+    btn.textContent = 'Downloading...';
+    document.getElementById('model-progress-bar').classList.remove('hidden');
+
+    const result = await vf.downloadLocalModel(variant);
+    btn.disabled = false;
+
+    if (result.success) {
+      btn.textContent = 'Download Model';
+      document.getElementById('model-progress-bar').classList.add('hidden');
+      await refreshLocalSttStatus();
+      updateQuickStart();
+    } else {
+      btn.textContent = 'Retry Download';
+      document.getElementById('model-progress-label').textContent = 'Error: ' + (result.error || 'Download failed');
+    }
+  });
+
+  // Delete model button
+  document.getElementById('btn-delete-model').addEventListener('click', async () => {
+    const variant = document.getElementById('setting-local-model').value;
+    if (confirm(`Delete the ${variant} model? You can re-download it later.`)) {
+      await vf.deleteLocalModel(variant);
+      await refreshLocalSttStatus();
+      updateQuickStart();
+    }
+  });
+
+  // Listen for download progress
+  vf.onModelDownloadProgress(({ percent, label }) => {
+    const fill = document.getElementById('model-progress-fill');
+    const lbl = document.getElementById('model-progress-label');
+    if (fill) fill.style.width = percent + '%';
+    if (lbl) lbl.textContent = label || (percent + '%');
+  });
+
+  // Initial panel state
+  toggleLocalPanel(settings.engine === 'local');
+  if (settings.engine === 'local') {
+    refreshLocalSttStatus();
+  }
+
   saveSetting('setting-language', 'language');
   saveSetting('setting-hotkey', 'hotkey');
   saveSetting('setting-output-style', 'outputStyle');
@@ -1065,9 +1143,52 @@ function setupSettingsHandlers() {
   document.getElementById('btn-refresh-mics').addEventListener('click', refreshMicDevices);
 }
 
+// ---- Local STT helpers ----
+function toggleLocalPanel(show) {
+  const panel = document.getElementById('local-stt-panel');
+  const groqRow = document.getElementById('row-groq-key');
+  if (show) {
+    panel.classList.remove('hidden');
+    groqRow.classList.add('hidden');
+  } else {
+    panel.classList.add('hidden');
+    groqRow.classList.remove('hidden');
+  }
+}
+
+async function refreshLocalSttStatus() {
+  try {
+    const status = await vf.getLocalSttStatus();
+    const variant = document.getElementById('setting-local-model').value || 'base.en';
+    const modelInfo = status.models.find(m => m.variant === variant);
+    const statusEl = document.getElementById('local-model-status');
+    const downloadBtn = document.getElementById('btn-download-model');
+    const deleteBtn = document.getElementById('btn-delete-model');
+
+    if (modelInfo && modelInfo.ready) {
+      statusEl.textContent = 'Downloaded (' + modelInfo.totalSizeMB + ' MB)';
+      statusEl.className = 'card-status ok';
+      downloadBtn.textContent = 'Re-download';
+      deleteBtn.classList.remove('hidden');
+      window._localSttReady = status.ready;
+    } else {
+      const size = modelInfo ? modelInfo.totalSizeMB : '?';
+      statusEl.textContent = 'Not downloaded (' + size + ' MB)';
+      statusEl.className = 'card-status warn';
+      downloadBtn.textContent = 'Download Model';
+      deleteBtn.classList.add('hidden');
+      window._localSttReady = false;
+    }
+  } catch (err) {
+    console.error('[APP] Failed to get local STT status:', err);
+    window._localSttReady = false;
+  }
+}
+
 function applySettings(s) {
   setVal('setting-engine', s.engine);
   setVal('setting-groq-key', s.groqApiKey);
+  setVal('setting-local-model', s.localModelVariant || 'base.en');
   setVal('setting-language', s.language);
   setVal('setting-hotkey', s.hotkey);
   setVal('setting-output-style', s.outputStyle || 'cleaned');

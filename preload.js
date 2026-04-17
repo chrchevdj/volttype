@@ -60,6 +60,13 @@ contextBridge.exposeInMainWorld('volttype', {
   getAuthStatus: () => ipcRenderer.invoke('auth-status'),
   getAuthToken: () => ipcRenderer.invoke('auth-token'),
 
+  // Local STT model management
+  getLocalSttStatus: () => ipcRenderer.invoke('local-stt-status'),
+  downloadLocalModel: (variant) => ipcRenderer.invoke('local-stt-download', variant),
+  deleteLocalModel: (variant) => ipcRenderer.invoke('local-stt-delete', variant),
+  initLocalStt: (variant) => ipcRenderer.invoke('local-stt-init', variant),
+  onModelDownloadProgress: (callback) => ipcRenderer.on('model-download-progress', (_, data) => callback(data)),
+
   // Window controls
   minimize: () => ipcRenderer.send('window-minimize'),
   maximize: () => ipcRenderer.send('window-maximize'),

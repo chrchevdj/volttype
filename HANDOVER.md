@@ -1,7 +1,7 @@
 # VoltType — Handover Document
 
-**Last Updated:** 2026-04-14
-**Status:** Windows beta launched and feature-complete. Website deployed. Android APK building on EAS. Marketing launch ready.
+**Last Updated:** 2026-04-16
+**Status:** Windows beta with local offline STT engine (whisper.cpp). Website deployed. Marketing launch ready.
 **Scorecard:** A (96/100) at https://scorecard.myclienta.com
 
 ## Project Overview
@@ -16,6 +16,35 @@
   - Cloudflare Workers API (volttype-api.crcaway.workers.dev)
 - **GitHub:** chrchevdj/volttype (private)
 - **Releases:** chrchevdj/volttype-releases (public, hosts .exe)
+
+## What Was Done — Session 2026-04-16
+
+### Local Offline STT Engine (whisper.cpp)
+- **Full local-first transcription pipeline** — runs on CPU, no cloud, no API key, $0 cost per user
+- **Engine:** whisper.cpp v1.8.4 subprocess (same pattern as ffmpeg — MIT licensed)
+- **Audio flow:** WebM/Opus → ffmpeg → 16kHz mono WAV → whisper.cpp → text on stdout
+- **Model Manager** (`src/model-manager.js`) — auto-downloads whisper.cpp binary from GitHub + GGML model from HuggingFace, caches in `%APPDATA%/VoltType/whisper-bin/` and `whisper-models/`
+- **4 model variants:** tiny.en (75MB, fastest), base.en (142MB, recommended), small.en (466MB, best quality), small (466MB, multilingual)
+- **Settings UI** — engine dropdown (Groq Cloud / Local Offline), model selector, download/delete buttons, progress bar
+- **IPC architecture** — 4 new handlers: `local-stt-status`, `local-stt-download`, `local-stt-delete`, `local-stt-init`
+- **Auto-init** — if engine is 'local' and model is cached, initializes on app start
+- **Tested end-to-end on Windows** — tiny.en model transcribes 2s audio in ~1.5s (4 CPU threads)
+- **Why not sherpa-onnx:** WASM variant OOM on model loading, native addon blocked by Windows Application Control (WDAC)
+- **Removed sherpa-onnx packages** — cleaned 3 unused npm packages, removed old ONNX model files (~452MB freed)
+- **26 new tests** — `stt-local.test.js` (9 tests), `model-manager.test.js` (17 tests), all passing
+- **59 total tests passing** across 11 test files (unit + integration)
+
+### Files Changed
+- `src/stt-local.js` — NEW: whisper.cpp subprocess STT engine
+- `src/model-manager.js` — NEW: GGML model + binary downloader/cache
+- `main.js` — wired local STT with IPC handlers, engine routing
+- `preload.js` — 5 new IPC bridges for local STT
+- `renderer/index.html` — local STT settings panel (model selector, download, progress bar)
+- `renderer/app.js` — local panel toggle, refresh status, download/delete handlers
+- `renderer/styles.css` — progress bar styles
+- `package.json` — removed sherpa-onnx deps, removed dead setup-model script
+- `tests/unit/stt-local.test.js` — NEW: 9 tests for LocalSTT
+- `tests/unit/model-manager.test.js` — NEW: 17 tests for ModelManager
 
 ## What Was Done — Session 2026-04-14
 
@@ -136,8 +165,12 @@
 - [ ] Offline recording queue
 
 ### DESKTOP
+- [x] Local offline STT engine (whisper.cpp) — fully wired, tested, 4 model variants
 - [ ] Taskbar icon — new icon-new.svg exists, needs to replace build/icon.*, rebuild .exe
 - [ ] Auto-updater testing (GitHub Releases at volttype-releases repo)
+- [ ] Rebuild desktop .exe with local STT feature
+- [ ] Test local STT with real voice (not just silence WAV)
+- [ ] Add annual pricing toggle to website
 
 ### WEBSITE
 - [x] Deployed 2026-04-14 with all fixes
@@ -197,7 +230,9 @@ VoltType/
 ├── src/                         ← Core app modules
 │   ├── auth.js                  ← Supabase auth
 │   ├── hotkey.js                ← Global hotkey handler (uiohook-napi)
-│   ├── stt-groq.js              ← Speech-to-text via Groq Whisper
+│   ├── stt-groq.js              ← Speech-to-text via Groq Whisper (cloud)
+│   ├── stt-local.js             ← Speech-to-text via whisper.cpp (offline)
+│   ├── model-manager.js         ← GGML model + whisper.cpp binary downloader
 │   ├── text-cleaner.js          ← LLM cleanup + 15 AI voice commands
 │   ├── vocab-learner.js         ← Learns from corrections (367 lines)
 │   ├── history.js               ← Last 200 transcriptions

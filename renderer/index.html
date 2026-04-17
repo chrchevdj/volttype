@@ -378,10 +378,38 @@
                 <option value="local">Local Engine (Offline)</option>
               </select>
             </div>
-            <div class="setting-row">
+            <!-- Cloud-only: Groq API key -->
+            <div class="setting-row" id="row-groq-key">
               <label>Groq API Key</label>
               <input type="password" id="setting-groq-key" placeholder="gsk_...">
               <button class="btn-text btn-small" id="btn-toggle-key">Show</button>
+            </div>
+            <!-- Local-only: Model management -->
+            <div id="local-stt-panel" class="hidden">
+              <div class="setting-row">
+                <label>Model</label>
+                <select id="setting-local-model">
+                  <option value="tiny.en">Tiny English (75 MB, fastest)</option>
+                  <option value="base.en">Base English (142 MB, recommended)</option>
+                  <option value="small.en">Small English (466 MB, best quality)</option>
+                  <option value="small">Small Multilingual (466 MB)</option>
+                </select>
+              </div>
+              <div class="setting-row" id="row-model-status">
+                <label>Status</label>
+                <span id="local-model-status" class="card-status">Checking...</span>
+              </div>
+              <div class="setting-row" id="row-model-actions">
+                <button class="btn-primary btn-small" id="btn-download-model">Download Model</button>
+                <button class="btn-text btn-small hidden" id="btn-delete-model">Delete</button>
+              </div>
+              <div id="model-progress-bar" class="hidden">
+                <div class="progress-track">
+                  <div class="progress-fill" id="model-progress-fill" style="width: 0%"></div>
+                </div>
+                <span class="progress-label" id="model-progress-label">0%</span>
+              </div>
+              <p class="setting-note">Runs 100% offline on your CPU. No API key needed, no cloud costs. Model is downloaded once and cached locally.</p>
             </div>
             <div class="setting-row">
               <label>Language</label>

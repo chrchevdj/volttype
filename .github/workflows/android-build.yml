@@ -28,11 +28,17 @@ on:
           - preview
           - production
 
+# Cancel previous runs on the same branch — only the latest push matters.
+# Prevents queueing 3 EAS builds when you push rapidly.
+concurrency:
+  group: android-build-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     name: Build preview APK via EAS
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
 
     steps:
       - name: Checkout repository
@@ -97,11 +103,9 @@ jobs:
           BUILD_ID: ${{ steps.eas.outputs.build_id }}
         run: |
           set -e
-          # Poll every 30s, up to 25 minutes. EAS queue + build typically
-          # takes 4–20 min depending on how busy the queue is. Filter by the
-          # specific BUILD_ID we triggered, so a concurrent build doesn't
-          # confuse the status.
-          for i in $(seq 1 50); do
+          # Poll every 30s, up to 35 minutes. EAS free-tier queue can be
+          # slow — builds sometimes sit at NEW for 15+ min before starting.
+          for i in $(seq 1 70); do
             sleep 30
             JSON=$(npx eas build:list --platform android --limit 10 --json --non-interactive 2>/dev/null || echo '[]')
             RESULT=$(echo "$JSON" | node -e "
@@ -116,7 +120,7 @@ jobs:
             STATUS=$(echo "$RESULT" | cut -d'|' -f1)
             APK_URL=$(echo "$RESULT" | cut -d'|' -f2)
             VERSION=$(echo "$RESULT" | cut -d'|' -f3)
-            echo "[poll $i/50] status=$STATUS id=$BUILD_ID"
+            echo "[poll $i/70] status=$STATUS id=$BUILD_ID"
             case "$STATUS" in
               FINISHED)
                 echo "apk_url=$APK_URL" >> "$GITHUB_OUTPUT"
@@ -129,7 +133,7 @@ jobs:
                 ;;
             esac
           done
-          echo "::warning::EAS build did not finish in 25 minutes. Check the build URL manually."
+          echo "::warning::EAS build did not finish in 35 minutes. Check the build URL manually."
           exit 1
 
       - name: Write summary with APK link
