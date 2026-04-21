@@ -124,13 +124,15 @@ class TextCleaner {
   /**
    * Clean/correct raw transcription text using an LLM.
    * @param {string} rawText - Raw whisper transcription
-   * @param {string} outputStyle - 'raw' (no processing), 'punctuated' (just fix punctuation), 'cleaned' (full rewrite)
+   * @param {string} outputStyle - 'raw' | 'verbatim' | 'punctuated' | 'cleaned'
    * @param {string} userContext - Learned vocabulary/style context from VocabLearner
    * @returns {Promise<string>} Cleaned text
    */
-  async clean(rawText, outputStyle = 'cleaned', userContext = '') {
+  async clean(rawText, outputStyle = 'punctuated', userContext = '') {
     if (!rawText || rawText.trim().length === 0) return rawText;
     if (outputStyle === 'raw') return rawText;
+    // Verbatim mode: bypass LLM entirely — deterministic local pass only.
+    if (outputStyle === 'verbatim') return this._verbatimPass(rawText);
     if (!this._apiKey) return rawText; // No key = skip silently
 
     let systemPrompt = this._getSystemPrompt(outputStyle);
@@ -172,7 +174,17 @@ class TextCleaner {
       const cleaned = data.choices?.[0]?.message?.content?.trim();
       console.log(`[CLEANER] ${outputStyle} in ${elapsed}ms: "${rawText.slice(0, 50)}" → "${(cleaned || '').slice(0, 50)}"`);
 
-      return cleaned || rawText;
+      if (!cleaned) return rawText;
+
+      // Safety net: if the LLM diverged too far from the input (paraphrase / context drift),
+      // fall back to the raw text. This catches the "cleaned mode mangles my words" bug.
+      // Only applied to 'cleaned' style — 'punctuated' can still legitimately reflow.
+      if (outputStyle === 'cleaned' && this._wordDivergenceRatio(rawText, cleaned) > 0.10) {
+        console.warn('[CLEANER] Divergence >10% — returning raw to preserve meaning');
+        return rawText;
+      }
+
+      return cleaned;
     } catch (err) {
       console.error('[CLEANER] Error:', err.message);
       return rawText; // Never fail — always return something
@@ -222,33 +234,71 @@ Rules:
 - No explanations, no quotes, no markdown`;
     }
 
-    // 'cleaned' — polished rewrite that preserves meaning exactly
-    return `You are a dictation post-processor. You take messy spoken text and rewrite it to sound clear, polished, and well-structured — like a professional wrote it.
+    // 'cleaned' — minimal-touch correction. Fix obvious transcription errors only.
+    return `PRIMARY DIRECTIVE: Fix only obvious transcription errors. Do NOT rephrase.
 
-YOU MUST REWRITE THE TEXT TO SOUND BETTER. Make it flow, improve sentence structure, and make it read like polished written text.
+Your job is to lightly correct a speech-to-text transcript. The speaker's exact words matter. Treat the input as near-final — only touch what is clearly wrong.
 
-HOWEVER — THESE RULES ARE ABSOLUTE:
-1. PRESERVE EVERY SINGLE IDEA AND POINT the speaker made — do not drop, skip, or summarize any part
-2. NEVER ADD ideas, facts, details, steps, or content the speaker did not say
-3. NEVER CHANGE THE SPEAKER'S PERSPECTIVE — if they say "I want X", keep it as "I want X". Do NOT turn it into instructions addressed to someone else.
-4. NEVER CHANGE a question into a statement. "Does this matter?" must stay a question.
-5. NEVER INVENT conclusions, recommendations, or next steps the speaker did not state
-6. NEVER CHANGE who is doing what — if the speaker says "the AI should do it", do not change it to "I will do it" or "you need to do it"
+BANNED ACTIONS — never do any of these:
+- Do NOT rephrase or "polish" sentences
+- Do NOT change word order
+- Do NOT substitute synonyms (keep "big" as "big", do not change it to "large")
+- Do NOT reorder sentences or ideas
+- Do NOT summarize, condense, or expand
+- Do NOT change a question into a statement or vice versa
+- Do NOT change the speaker's perspective, pronouns, or who is doing what
+- Do NOT invent content, conclusions, recommendations, or next steps
+- Do NOT convert lists into prose or prose into lists
 
-WHAT YOU SHOULD DO:
-- Rewrite for clarity, flow, and readability
-- Fix grammar, punctuation, and capitalization
-- Remove filler words (um, uh, like, you know, basically)
-- Restructure sentences to read better — but keep the same ideas in the same order
-- Make it sound professional and well-written
-- Keep technical terms, names, and brand names exactly as spoken
+ALLOWED ACTIONS — only these:
+- Fix a clearly misheard word when context makes the correct word obvious (e.g. "their" vs "there")
+- Fix punctuation (periods, commas, question marks) and capitalization
+- Remove pure filler words only when they are clearly fillers: "um", "uh", "erm"
+- Keep technical terms, names, and brand names exactly as transcribed
 
-EXAMPLE:
-- Speaker says: "I want to tell the AI to create a separate tab where I would be a super user and I provide a URL or specify what I want and the AI would tell me what I need to connect how I need to connect and it would be in charge of my social media for that URL"
-  CORRECT output: "I want the AI to create a separate tab where I act as a super user. In this tab, I would provide a URL or specify what I want, and the AI would tell me what I need to connect, how to connect it, and then take charge of managing my social media for that URL."
-  WRONG output: "To set this up, I'll need you to provide me with the URLs of the businesses..." (this invents content and changes the perspective)
+VERIFICATION RULE (critical):
+Before returning your output, compare it word-for-word to the input.
+If more than 10% of the words are different, you are rephrasing — STOP and return the input unchanged.
 
-OUTPUT: Only the rewritten text. No preamble, no quotes, no markdown, no explanations.`;
+OUTPUT: Only the corrected text. No preamble, no quotes, no markdown, no explanations.`;
+  }
+
+  /**
+   * Verbatim pass — no LLM. Deterministic local cleanup only.
+   * Capitalizes the first letter, ensures a terminal punctuation mark,
+   * and normalizes whitespace. Preserves every word as transcribed.
+   */
+  _verbatimPass(rawText) {
+    if (!rawText) return rawText;
+    let t = rawText.replace(/\s+/g, ' ').trim();
+    if (!t) return t;
+    // Capitalize first alphabetic character
+    t = t.replace(/^(\W*)([a-z])/, (_m, pre, ch) => pre + ch.toUpperCase());
+    // Ensure terminal punctuation
+    if (!/[.!?]$/.test(t)) t += '.';
+    return t;
+  }
+
+  /**
+   * Ratio of words in `cleaned` that don't appear in `raw` (case-insensitive,
+   * stripped of punctuation). Used as a safety net against LLM paraphrasing.
+   * Returns a value in [0, 1]. Higher = more divergence.
+   */
+  _wordDivergenceRatio(raw, cleaned) {
+    const norm = (s) => (s || '')
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}\s']/gu, ' ')
+      .split(/\s+/)
+      .filter(Boolean);
+    const rawWords = norm(raw);
+    const cleanedWords = norm(cleaned);
+    if (cleanedWords.length === 0) return 0;
+    const rawSet = new Set(rawWords);
+    let missing = 0;
+    for (const w of cleanedWords) {
+      if (!rawSet.has(w)) missing++;
+    }
+    return missing / cleanedWords.length;
   }
 }
 

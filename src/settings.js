@@ -23,8 +23,9 @@ const DEFAULTS = {
   injectionMode: 'clipboard', // 'clipboard' | 'typing'
   showOverlay: true,
   playSounds: true,
-  outputStyle: 'punctuated',  // 'raw' | 'punctuated' | 'cleaned'
+  outputStyle: 'punctuated',  // 'raw' | 'verbatim' | 'punctuated' | 'cleaned'
   translateToEnglish: false,  // when true, dictation in any language is typed in English
+  applyLearnedVocab: false,   // inject vocab-learner userContext into cleaner prompt (off = no bias)
   theme: 'dark',
 };
 

@@ -629,11 +629,16 @@ ipcMain.handle('audio-captured', async (event, { audioBase64, mimeType }) => {
     }
 
     // LLM post-processing — clean up grammar, punctuation, filler words
-    const outputStyle = settings.get('outputStyle') || 'cleaned';
+    const outputStyle = settings.get('outputStyle') || 'punctuated';
     const rawText = text; // Keep raw for learning comparison
     if (outputStyle !== 'raw') {
       try {
-        const userContext = vocabLearner.getCleanerContext();
+        // Opt-in: only inject learned vocab context when user enables it AND
+        // we're in 'cleaned' mode (verbatim never gets vocab bias).
+        const applyVocab = !!settings.get('applyLearnedVocab');
+        const userContext = (applyVocab && outputStyle === 'cleaned')
+          ? vocabLearner.getCleanerContext()
+          : '';
         const cleaned = await textCleaner.clean(text, outputStyle, userContext);
         console.log(`[STT] Cleaned: "${cleaned}"`);
         text = cleaned;

@@ -1132,6 +1132,7 @@ function setupSettingsHandlers() {
   saveSetting('setting-language', 'language');
   saveSetting('setting-hotkey', 'hotkey');
   saveSetting('setting-output-style', 'outputStyle');
+  saveSetting('setting-apply-vocab', 'applyLearnedVocab');
   saveSetting('setting-translate-to-english', 'translateToEnglish');
   saveSetting('setting-injection', 'injectionMode');
   saveSetting('setting-start-minimized', 'startMinimized');
@@ -1204,8 +1205,9 @@ function applySettings(s) {
   setVal('setting-local-model', s.localModelVariant || 'base.en');
   setVal('setting-language', s.language);
   setVal('setting-hotkey', s.hotkey);
-  setVal('setting-output-style', s.outputStyle || 'cleaned');
+  setVal('setting-output-style', s.outputStyle || 'punctuated');
   setVal('setting-injection', s.injectionMode);
+  setChecked('setting-apply-vocab', s.applyLearnedVocab);
   setChecked('setting-translate-to-english', s.translateToEnglish);
   setChecked('setting-start-minimized', s.startMinimized);
   setChecked('setting-start-windows', s.startWithWindows);

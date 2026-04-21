@@ -511,12 +511,18 @@
             <div class="setting-row">
               <label>Output Mode</label>
               <select id="setting-output-style">
+                <option value="verbatim">Verbatim (Lawyer/Doctor Mode) — exact words, no AI, just capitalization</option>
                 <option value="punctuated">Your Words + Punctuation (recommended) — adds periods and commas, keeps your exact words</option>
                 <option value="cleaned">AI Rewrite — rewrites for grammar and flow (may change meaning)</option>
                 <option value="raw">100% Raw — exact output, nothing touched</option>
               </select>
             </div>
-            <p class="setting-note">Recommended: "Your Words + Punctuation" — types exactly what you say, just adds punctuation.</p>
+            <p class="setting-note">Recommended: "Your Words + Punctuation" — types exactly what you say, just adds punctuation. Use Verbatim for legal/medical notes where exact words matter.</p>
+            <div class="setting-row toggle-row">
+              <label for="setting-apply-vocab">Apply learned vocabulary to cleanups</label>
+              <input type="checkbox" id="setting-apply-vocab">
+            </div>
+            <p class="setting-note">When ON, AI Rewrite mode uses vocabulary the app learned from your past dictations. Default OFF to avoid biasing word choices. Only affects AI Rewrite mode.</p>
           </div>
 
           <!-- Behavior -->

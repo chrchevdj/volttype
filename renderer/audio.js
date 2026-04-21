@@ -282,15 +282,25 @@ class AudioCapture {
       return null;
     }
 
+    const hasSpoken = this._hasSpoken;
     return new Promise((resolve) => {
       this._mediaRecorder.onstop = async () => {
         const mimeType = this._mediaRecorder.mimeType;
         const blob = new Blob(this._chunks, { type: mimeType });
         const arrayBuffer = await blob.arrayBuffer();
 
-        console.log(`[AUDIO] Stopped. Captured ${Math.round(arrayBuffer.byteLength / 1024)}KB, ${this._chunks.length} chunks`);
+        console.log(`[AUDIO] Stopped. Captured ${Math.round(arrayBuffer.byteLength / 1024)}KB, ${this._chunks.length} chunks, spoke=${hasSpoken}`);
 
         this._cleanup();
+
+        // VAD gate: if VAD never saw real speech during the clip, don't send it
+        // to Whisper — silent clips cause hallucinations (invented phrases).
+        if (!hasSpoken) {
+          console.log('[AUDIO] VAD gate: no speech detected, returning empty buffer');
+          resolve({ blob, mimeType, arrayBuffer: new ArrayBuffer(0) });
+          return;
+        }
+
         resolve({ blob, mimeType, arrayBuffer });
       };
 
