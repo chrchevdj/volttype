@@ -2593,9 +2593,26 @@
     // PWA service worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').catch(() => {});
+        navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' })
+          .then(reg => { setInterval(() => reg.update(), 60000); })
+          .catch(() => {});
+        navigator.serviceWorker.addEventListener('message', e => {
+          if (e.data && e.data.type === 'SW_UPDATED') {
+            var t = document.getElementById('sw-update-toast');
+            if (t) t.style.display = 'flex';
+          }
+        });
       });
     }
   </script>
+  <div id="sw-update-toast" style="display:none;position:fixed;bottom:20px;right:20px;z-index:9999;
+    background:#0f172a;border:1px solid #7c3aed;border-radius:12px;padding:14px 18px;
+    align-items:center;gap:12px;box-shadow:0 4px 24px rgba(0,0,0,.5)">
+    <span style="color:#e2e8f0;font-size:13px;font-weight:600">New version available</span>
+    <button onclick="window.location.reload()" style="background:#7c3aed;color:#fff;border:none;
+      border-radius:8px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer">Reload</button>
+    <button onclick="document.getElementById('sw-update-toast').style.display='none'"
+      style="background:transparent;color:#94a3b8;border:none;font-size:18px;cursor:pointer">&times;</button>
+  </div>
 </body>
 </html>
