@@ -415,11 +415,15 @@ async function _handleRecordingState({ recording, skip, mode }) {
         }
       } else {
         console.log('[APP] No audio captured (empty result)');
+        // CRITICAL: tell main to clear isTranscribing — otherwise app freezes
+        try { vf.rendererNoAudio('empty-buffer'); } catch {}
         status.className = 'status-idle';
         status.querySelector('.status-text').textContent = 'Ready';
       }
     } catch (err) {
       console.error('[APP] Audio stop/send failed:', err);
+      // CRITICAL: tell main to clear isTranscribing — otherwise app freezes
+      try { vf.rendererNoAudio('stop-error:' + (err && err.message || 'unknown')); } catch {}
       status.className = 'status-error';
       status.querySelector('.status-text').textContent = 'Error';
       setTimeout(() => {
@@ -581,20 +585,33 @@ function hideUpgradeBanner() { // eslint-disable-line no-unused-vars
 function handleTranscriptionError({ message }) {
   const status = document.getElementById('sidebar-status');
   status.className = 'status-error';
-  status.querySelector('.status-text').textContent = 'Error';
   playErrorSound();
 
-  // Check if this is a limit error — show upgrade banner
-  if (message && (message.includes('limit') || message.includes('Daily limit'))) {
-    showUpgradeBanner();
+  // Show meaningful error text (truncate at 40 chars so it fits the sidebar)
+  let displayMsg = 'Error';
+  if (message) {
+    if (message.includes('limit') || message.includes('Daily limit')) {
+      displayMsg = 'Daily limit reached';
+      showUpgradeBanner();
+    } else if (message.includes('timed out') || message.includes('timeout')) {
+      displayMsg = 'Timed out — try again';
+    } else if (message.includes('API key') || message.includes('401') || message.includes('403')) {
+      displayMsg = 'API key error';
+    } else if (message.includes('network') || message.includes('fetch') || message.includes('ECONNREFUSED')) {
+      displayMsg = 'Network error';
+    } else {
+      // Truncate raw message to fit UI
+      displayMsg = message.length > 38 ? message.slice(0, 36) + '…' : message;
+    }
   }
+  status.querySelector('.status-text').textContent = displayMsg;
 
   console.log('[APP] Transcription error:', message);
 
   setTimeout(() => {
     status.className = 'status-idle';
     status.querySelector('.status-text').textContent = 'Ready';
-  }, 3000);
+  }, 4000);
 }
 
 // ---- Home page ----

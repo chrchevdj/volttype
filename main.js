@@ -59,6 +59,29 @@ let currentHotkey = null;
 let lastToggleTime = 0;      // Debounce protection
 let recordingMode = 'hold';  // 'hold' = Ctrl+Space, 'toggle' = Ctrl+Shift+D
 const TOGGLE_DEBOUNCE_MS = 500;
+// Watchdog: if isTranscribing stays true too long → something hung, force reset
+let transcribingWatchdog = null;
+const TRANSCRIBING_TIMEOUT_MS = 30000; // 30s max per transcription
+
+function setTranscribing(val) {
+  isTranscribing = val;
+  if (transcribingWatchdog) {
+    clearTimeout(transcribingWatchdog);
+    transcribingWatchdog = null;
+  }
+  if (val) {
+    transcribingWatchdog = setTimeout(() => {
+      console.error('[WATCHDOG] isTranscribing stuck >30s — force resetting state (freeze recovery)');
+      setTranscribing(false);
+      transcribingWatchdog = null;
+      try { hideOverlay(); } catch {}
+      try { updateTrayState('idle'); } catch {}
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('transcription-error', { message: 'Transcription timed out — state reset. Try again.' });
+      }
+    }, TRANSCRIBING_TIMEOUT_MS);
+  }
+}
 
 // Icons (created after app ready)
 let iconIdle, iconRecording, iconProcessing;
@@ -139,7 +162,7 @@ app.whenReady().then(() => {
 
   // Ensure overlay is hidden on startup (prevents stuck overlay from previous crash)
   hideOverlay();
-  isTranscribing = false;
+  setTranscribing(false);
   isRecording = false;
 
   // Apply auto-start setting
@@ -263,32 +286,47 @@ function createOverlay() {
         font-size: 13px;
         font-weight: 600;
         color: white;
-        transition: all 0.3s ease;
+        transition: background 0.3s ease, box-shadow 0.3s ease;
       }
       .recording {
         background: linear-gradient(135deg, #f87171, #ef4444);
-        box-shadow: 0 4px 20px rgba(248,113,113,0.4);
+        box-shadow: 0 4px 20px rgba(248,113,113,0.5);
       }
       .processing {
-        background: linear-gradient(135deg, #38bd9c, #3b82f6);
-        box-shadow: 0 4px 20px rgba(56,189,156,0.4);
+        background: linear-gradient(135deg, #7c3aed, #4f46e5);
+        box-shadow: 0 4px 24px rgba(124,58,237,0.6);
       }
+      /* Listening indicator — pulsing red dot */
       .dot {
         width: 10px;
         height: 10px;
         border-radius: 50%;
         background: white;
         animation: pulse 1s infinite;
+        flex-shrink: 0;
       }
       @keyframes pulse {
         0%, 100% { opacity: 1; transform: scale(1); }
         50% { opacity: 0.4; transform: scale(0.8); }
       }
+      /* Processing indicator — spinning arc (distinct from dot) */
+      .spinner {
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(255,255,255,0.35);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+        flex-shrink: 0;
+      }
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
       .hidden { display: none; }
     </style></head>
     <body>
       <div class="pill recording" id="pill">
-        <div class="dot"></div>
+        <div class="dot" id="indicator"></div>
         <span id="label">Listening...</span>
       </div>
     </body>
@@ -298,9 +336,17 @@ function createOverlay() {
 
 function showOverlay(mode) {
   if (!overlayWindow || overlayWindow.isDestroyed()) return;
+  const isProcessing = mode === 'processing';
   overlayWindow.webContents.executeJavaScript(`
-    document.getElementById('pill').className = 'pill ${mode}';
-    document.getElementById('label').textContent = '${mode === 'recording' ? 'Listening...' : 'Transcribing...'}';
+    (function() {
+      var pill = document.getElementById('pill');
+      var indicator = document.getElementById('indicator');
+      var label = document.getElementById('label');
+      pill.className = 'pill ${mode}';
+      label.textContent = '${isProcessing ? 'Transcribing...' : 'Listening...'}';
+      // Swap indicator: spinner for processing, dot for listening
+      indicator.className = '${isProcessing ? 'spinner' : 'dot'}';
+    })();
   `).catch(() => {});
   overlayWindow.showInactive();
 }
@@ -428,6 +474,17 @@ function toggleRecording() {
 function startRecording() {
   if (isRecording || isTranscribing) {
     console.log('[RECORD] Blocked — already', isRecording ? 'recording' : 'transcribing');
+    // Flash a "Busy" hint on the overlay so user knows shortcut was received but blocked
+    if (isTranscribing && overlayWindow && !overlayWindow.isDestroyed()) {
+      overlayWindow.webContents.executeJavaScript(`
+        (function() {
+          var label = document.getElementById('label');
+          var prev = label.textContent;
+          label.textContent = 'Still processing...';
+          setTimeout(function() { label.textContent = prev; }, 1000);
+        })();
+      `).catch(() => {});
+    }
     return;
   }
 
@@ -460,7 +517,7 @@ function stopRecording() {
     return;
   }
 
-  isTranscribing = true;
+  setTranscribing(true);
   updateTrayState('processing');
   showOverlay('processing');
   console.log(`[RECORD] Stopped after ${holdDuration}ms — waiting for audio from renderer`);
@@ -519,7 +576,7 @@ ipcMain.handle('audio-captured', async (event, { audioBase64, mimeType }) => {
       console.log('[STT] Audio too small, skipping');
       hideOverlay();
       updateTrayState('idle');
-      isTranscribing = false;
+      setTranscribing(false);
       return { success: false, error: 'Too short' };
     }
 
@@ -564,7 +621,7 @@ ipcMain.handle('audio-captured', async (event, { audioBase64, mimeType }) => {
       console.log('[STT] Empty result, skipping injection');
       hideOverlay();
       updateTrayState('idle');
-      isTranscribing = false;
+      setTranscribing(false);
       return { success: true, text: '' };
     }
 
@@ -603,7 +660,7 @@ ipcMain.handle('audio-captured', async (event, { audioBase64, mimeType }) => {
           await injectText(transformed);
 
           updateTrayState('idle');
-          isTranscribing = false;
+          setTranscribing(false);
 
           if (mainWindow && !mainWindow.isDestroyed()) {
             mainWindow.webContents.send('transcription-result', {
@@ -624,7 +681,7 @@ ipcMain.handle('audio-captured', async (event, { audioBase64, mimeType }) => {
       // If no previous text or transform failed, fall through to normal processing
       hideOverlay();
       updateTrayState('idle');
-      isTranscribing = false;
+      setTranscribing(false);
       return { success: true, text: '', voiceCommand: cmdResult.command, noTarget: true };
     }
 
@@ -667,7 +724,7 @@ ipcMain.handle('audio-captured', async (event, { audioBase64, mimeType }) => {
     console.log('[INJECT] Done');
 
     updateTrayState('idle');
-    isTranscribing = false;
+    setTranscribing(false);
 
     // Notify renderer
     if (mainWindow && !mainWindow.isDestroyed()) {
@@ -683,7 +740,7 @@ ipcMain.handle('audio-captured', async (event, { audioBase64, mimeType }) => {
     console.error('[STT] Error:', err.message);
     hideOverlay();
     updateTrayState('idle');
-    isTranscribing = false;
+    setTranscribing(false);
     // Don't show alert — just log it. User can check history.
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('transcription-error', { message: err.message });
@@ -771,6 +828,26 @@ ipcMain.handle('correct-and-reinject', async (event, { originalText, newText }) 
 ipcMain.on('vad-auto-stop', () => {
   console.log('[VAD] Auto-stop triggered by renderer');
   stopRecording();
+});
+
+// Renderer reports it has no audio to send (empty capture / VAD gate / error)
+// Critical for freeze prevention: without this, isTranscribing stays true forever
+// if renderer never calls audio-captured after stopRecording().
+ipcMain.on('renderer-no-audio', (_e, reason) => {
+  console.log('[RECOVERY] Renderer reported no audio:', reason || '(none)');
+  hideOverlay();
+  updateTrayState('idle');
+  setTranscribing(false);
+});
+
+// Explicit panic reset — if UI ever detects stuck state
+ipcMain.handle('force-reset-state', () => {
+  console.log('[RECOVERY] Force reset state requested by renderer');
+  isRecording = false;
+  setTranscribing(false);
+  hideOverlay();
+  updateTrayState('idle');
+  return true;
 });
 
 // Checkout — open Stripe payment in browser
