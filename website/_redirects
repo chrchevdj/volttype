@@ -2,4 +2,4 @@
 # Update the download URL here when a new release is published.
 # Format: /download → <direct asset URL> 302
 
-/download  https://github.com/chrchevdj/volttype-releases/releases/latest/download/VoltType.Setup.1.2.0.exe  302
+/download  https://github.com/chrchevdj/volttype-releases/releases/latest/download/VoltType-Setup-1.2.0.exe  302
