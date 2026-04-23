@@ -7,6 +7,7 @@ ENVIRONMENT = "production"
 ADMIN_EMAIL = "crcaway@gmail.com"
 
 # Secrets (set via `wrangler secret put <NAME>`):
+# RESEND_API_KEY        - re_... from Resend dashboard (free tier, 100/day) — welcome emails
 # GROQ_API_KEY          - Paid Groq API key for STT transcription
 # SUPABASE_URL          - https://ceuymixybyaxpldgggin.supabase.co
 # SUPABASE_SERVICE_KEY  - Supabase service role key (from Supabase dashboard)
@@ -42,3 +43,7 @@ ADMIN_EMAIL = "crcaway@gmail.com"
 #    invoice.paid
 #    invoice.payment_failed
 # 10. Create the `volttype_webhook_events` table from `stripe-webhook-events.sql`
+
+[observability]
+enabled = true
+head_sampling_rate = 1

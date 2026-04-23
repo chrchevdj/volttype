@@ -396,6 +396,15 @@ export async function handleStripeWebhook(request, env) {
             await syncStripeSubscription(subscription, env);
           }
         }
+
+        // Send welcome email via Resend
+        const customerEmail = session?.customer_details?.email || session?.customer_email;
+        const purchasedPlan = session?.metadata?.plan || 'basic';
+        if (customerEmail && env.RESEND_API_KEY) {
+          await sendWelcomeEmail(customerEmail, purchasedPlan, env).catch((err) => {
+            console.error('[RESEND] Welcome email failed:', err.message);
+          });
+        }
         break;
       }
 
@@ -615,6 +624,138 @@ export async function supabaseRequest(path, env, options = {}) {
   }
 
   return res.json();
+}
+
+// ─── Resend welcome email ────────────────────────────────────────────────────
+
+const PLAN_FEATURES = {
+  basic: {
+    label: 'Basic',
+    price: '$4.99/mo',
+    features: [
+      '60 minutes of voice dictation per day',
+      'AI text cleanup (punctuation, formatting)',
+      '15 AI voice commands (formal, translate, summarize, etc.)',
+      'Works in any Windows app',
+      'Cloud STT via Groq Whisper',
+    ],
+  },
+  pro: {
+    label: 'Pro',
+    price: '$8.99/mo',
+    features: [
+      'Unlimited voice dictation',
+      'AI text cleanup + advanced rewrite',
+      '15 AI voice commands',
+      'Local offline STT engine (no internet needed)',
+      'AI Notes Workspace with 5 output modes',
+      'Priority support',
+    ],
+  },
+};
+
+export async function sendWelcomeEmail(toEmail, plan, env) {
+  const info = PLAN_FEATURES[plan] || PLAN_FEATURES.basic;
+  const featureList = info.features.map((f) => `<li style="margin-bottom:6px;">${f}</li>`).join('');
+  const downloadUrl = 'https://volttype.com/download';
+  const supportEmail = 'support@volttype.com';
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Welcome to VoltType ${info.label}</title>
+</head>
+<body style="margin:0;padding:0;background:#0d0d0d;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0d0d0d;padding:40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#1a1a1a;border-radius:12px;overflow:hidden;">
+          <!-- Header -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#7c3aed,#4f46e5);padding:32px 40px;text-align:center;">
+              <p style="margin:0;font-size:28px;font-weight:700;color:#fff;letter-spacing:-0.5px;">VoltType</p>
+              <p style="margin:8px 0 0;font-size:14px;color:rgba(255,255,255,0.8);">Voice typing + AI rewrite for Windows</p>
+            </td>
+          </tr>
+          <!-- Body -->
+          <tr>
+            <td style="padding:40px;">
+              <h1 style="margin:0 0 16px;font-size:22px;font-weight:600;color:#fff;">Welcome to VoltType ${info.label}</h1>
+              <p style="margin:0 0 24px;font-size:15px;color:#a1a1aa;line-height:1.6;">
+                Your ${info.label} plan (${info.price}) is now active. Here is everything you need to get started.
+              </p>
+
+              <!-- Download CTA -->
+              <table cellpadding="0" cellspacing="0" style="margin:0 0 32px;">
+                <tr>
+                  <td style="background:#7c3aed;border-radius:8px;padding:14px 28px;">
+                    <a href="${downloadUrl}" style="color:#fff;font-size:15px;font-weight:600;text-decoration:none;">
+                      Download VoltType for Windows →
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Plan features -->
+              <h2 style="margin:0 0 12px;font-size:15px;font-weight:600;color:#e4e4e7;">What is included in ${info.label}</h2>
+              <ul style="margin:0 0 32px;padding-left:20px;color:#a1a1aa;font-size:14px;line-height:1.7;">
+                ${featureList}
+              </ul>
+
+              <!-- Quick start -->
+              <h2 style="margin:0 0 12px;font-size:15px;font-weight:600;color:#e4e4e7;">Quick start (3 steps)</h2>
+              <ol style="margin:0 0 32px;padding-left:20px;color:#a1a1aa;font-size:14px;line-height:1.8;">
+                <li>Download and install VoltType from the link above</li>
+                <li>Sign in with the email you used to purchase</li>
+                <li>Hold <strong style="color:#e4e4e7;">Ctrl + Space</strong> anywhere in Windows and start speaking</li>
+              </ol>
+
+              <!-- Support -->
+              <p style="margin:0;font-size:14px;color:#71717a;">
+                Questions? Reply to this email or contact us at
+                <a href="mailto:${supportEmail}" style="color:#7c3aed;text-decoration:none;">${supportEmail}</a>
+              </p>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="padding:20px 40px;border-top:1px solid #2a2a2a;text-align:center;">
+              <p style="margin:0;font-size:12px;color:#52525b;">
+                VoltType · <a href="https://volttype.com" style="color:#7c3aed;text-decoration:none;">volttype.com</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${env.RESEND_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: 'VoltType <noreply@volttype.com>',
+      to: [toEmail],
+      subject: `Welcome to VoltType ${info.label} — download + activation`,
+      html,
+    }),
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Resend API error ${res.status}: ${body}`);
+  }
+
+  const result = await res.json();
+  console.log('[RESEND] Welcome email sent to', toEmail, 'id:', result.id);
+  return result;
 }
 
 export async function verifyStripeWebhookSignature(payload, signatureHeader, secret) {
