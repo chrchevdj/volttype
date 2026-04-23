@@ -1,8 +1,49 @@
 # VoltType — Handover Document
 
-**Last Updated:** 2026-04-18
-**Status:** Local offline STT 98% complete. .exe built & released. Only real voice test remains.
+**Last Updated:** 2026-04-23
+**Status:** Post-purchase welcome email live. Auto-updater fixed (latest.yml uploaded). /download redirect live.
 **Scorecard:** A (96/100) at https://scorecard.myclienta.com
+
+## Session 2026-04-23 — What was done
+
+### Task 1 — Welcome email via Resend (DONE, deployed)
+- Added `sendWelcomeEmail()` to `backend/cloudflare-worker/src/index.js`
+- Fires on `checkout.session.completed` (fire-and-forget, non-blocking)
+- HTML email: plan features, download CTA (`volttype.com/download`), 3-step quick start
+- From: `VoltType <noreply@volttype.com>`
+- `RESEND_API_KEY` secret set in Cloudflare Worker via `wrangler secret put`
+- **PENDING ACTION**: Verify volttype.com DNS for Resend (see DNS section below)
+
+### Task 2 — Auto-updater (DONE)
+- Built v1.2.0 locally with correct `artifactName: VoltType-Setup-${version}.exe`
+- Uploaded to chrchevdj/volttype-releases v1.2.0: `latest.yml` + `VoltType-Setup-1.2.0.exe` + `.blockmap`
+- `package.json` bumped to `1.2.0` to match release tag
+- Installed apps at v1.0.x will now detect and auto-update
+- **PENDING**: Djoko must install app and test auto-update fires
+
+### Task 3 — Download redirect (DONE, live)
+- `website/_redirects`: `/download → https://github.com/.../VoltType-Setup-1.2.0.exe` (302)
+- Landing page hero + section CTAs updated to use `/download` as fallback
+- Verified live: `volttype.com/download` → GitHub asset (302 confirmed)
+- When releasing future versions: update ONE line in `website/_redirects`
+
+## Resend DNS — Required for volttype.com domain verification
+
+Resend requires these DNS records on volttype.com (add via Cloudflare DNS panel):
+
+| Type | Name | Value |
+|------|------|-------|
+| TXT | `resend._domainkey.volttype.com` | DKIM key (get from resend.com/domains after adding domain) |
+| TXT | `volttype.com` | SPF: `v=spf1 include:amazonses.com ~all` (Resend uses SES) |
+| MX | `bounce.volttype.com` | `feedback-smtp.us-east-1.amazonses.com` |
+
+**Steps:**
+1. Go to resend.com/domains → Add Domain → enter `volttype.com`
+2. Resend shows exact DNS records to add — copy/paste into Cloudflare DNS
+3. Click "Verify" in Resend — takes <5 min on Cloudflare
+4. Until verified, emails send from `onboarding@resend.dev` (Resend sandbox) — they work but look unbranded
+
+**Note:** Free tier = 100 emails/day, 3,000/month. Sufficient for current scale.
 
 ---
 
@@ -450,7 +491,22 @@ cd android && npx eas build --platform android --profile production
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ### Session — 2026-04-18
+- docs: update HANDOVER with 98% status, voice test instructions, detriment table
 - fix: bundle ffmpeg, better download UX, CPU auto-detect for local STT
 - docs: update HANDOVER with full local STT status for session continuity
 - feat: local offline STT engine via whisper.cpp subprocess
@@ -470,3 +526,142 @@ Changed files:
   - src/stt-local.js
   - tests/unit/model-manager.test.js
   - tests/unit/stt-local.test.js
+
+
+
+
+
+
+
+
+
+
+
+
+### Session — 2026-04-21
+- fix(volttype): rewrite cleaned prompt + add verbatim mode + VAD + opt-in vocab — resolves Chairman's context-drift report 2026-04-20
+Changed files:
+  - main.js
+  - renderer/app.js
+  - renderer/audio.js
+  - renderer/index.html
+  - src/settings.js
+  - src/text-cleaner.js
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### Session — 2026-04-22
+- feat(pwa): add PWA auto-bump on deploy — F1 foundation
+- F4+F6: Add HSTS+XFO+CSP+Permissions-Policy to volttype-api Worker, remove user-scalable=no (MOB-002)
+Changed files:
+  - backend/cloudflare-worker/src/index.js
+  - bump-sw-version.mjs
+  - pwa/index.html
+  - website/index.html
+  - website/sw.js
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### Session — 2026-04-23
+- fix(ux): distinct processing state overlay + visible STT error messages + cold email campaign staged
+Changed files:
+  - main.js
+  - marketing/cold-emails-rsi-wave1.md
+  - marketing/danish-variants-dk-accessibility.md
+  - renderer/app.js
