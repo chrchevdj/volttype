@@ -82,10 +82,41 @@ class ModelManager {
     this._onProgress = fn;
   }
 
+  /**
+   * Get the path to a bundled model file (packed into extraResources at build time).
+   * Returns null if not found (dev mode or older installer without bundled model).
+   */
+  _getBundledModelPath(modelFile) {
+    // In packaged app, extraResources land in process.resourcesPath
+    if (process.resourcesPath) {
+      const bundled = path.join(process.resourcesPath, 'models', modelFile);
+      if (fs.existsSync(bundled)) return bundled;
+    }
+    // Dev fallback: check local models/ directory
+    const devPath = path.join(__dirname, '..', 'models', modelFile);
+    if (fs.existsSync(devPath)) return devPath;
+    return null;
+  }
+
+  /**
+   * Get the path to the bundled whisper-cli binary (packed into extraResources).
+   * Returns null if not found.
+   */
+  _getBundledBinaryPath() {
+    if (process.resourcesPath) {
+      const bundled = path.join(process.resourcesPath, 'whisper-cli.exe');
+      if (fs.existsSync(bundled)) return bundled;
+    }
+    return null;
+  }
+
   /** Check if a model variant is fully downloaded and binary is available. */
   isModelReady(variant = 'base.en') {
     const model = MODELS[variant];
     if (!model) return false;
+    // Check bundled model first (no download needed)
+    if (this._getBundledModelPath(model.file) && this._getBundledBinaryPath()) return true;
+    // Fall back to user-downloaded cache
     const modelPath = path.join(this._modelsDir, model.file);
     const binaryPath = this._getBinaryPath();
     return fs.existsSync(modelPath) && fs.existsSync(binaryPath);
@@ -95,13 +126,19 @@ class ModelManager {
   getModelPaths(variant = 'base.en') {
     const model = MODELS[variant];
     if (!model) throw new Error(`Unknown model variant: ${variant}`);
+    // Prefer bundled paths (no download overhead for base.en on fresh install)
+    const bundledModel = this._getBundledModelPath(model.file);
+    const bundledBinary = this._getBundledBinaryPath();
+    if (bundledModel && bundledBinary) {
+      return { model: bundledModel, binary: bundledBinary };
+    }
     return {
       model: path.join(this._modelsDir, model.file),
       binary: this._getBinaryPath(),
     };
   }
 
-  /** Get the whisper-cli binary path */
+  /** Get the whisper-cli binary path (user-downloaded cache) */
   _getBinaryPath() {
     if (process.platform === 'win32') {
       return path.join(this._binDir, WHISPER_CPP.windows.binary);

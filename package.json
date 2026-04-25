@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node start.js",
     "dev": "node start.js --dev",
+    "prebuild": "node scripts/download-bundle-assets.js",
     "build": "electron-builder --win",
     "build:mac": "electron-builder --mac",
     "build:linux": "electron-builder --linux",
@@ -108,6 +109,15 @@
       {
         "from": "node_modules/ffmpeg-static/ffmpeg.exe",
         "to": "ffmpeg.exe"
+      },
+      {
+        "from": "models/",
+        "to": "models/",
+        "filter": ["**/*.bin"]
+      },
+      {
+        "from": "whisper-bin/whisper-cli.exe",
+        "to": "whisper-cli.exe"
       }
     ],
     "directories": {

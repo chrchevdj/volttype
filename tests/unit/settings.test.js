@@ -29,7 +29,7 @@ describe('Settings', () => {
 
     expect(settings.get('hotkey')).toBe('Ctrl+Shift+D');
     expect(settings.get('outputStyle')).toBe('punctuated');
-    expect(settings.get('engine')).toBe('groq');
+    expect(settings.get('engine')).toBe('local');
   });
 
   it('migrates legacy cleaned mode to punctuated', async () => {
