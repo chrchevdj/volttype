@@ -115,10 +115,17 @@ app.whenReady().then(() => {
     if (modelManager.isModelReady(variant)) {
       const paths = modelManager.getModelPaths(variant);
       localSTT.init(paths, variant).then(() => {
-        console.log('[MAIN] Local STT auto-initialized');
+        console.log('[MAIN] Local STT auto-initialized:', variant);
       }).catch(err => {
         console.error('[MAIN] Local STT auto-init failed:', err.message);
+        // Notify renderer so status card shows NOT READY
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('local-stt-status-update', { ready: false, error: err.message });
+        }
       });
+    } else {
+      // Engine is set to local but model not yet downloaded — log clearly
+      console.warn(`[MAIN] Engine=local but model "${variant}" not downloaded yet. User must download from Settings.`);
     }
   }
 
@@ -588,7 +595,20 @@ ipcMain.handle('audio-captured', async (event, { audioBase64, mimeType }) => {
     const engineMode = settings.get('engine') || 'groq';
     let result;
 
-    if (engineMode === 'local' && localSTT && localSTT.isReady) {
+    if (engineMode === 'local') {
+      // Local engine selected — fail loudly if not ready (never silently fall back to cloud)
+      if (!localSTT || !localSTT.isReady) {
+        console.error('[STT] Local engine selected but not ready — model may not be downloaded');
+        hideOverlay();
+        updateTrayState('idle');
+        setTranscribing(false);
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('transcription-error', {
+            message: 'Local STT not ready. Open Settings → Speech Engine → download a model first.',
+          });
+        }
+        return { success: false, error: 'Local STT not ready' };
+      }
       console.log('[STT] Using LOCAL engine (whisper.cpp)');
       result = await localSTT.transcribe(
         audioBuffer,

@@ -595,6 +595,8 @@ function handleTranscriptionError({ message }) {
       showUpgradeBanner();
     } else if (message.includes('timed out') || message.includes('timeout')) {
       displayMsg = 'Timed out — try again';
+    } else if (message.includes('Local STT not ready') || message.includes('download a model')) {
+      displayMsg = 'Local STT not ready — download model in Settings';
     } else if (message.includes('API key') || message.includes('401') || message.includes('403')) {
       displayMsg = 'API key error';
     } else if (message.includes('network') || message.includes('fetch') || message.includes('ECONNREFUSED')) {
