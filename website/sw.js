@@ -1,4 +1,4 @@
-const CACHE_NAME = 'volttype-v4';
+const CACHE_NAME = 'volttype-8dec344';
 const SHELL = [
   '/',
   '/index.html',
@@ -52,7 +52,7 @@ const OFFLINE_PAGE = `<!DOCTYPE html>
 </head>
 <body>
   <h1>VoltType</h1>
-  <p>You appear to be offline. The desktop app works without internet if you have your own API key configured.</p>
+  <p>You appear to be offline. The Windows desktop app can keep dictation local when an offline speech model is installed.</p>
   <p style="font-size: 14px;">Check your connection and try again.</p>
   <button class="retry" onclick="location.reload()">Try Again</button>
 </body>

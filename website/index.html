@@ -38,7 +38,7 @@
       { "@type": "Offer", "price": "8.99", "priceCurrency": "USD", "name": "Pro", "description": "Unlimited voice typing, AI rewrite, and AI notes workflows" }
     ],
     "downloadUrl": "https://volttype.com/download",
-    "softwareVersion": "1.0.0"
+    "softwareVersion": "1.2.1"
   }
   </script>
   <!-- Apply dark mode before render to prevent flash -->
@@ -939,7 +939,7 @@
       </a>
       <button class="btn-hero btn-secondary-hero" id="hero-signup-btn" type="button" data-i18n="heroSignup">Create Account</button>
     </div>
-    <p class="hero-note"><span data-i18n="heroNote">Free tier — 10 minutes/day. No credit card needed. Windows beta available now.</span> <span id="download-version"></span></p>
+    <p class="hero-note"><span data-i18n="heroNote">Free tier - offline mode included, plus 2,000 hosted words/week. No credit card needed. Windows beta available now.</span> <span id="download-version"></span></p>
     <div class="hero-social-proof">
       <div class="proof-item">
         <span>&#x1F399;</span>
@@ -1069,7 +1069,7 @@
       <div class="step-card">
         <div class="step-num">1</div>
         <h3 data-i18n="step1">Download & Install</h3>
-        <p data-i18n="step1p">One-click installer for Windows. No accounts required for the free tier.</p>
+        <p data-i18n="step1p">One-click installer for Windows. Start offline instantly, then add an account only if you want hosted AI features.</p>
       </div>
       <div class="step-card">
         <div class="step-num">2</div>
@@ -1187,41 +1187,41 @@
     </div>
   </section>
 
-  <!-- Testimonials -->
+  <!-- Private beta notes -->
   <section class="section" id="testimonials">
-    <h2 class="section-title" data-i18n="testTitle">What Users Say</h2>
-    <p class="section-sub" data-i18n="testSub">Real feedback from real people using VoltType every day.</p>
+    <h2 class="section-title" data-i18n="testTitle">Private Beta Notes</h2>
+    <p class="section-sub" data-i18n="testSub">What we are validating before opening VoltType wider.</p>
     <div class="testimonials-grid">
       <div class="testimonial-card">
-        <div class="testimonial-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-        <p class="quote">"VoltType completely changed the speed I work at. I used to spend 20 minutes drafting emails and follow-ups -- now I just talk and it's done in two. I'm genuinely more productive than I've ever been."</p>
+        <div class="testimonial-stars">&#10003;</div>
+        <p class="quote">Hold-to-talk needs to feel instant in everyday Windows apps: browser fields, email drafts, notes, and documents.</p>
         <div class="author">
-          <div class="avatar">D</div>
+          <div class="avatar">1</div>
           <div>
-            <div class="author-name">Djoko</div>
-            <div class="author-role">Founder, <a href="https://myclienta.com" target="_blank" style="color:var(--purple)">myclienta.com</a></div>
+            <div class="author-name">Voice typing loop</div>
+            <div class="author-role">Private beta validation</div>
           </div>
         </div>
       </div>
       <div class="testimonial-card">
-        <div class="testimonial-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-        <p class="quote">"My boss actually asked me what happened -- why I was getting reports and client updates out so fast. I just smile. VoltType lets me speak through everything instead of typing it out one word at a time."</p>
+        <div class="testimonial-stars">&#10003;</div>
+        <p class="quote">Offline speech recognition should work without sending raw voice to a hosted transcription API.</p>
         <div class="author">
-          <div class="avatar">L</div>
+          <div class="avatar">2</div>
           <div>
-            <div class="author-name">Lily</div>
-            <div class="author-role">Operations Manager, <a href="https://brandpulso.com" target="_blank" style="color:var(--purple)">brandpulso.com</a></div>
+            <div class="author-name">Offline-first STT</div>
+            <div class="author-role">Local whisper.cpp engine</div>
           </div>
         </div>
       </div>
       <div class="testimonial-card">
-        <div class="testimonial-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-        <p class="quote">"I respond to project plans and client updates so much faster now. What used to take me 15 minutes of careful typing, I can dictate in 2 minutes and let the AI clean it up. It changed how I work."</p>
+        <div class="testimonial-stars">&#10003;</div>
+        <p class="quote">AI cleanup should preserve meaning: punctuation first, optional rewrite second, raw transcript always available.</p>
         <div class="author">
-          <div class="avatar">C</div>
+          <div class="avatar">3</div>
           <div>
-            <div class="author-name">Christina</div>
-            <div class="author-role">Project Manager, <a href="https://jobalarm.dk" target="_blank" style="color:var(--purple)">jobalarm.dk</a></div>
+            <div class="author-name">Text quality</div>
+            <div class="author-role">Meaning-preserving workflow</div>
           </div>
         </div>
       </div>
@@ -2418,14 +2418,14 @@
         heroP: 'VoltType is the voice-first AI workspace for Windows. Dictates in any app with full offline speech recognition — no cloud, no API key, no data sent. Then clean, summarize, and rewrite with AI.',
         heroBtn: 'Download Free for Windows',
         heroSignup: 'Create Account',
-        heroNote: 'Free tier — 10 minutes/day. No credit card needed. Windows beta available now.',
+        heroNote: 'Free tier - offline mode included, plus 2,000 hosted words/week. No credit card needed. Windows beta available now.',
         howTitle: 'How It Works',
         howSub: 'Capture the thought, clean it up, and keep moving.',
-        step1: 'Download & Install', step1p: 'One-click installer for Windows. No accounts required for the free tier.',
+        step1: 'Download & Install', step1p: 'One-click installer for Windows. Start offline instantly, then add an account only if you want hosted AI features.',
         step2: 'Hold Ctrl+Space & Speak', step2p: 'Speak in email, chat, docs, or your own note workspace without switching tools.',
         step3: 'Rewrite or Turn It Into Notes', step3p: 'Use AI commands to fix grammar, make text formal, or create summaries and follow-ups.',
         featTitle: 'Features', featSub: 'Built to move fast and stay out of your way.',
-        testTitle: 'What Users Say', testSub: 'Real feedback from real people using VoltType every day.',
+        testTitle: 'Private Beta Notes', testSub: 'What we are validating before opening VoltType wider.',
         priceTitle: 'Simple Pricing', priceFree: 'Free Trial', priceBasic: 'Basic', pricePro: 'Pro',
         dlTitle: 'Download VoltType', dlSub: 'Windows 10/11 required. Free tier — no credit card needed.',
         navFeatures: 'Features', navPricing: 'Pricing', navUseCases: 'Use Cases', navDownload: 'Download', navSignup: 'Sign Up Free',
@@ -2437,10 +2437,10 @@
         heroP: 'VoltType este spatiul de lucru AI bazat pe voce pentru Windows. Dicteaza in orice aplicatie, corecteaza textul cu comenzi vocale si transforma vorbirea in note, rezumate si follow-up-uri.',
         heroBtn: 'Descarca gratuit pentru Windows',
         heroSignup: 'Creeaza cont',
-        heroNote: 'Plan gratuit — 10 minute/zi. Fara card de credit. Beta Windows disponibil acum.',
+        heroNote: 'Plan gratuit - mod offline inclus, plus 2.000 de cuvinte gazduite pe saptamana. Fara card de credit. Beta Windows disponibil acum.',
         howTitle: 'Cum functioneaza',
         howSub: 'Capteaza ideea, curata textul si mergi mai departe.',
-        step1: 'Descarca si instaleaza', step1p: 'Installer cu un singur click pentru Windows. Nu e nevoie de cont pentru planul gratuit.',
+        step1: 'Descarca si instaleaza', step1p: 'Installer cu un singur click pentru Windows. Incepi offline imediat, apoi adaugi cont doar daca vrei functii AI gazduite.',
         step2: 'Tine Ctrl+Space si vorbeste', step2p: 'Vorbeste in email, chat, documente sau spatiul tau de note fara sa schimbi aplicatia.',
         step3: 'Rescrie sau transforma in note', step3p: 'Foloseste comenzi AI pentru a corecta gramatica, a face textul formal sau a crea rezumate.',
         featTitle: 'Functii', featSub: 'Construit sa fie rapid si sa nu te incurce.',
@@ -2456,10 +2456,10 @@
         heroP: 'VoltType er det stemme-forst AI-arbejdsomrade til Windows. Dikter i enhver app, ryd op i din tekst med stemmekommandoer, og forvandl tale til noter, resumeer og opfolgninger.',
         heroBtn: 'Download gratis til Windows',
         heroSignup: 'Opret konto',
-        heroNote: 'Gratis plan — 10 minutter/dag. Intet kreditkort krevet. Windows beta tilgengelig nu.',
+        heroNote: 'Gratis plan - offline-tilstand inkluderet, plus 2.000 hostede ord om ugen. Intet kreditkort krevet. Windows beta tilgengelig nu.',
         howTitle: 'Sadan virker det',
         howSub: 'Fang tanken, ryd op og kom videre.',
-        step1: 'Download og installer', step1p: 'Et-klik installation til Windows. Ingen konto nødvendig for gratis planen.',
+        step1: 'Download og installer', step1p: 'Et-klik installation til Windows. Start offline med det samme, og tilfoj kun en konto hvis du vil have hostede AI-funktioner.',
         step2: 'Hold Ctrl+Space og tal', step2p: 'Tal i email, chat, dokumenter eller dit eget noteomrade uden at skifte værktøj.',
         step3: 'Omskriv eller lav noter', step3p: 'Brug AI-kommandoer til at rette grammatik, gore tekst formel eller lave resumeer.',
         featTitle: 'Funktioner', featSub: 'Bygget til at vere hurtig og ikke sta i vejen.',
@@ -2475,10 +2475,10 @@
         heroP: 'VoltType ist der sprachbasierte KI-Arbeitsbereich fur Windows. Diktiere in jeder App, bereinige deinen Text mit Sprachbefehlen und verwandle Sprache in Notizen, Zusammenfassungen und Follow-ups.',
         heroBtn: 'Kostenlos fur Windows herunterladen',
         heroSignup: 'Konto erstellen',
-        heroNote: 'Kostenloser Plan — 10 Minuten/Tag. Keine Kreditkarte erforderlich. Windows Beta jetzt verfugbar.',
+        heroNote: 'Kostenloser Plan - Offline-Modus inklusive plus 2.000 gehostete Worter pro Woche. Keine Kreditkarte erforderlich. Windows Beta jetzt verfugbar.',
         howTitle: 'So funktioniert es',
         howSub: 'Gedanken festhalten, aufraumen und weitermachen.',
-        step1: 'Herunterladen & Installieren', step1p: 'Ein-Klick-Installer fur Windows. Kein Konto fur den kostenlosen Plan erforderlich.',
+        step1: 'Herunterladen & Installieren', step1p: 'Ein-Klick-Installer fur Windows. Starte sofort offline und fige nur dann ein Konto hinzu, wenn du gehostete KI-Funktionen willst.',
         step2: 'Ctrl+Space halten & sprechen', step2p: 'Sprich in E-Mail, Chat, Dokumenten oder deinem Notizbereich ohne Werkzeugwechsel.',
         step3: 'Umschreiben oder Notizen erstellen', step3p: 'Verwende KI-Befehle um Grammatik zu korrigieren, Text formell zu machen oder Zusammenfassungen zu erstellen.',
         featTitle: 'Funktionen', featSub: 'Gebaut um schnell zu sein und nicht im Weg zu stehen.',
@@ -2494,10 +2494,10 @@
         heroP: 'VoltType est l\'espace de travail IA vocal pour Windows. Dictez dans n\'importe quelle app, nettoyez votre texte avec des commandes vocales et transformez la parole en notes, resumes et suivis.',
         heroBtn: 'Telecharger gratuitement pour Windows',
         heroSignup: 'Creer un compte',
-        heroNote: 'Plan gratuit — 10 minutes/jour. Pas de carte de credit requise. Beta Windows disponible maintenant.',
+        heroNote: 'Plan gratuit - mode hors ligne inclus, plus 2 000 mots heberges par semaine. Pas de carte de credit requise. Beta Windows disponible maintenant.',
         howTitle: 'Comment ca marche',
         howSub: 'Capturez l\'idee, nettoyez et avancez.',
-        step1: 'Telecharger et installer', step1p: 'Installation en un clic pour Windows. Pas de compte requis pour le plan gratuit.',
+        step1: 'Telecharger et installer', step1p: 'Installation en un clic pour Windows. Commencez hors ligne immediatement, puis ajoutez un compte seulement si vous voulez les fonctions IA hebergees.',
         step2: 'Maintenez Ctrl+Space et parlez', step2p: 'Parlez dans l\'email, le chat, les documents ou votre espace de notes sans changer d\'outil.',
         step3: 'Reecrivez ou creez des notes', step3p: 'Utilisez des commandes IA pour corriger la grammaire, formaliser le texte ou creer des resumes.',
         featTitle: 'Fonctionnalites', featSub: 'Concu pour etre rapide et ne pas gener.',
@@ -2513,10 +2513,10 @@
         heroP: 'VoltType es el espacio de trabajo IA basado en voz para Windows. Dicta en cualquier app, limpia tu texto con comandos de voz y convierte el habla en notas, resumenes y seguimientos.',
         heroBtn: 'Descargar gratis para Windows',
         heroSignup: 'Crear cuenta',
-        heroNote: 'Plan gratuito — 10 minutos/dia. Sin tarjeta de credito. Beta de Windows disponible ahora.',
+        heroNote: 'Plan gratuito - modo offline incluido, mas 2.000 palabras alojadas por semana. Sin tarjeta de credito. Beta de Windows disponible ahora.',
         howTitle: 'Como funciona',
         howSub: 'Captura la idea, limpiala y sigue adelante.',
-        step1: 'Descargar e instalar', step1p: 'Instalador de un clic para Windows. No se requiere cuenta para el plan gratuito.',
+        step1: 'Descargar e instalar', step1p: 'Instalador de un clic para Windows. Empieza offline al instante y agrega una cuenta solo si quieres funciones IA alojadas.',
         step2: 'Manten Ctrl+Space y habla', step2p: 'Habla en email, chat, documentos o tu espacio de notas sin cambiar de herramienta.',
         step3: 'Reescribe o crea notas', step3p: 'Usa comandos IA para corregir gramatica, formalizar texto o crear resumenes.',
         featTitle: 'Caracteristicas', featSub: 'Construido para ser rapido y no estorbar.',
@@ -2532,7 +2532,7 @@
         heroP: 'Το VoltType ειναι ο χωρος εργασιας AI με φωνη για Windows. Υπαγορευσε σε οποιαδηποτε εφαρμογη, καθαρισε το κειμενο σου με φωνητικες εντολες και μετατρεψε την ομιλια σε σημειωσεις και περιληψεις.',
         heroBtn: 'Κατεβασε δωρεαν για Windows',
         heroSignup: 'Δημιουργια λογαριασμου',
-        heroNote: 'Δωρεαν πλανο — 10 λεπτα/μερα. Δεν χρειαζεται πιστωτικη καρτα.',
+        heroNote: 'Free tier - offline mode included, plus 2,000 hosted words/week. No credit card needed.',
         howTitle: 'Πως λειτουργει', howSub: 'Συλλαβε την ιδεα, καθαρισε την και προχωρα.',
         step1: 'Κατεβασμα και εγκατασταση', step1p: 'Εγκατασταση με ενα κλικ για Windows.',
         step2: 'Κρατα Ctrl+Space και μιλα', step2p: 'Μιλα σε email, chat, εγγραφα χωρις να αλλαζεις εργαλειο.',
@@ -2550,7 +2550,7 @@
         heroP: 'VoltType е работен простор базиран на глас за Windows. Диктирај во секоја апликација, среди го текстот со гласовни команди и претвори го зборувањето во белешки, резимеа и следења.',
         heroBtn: 'Преземи бесплатно за Windows',
         heroSignup: 'Креирај сметка',
-        heroNote: 'Бесплатен план — 10 минути/ден. Без кредитна картичка.',
+        heroNote: 'Free tier - offline mode included, plus 2,000 hosted words/week. No credit card needed.',
         howTitle: 'Како функционира', howSub: 'Фати ја идејата, среди ја и продолжи.',
         step1: 'Преземи и инсталирај', step1p: 'Инсталација со еден клик за Windows.',
         step2: 'Држи Ctrl+Space и зборувај', step2p: 'Зборувај во email, chat, документи без менување на алатки.',
