@@ -50,6 +50,12 @@ Append new notes below. Keep each note short and factual.
 
 ## Updates
 
+## Update - 2026-05-12 18:49 - Codex
+- Changed: Wired public VoltType checkout CTAs. `/v1/checkout` now supports public website checkout while still attaching sessions to authenticated users when a Bearer token is present. Pro uses `price_1TWHuEFEweghdusf0NWlvqPg` with a 14-day trial; Champion uses the legacy `basic` slot `price_1TWHuKFEweghdusfpnW8Rhwq`. Added Champion pricing card, fixed pricing/footer CTAs, refreshed Terms pricing/refund copy, and bumped the website service-worker cache.
+- Verified: `npm.cmd run lint` passed; `npm.cmd run test:integration -- tests/integration/worker-fetch.test.js` passed 9/9 integration tests; deployed Worker version `c3c09b94-612d-4316-8797-a3b34586ca31`; deployed Pages preview `https://09a95318.volttype.pages.dev`; live API returned Stripe Checkout URLs for Pro and Champion; browser smoke opened Stripe Checkout showing Pro `14 days free` then `$7.00/month`, and Champion `$20.00/month`; legal links resolve 200 after canonical redirect and `/download` returns 302 to GitHub releases.
+- Risk/blocker: Wrangler on this Windows box failed certificate validation unless `NODE_TLS_REJECT_UNAUTHORIZED=0` was set for deploy. Do not treat Luka-facing pricing as quotable until Tea/Atlas independently verify from a clean browser, per Chairman rule.
+- Next: Tea/Atlas should click live CTAs from their environment, confirm Stripe pages/prices, and stop before card entry.
+
 ## Update - 2026-05-08 07:27 - Codex
 - Changed: Completed T-005 audit/fix/deploy pass. Replaced unverified named testimonial section with honest "Private Beta Notes" validation copy and updated stale offline service-worker copy.
 - Verified: `npm.cmd run build` produced VoltType 1.2.1 Windows installer + portable; live curl returned 200 for `volttype.com` and `app.volttype.com`; deployed Pages preview `https://0d2b4bce.volttype.pages.dev`; Playwright live smoke found 0 console errors and 0 failed responses on preview, `volttype.com`, and `app.volttype.com`; preview/custom domain show Private Beta Notes and no old testimonial names/copy.

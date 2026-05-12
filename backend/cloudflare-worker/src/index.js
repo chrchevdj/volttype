@@ -18,6 +18,17 @@ import { proxyTranscribe, proxyClean, proxyCommand } from './groq-proxy.js';
 // to already be tagged as a VoltType user. Everything else needs the tag.
 const PRODUCT_TAG_OPT_OUT = new Set(['/v1/auth/join-product']);
 
+const CHECKOUT_PRICE_FALLBACKS = {
+  pro: {
+    month: 'price_1TWHuEFEweghdusf0NWlvqPg',
+    year: null,
+  },
+  basic: {
+    month: 'price_1TWHuKFEweghdusfpnW8Rhwq',
+    year: null,
+  },
+};
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -35,6 +46,12 @@ export default {
 
     if (path === '/v1/webhooks/stripe' && request.method === 'POST') {
       return handleStripeWebhook(request, env);
+    }
+
+    // Public website checkout. If the desktop app sends a Bearer token, we
+    // attach the Stripe session to that user; otherwise Stripe collects email.
+    if (path === '/v1/checkout' && request.method === 'POST') {
+      return handleCheckout(request, env);
     }
 
     try {
@@ -160,78 +177,6 @@ export default {
       }, 200, request);
     }
 
-    // --- POST /v1/checkout ---
-    if (path === '/v1/checkout' && request.method === 'POST') {
-      try {
-        const { plan, interval = 'month' } = await request.json();
-        if (!['basic', 'pro'].includes(plan)) {
-          return json({ error: 'Invalid plan selected' }, 400, request);
-        }
-        if (!['month', 'year'].includes(interval)) {
-          return json({ error: 'Invalid billing interval' }, 400, request);
-        }
-
-        // Select the correct price ID based on plan + interval
-        let priceId;
-        if (plan === 'pro') {
-          priceId = interval === 'year' ? env.STRIPE_PRICE_PRO_ANNUAL : env.STRIPE_PRICE_PRO;
-        } else {
-          priceId = interval === 'year' ? env.STRIPE_PRICE_BASIC_ANNUAL : env.STRIPE_PRICE_BASIC;
-        }
-
-        if (!priceId || !env.STRIPE_SECRET_KEY) {
-          return json({ error: 'Payment not configured for this plan/interval' }, 500, request);
-        }
-
-        const existingProfile = await getProfileByUserId(user.userId, env);
-        const checkoutParams = new URLSearchParams({
-          'mode': 'subscription',
-          'line_items[0][price]': priceId,
-          'line_items[0][quantity]': '1',
-          'success_url': `https://volttype.com/?payment=success&plan=${plan}&interval=${interval}`,
-          'cancel_url': `https://volttype.com/?payment=cancelled&plan=${plan}&interval=${interval}`,
-          'client_reference_id': user.userId,
-          'metadata[user_id]': user.userId,
-          'metadata[plan]': plan,
-          'metadata[interval]': interval,
-          'subscription_data[metadata][user_id]': user.userId,
-          'subscription_data[metadata][plan]': plan,
-          'subscription_data[metadata][interval]': interval,
-          'allow_promotion_codes': 'true',
-          'billing_address_collection': 'auto',
-          'payment_method_collection': 'if_required',
-        });
-
-        if (existingProfile?.stripe_customer_id) {
-          checkoutParams.set('customer', existingProfile.stripe_customer_id);
-          checkoutParams.set('customer_update[address]', 'auto');
-          checkoutParams.set('customer_update[name]', 'auto');
-        } else {
-          checkoutParams.set('customer_email', user.email);
-        }
-
-        // Create Stripe Checkout Session
-        const stripeRes = await fetch('https://api.stripe.com/v1/checkout/sessions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${env.STRIPE_SECRET_KEY}`,
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Stripe-Version': '2026-02-25.clover',
-          },
-          body: checkoutParams,
-        });
-
-        const session = await stripeRes.json();
-        if (!stripeRes.ok) {
-          return json({ error: session.error?.message || 'Stripe error' }, 400, request);
-        }
-
-        return json({ url: session.url }, 200, request);
-      } catch (err) {
-        return json({ error: err.message }, 500, request);
-      }
-    }
-
     // --- GET /v1/admin/stats ---
     // Admin-only: returns user/subscriber/usage stats
     if (path === '/v1/admin/stats' && request.method === 'GET') {
@@ -352,6 +297,117 @@ export function json(data, status, request) {
       ...SECURITY_HEADERS,
     },
   });
+}
+
+export async function handleCheckout(request, env) {
+  try {
+    const body = await request.json().catch(() => ({}));
+    const { plan, interval = 'month', email = '', source = 'website' } = body;
+
+    if (!['basic', 'pro'].includes(plan)) {
+      return json({ error: 'Invalid plan selected' }, 400, request);
+    }
+    if (!['month', 'year'].includes(interval)) {
+      return json({ error: 'Invalid billing interval' }, 400, request);
+    }
+
+    const priceId = getCheckoutPriceId(plan, interval, env);
+    if (!priceId || !env.STRIPE_SECRET_KEY) {
+      return json({ error: 'Payment not configured for this plan/interval' }, 500, request);
+    }
+
+    const user = await getOptionalCheckoutUser(request, env);
+    const existingProfile = user?.userId
+      ? await getProfileByUserId(user.userId, env).catch(() => null)
+      : null;
+
+    const checkoutParams = new URLSearchParams({
+      'mode': 'subscription',
+      'line_items[0][price]': priceId,
+      'line_items[0][quantity]': '1',
+      'success_url': `https://volttype.com/?payment=success&plan=${plan}&interval=${interval}`,
+      'cancel_url': `https://volttype.com/?payment=cancelled&plan=${plan}&interval=${interval}`,
+      'metadata[plan]': plan,
+      'metadata[interval]': interval,
+      'metadata[source]': String(source).slice(0, 80),
+      'subscription_data[metadata][plan]': plan,
+      'subscription_data[metadata][interval]': interval,
+      'subscription_data[metadata][source]': String(source).slice(0, 80),
+      'allow_promotion_codes': 'true',
+      'billing_address_collection': 'auto',
+      'payment_method_collection': 'if_required',
+    });
+
+    if (plan === 'pro' && interval === 'month') {
+      checkoutParams.set('subscription_data[trial_period_days]', '14');
+    }
+
+    if (user?.userId) {
+      checkoutParams.set('client_reference_id', user.userId);
+      checkoutParams.set('metadata[user_id]', user.userId);
+      checkoutParams.set('subscription_data[metadata][user_id]', user.userId);
+    }
+
+    if (existingProfile?.stripe_customer_id) {
+      checkoutParams.set('customer', existingProfile.stripe_customer_id);
+      checkoutParams.set('customer_update[address]', 'auto');
+      checkoutParams.set('customer_update[name]', 'auto');
+    } else if (user?.email) {
+      checkoutParams.set('customer_email', user.email);
+    } else if (isValidEmail(email)) {
+      checkoutParams.set('customer_email', email.trim());
+    }
+
+    const stripeRes = await fetch('https://api.stripe.com/v1/checkout/sessions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${env.STRIPE_SECRET_KEY}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Stripe-Version': '2026-02-25.clover',
+      },
+      body: checkoutParams,
+    });
+
+    const session = await stripeRes.json();
+    if (!stripeRes.ok) {
+      return json({ error: session.error?.message || 'Stripe error' }, 400, request);
+    }
+
+    return json({ url: session.url }, 200, request);
+  } catch (err) {
+    console.error('[STRIPE] Checkout failed:', err.message);
+    return json({ error: err.message }, 500, request);
+  }
+}
+
+export function getCheckoutPriceId(plan, interval, env) {
+  if (plan === 'pro') {
+    return interval === 'year'
+      ? env.STRIPE_PRICE_PRO_ANNUAL || CHECKOUT_PRICE_FALLBACKS.pro.year
+      : env.STRIPE_PRICE_PRO || CHECKOUT_PRICE_FALLBACKS.pro.month;
+  }
+
+  return interval === 'year'
+    ? env.STRIPE_PRICE_BASIC_ANNUAL || CHECKOUT_PRICE_FALLBACKS.basic.year
+    : env.STRIPE_PRICE_BASIC || CHECKOUT_PRICE_FALLBACKS.basic.month;
+}
+
+async function getOptionalCheckoutUser(request, env) {
+  const authorization = request.headers.get('Authorization') || '';
+  if (!authorization.toLowerCase().startsWith('bearer ')) {
+    return null;
+  }
+
+  try {
+    return await verifyToken(request, env);
+  } catch (err) {
+    console.warn('[STRIPE] Ignoring invalid checkout bearer token:', err.message);
+    return null;
+  }
+}
+
+function isValidEmail(value) {
+  return typeof value === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 }
 
 export async function handleStripeWebhook(request, env) {
@@ -521,8 +577,18 @@ export function getPlanFromSubscription(subscription, env) {
   }
 
   const priceId = subscription?.items?.data?.[0]?.price?.id || null;
-  if (priceId === env.STRIPE_PRICE_PRO || priceId === env.STRIPE_PRICE_PRO_ANNUAL) return 'pro';
-  if (priceId === env.STRIPE_PRICE_BASIC || priceId === env.STRIPE_PRICE_BASIC_ANNUAL) return 'basic';
+  if (
+    priceId === env.STRIPE_PRICE_PRO ||
+    priceId === env.STRIPE_PRICE_PRO_ANNUAL ||
+    priceId === CHECKOUT_PRICE_FALLBACKS.pro.month ||
+    priceId === CHECKOUT_PRICE_FALLBACKS.pro.year
+  ) return 'pro';
+  if (
+    priceId === env.STRIPE_PRICE_BASIC ||
+    priceId === env.STRIPE_PRICE_BASIC_ANNUAL ||
+    priceId === CHECKOUT_PRICE_FALLBACKS.basic.month ||
+    priceId === CHECKOUT_PRICE_FALLBACKS.basic.year
+  ) return 'basic';
   return null;
 }
 
@@ -630,19 +696,17 @@ export async function supabaseRequest(path, env, options = {}) {
 
 const PLAN_FEATURES = {
   basic: {
-    label: 'Basic',
-    price: '$4.99/mo',
+    label: 'Champion',
+    price: '$20/mo',
     features: [
-      '60 minutes of voice dictation per day',
-      'AI text cleanup (punctuation, formatting)',
-      '15 AI voice commands (formal, translate, summarize, etc.)',
-      'Works in any Windows app',
-      'Cloud STT via Groq Whisper',
+      'Everything in Pro',
+      'Supporter tier for people who want VoltType to keep shipping',
+      'Champion badge when the account UI is enabled',
     ],
   },
   pro: {
     label: 'Pro',
-    price: '$8.99/mo',
+    price: '$7/mo',
     features: [
       'Unlimited voice dictation',
       'AI text cleanup + advanced rewrite',

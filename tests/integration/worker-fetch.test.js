@@ -35,6 +35,7 @@ vi.mock('../../backend/cloudflare-worker/src/groq-proxy.js', () => ({
 describe('worker fetch integration', () => {
   beforeEach(() => {
     vi.resetModules();
+    vi.restoreAllMocks();
     Object.values(moduleState).forEach((mock) => mock.mockReset());
   });
 
@@ -179,6 +180,29 @@ describe('worker fetch integration', () => {
       activeSubscriptions: 1,
       downloads: 10,
     });
+  });
+
+  it('creates public Stripe checkout sessions for website pricing CTAs', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(new Response(JSON.stringify({ url: 'https://checkout.stripe.com/c/test-session' }), { status: 200 }));
+    const worker = (await import('../../backend/cloudflare-worker/src/index.js')).default;
+
+    const res = await worker.fetch(new Request('https://api.example/v1/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ plan: 'pro', interval: 'month', source: 'test' }),
+    }), {
+      STRIPE_SECRET_KEY: 'sk_test_123',
+    });
+
+    expect(res.status).toBe(200);
+    await expect(res.json()).resolves.toEqual({ url: 'https://checkout.stripe.com/c/test-session' });
+    expect(moduleState.verifyToken).not.toHaveBeenCalled();
+
+    const stripeBody = fetchMock.mock.calls[0][1].body.toString();
+    expect(stripeBody).toContain('line_items%5B0%5D%5Bprice%5D=price_1TWHuEFEweghdusf0NWlvqPg');
+    expect(stripeBody).toContain('subscription_data%5Btrial_period_days%5D=14');
+    fetchMock.mockRestore();
   });
 
   it('blocks authenticated users who are not tagged for volttype', async () => {

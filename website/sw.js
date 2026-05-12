@@ -1,4 +1,4 @@
-const CACHE_NAME = 'volttype-8dec344';
+const CACHE_NAME = 'volttype-checkout-20260512';
 const SHELL = [
   '/',
   '/index.html',
