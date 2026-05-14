@@ -41,6 +41,8 @@ if (!gotLock) {
 // State
 let mainWindow = null;
 let overlayWindow = null;
+let overlayReady = false;
+let pendingOverlayMode = null;
 let tray = null;
 let settings = null;
 let history = null;
@@ -245,6 +247,10 @@ function createWindow() {
 // Floating Recording Overlay
 // --------------------------------------------------
 function createOverlay() {
+  if (overlayWindow && !overlayWindow.isDestroyed()) return overlayWindow;
+
+  overlayReady = false;
+  pendingOverlayMode = null;
   const { screen } = require('electron');
   const primaryDisplay = screen.getPrimaryDisplay();
   const { width } = primaryDisplay.workAreaSize;
@@ -268,6 +274,19 @@ function createOverlay() {
 
   // Prevent the overlay from being clicked/focused
   overlayWindow.setIgnoreMouseEvents(true);
+  overlayWindow.webContents.once('did-finish-load', () => {
+    overlayReady = true;
+    if (pendingOverlayMode) {
+      const mode = pendingOverlayMode;
+      pendingOverlayMode = null;
+      showOverlay(mode);
+    }
+  });
+  overlayWindow.on('closed', () => {
+    overlayWindow = null;
+    overlayReady = false;
+    pendingOverlayMode = null;
+  });
 
   overlayWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(`
     <!DOCTYPE html>
@@ -339,10 +358,17 @@ function createOverlay() {
     </body>
     </html>
   `)}`);
+
+  return overlayWindow;
 }
 
 function showOverlay(mode) {
+  if (!overlayWindow || overlayWindow.isDestroyed()) createOverlay();
   if (!overlayWindow || overlayWindow.isDestroyed()) return;
+  if (!overlayReady) {
+    pendingOverlayMode = mode;
+    return;
+  }
   const isProcessing = mode === 'processing';
   overlayWindow.webContents.executeJavaScript(`
     (function() {
@@ -354,8 +380,13 @@ function showOverlay(mode) {
       // Swap indicator: spinner for processing, dot for listening
       indicator.className = '${isProcessing ? 'spinner' : 'dot'}';
     })();
-  `).catch(() => {});
-  overlayWindow.showInactive();
+  `).then(() => {
+    if (overlayWindow && !overlayWindow.isDestroyed()) {
+      overlayWindow.showInactive();
+    }
+  }).catch(() => {
+    pendingOverlayMode = mode;
+  });
 }
 
 function hideOverlay() {
