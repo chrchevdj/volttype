@@ -396,7 +396,7 @@ async function _handleRecordingState({ recording, skip, mode }) {
     // Stop audio and send to main process
     try {
       const result = await audio.stopRecording();
-      if (result && result.arrayBuffer.byteLength > 0) {
+      if (result && !result.timedOut && result.arrayBuffer && result.arrayBuffer.byteLength > 0) {
         const uint8 = new Uint8Array(result.arrayBuffer);
         // Fast base64 encoding using chunks to avoid stack overflow on large arrays
         const chunkSize = 8192;
@@ -414,9 +414,9 @@ async function _handleRecordingState({ recording, skip, mode }) {
           console.log('[APP] Transcription failed:', response.error);
         }
       } else {
-        console.log('[APP] No audio captured (empty result)');
+        console.log('[APP] No audio captured (empty result or stop timeout)');
         // CRITICAL: tell main to clear isTranscribing — otherwise app freezes
-        try { vf.rendererNoAudio('empty-buffer'); } catch {}
+        try { vf.rendererNoAudio(result && result.timedOut ? 'stop-timeout' : 'empty-buffer'); } catch {}
         status.className = 'status-idle';
         status.querySelector('.status-text').textContent = 'Ready';
       }

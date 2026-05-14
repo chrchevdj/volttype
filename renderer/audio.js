@@ -284,6 +284,24 @@ class AudioCapture {
 
     const hasSpoken = this._hasSpoken;
     return new Promise((resolve) => {
+      let settled = false;
+      const finish = (result) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(stopTimeout);
+        resolve(result);
+      };
+      const stopTimeout = setTimeout(() => {
+        console.error('[AUDIO] MediaRecorder stop timed out after 8000ms; recovering');
+        this._cleanup();
+        finish({
+          blob: null,
+          mimeType: null,
+          arrayBuffer: new ArrayBuffer(0),
+          timedOut: true,
+        });
+      }, 8000);
+
       this._mediaRecorder.onstop = async () => {
         const mimeType = this._mediaRecorder.mimeType;
         const blob = new Blob(this._chunks, { type: mimeType });
@@ -297,11 +315,11 @@ class AudioCapture {
         // to Whisper — silent clips cause hallucinations (invented phrases).
         if (!hasSpoken) {
           console.log('[AUDIO] VAD gate: no speech detected, returning empty buffer');
-          resolve({ blob, mimeType, arrayBuffer: new ArrayBuffer(0) });
+          finish({ blob, mimeType, arrayBuffer: new ArrayBuffer(0) });
           return;
         }
 
-        resolve({ blob, mimeType, arrayBuffer });
+        finish({ blob, mimeType, arrayBuffer });
       };
 
       try { this._mediaRecorder.requestData(); } catch {}
