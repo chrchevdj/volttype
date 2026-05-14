@@ -56,6 +56,12 @@ Append new notes below. Keep each note short and factual.
 - Risk/blocker: Wrangler on this Windows box failed certificate validation unless `NODE_TLS_REJECT_UNAUTHORIZED=0` was set for deploy. Do not treat Luka-facing pricing as quotable until Tea/Atlas independently verify from a clean browser, per Chairman rule.
 - Next: Tea/Atlas should click live CTAs from their environment, confirm Stripe pages/prices, and stop before card entry.
 
+## Update - 2026-05-14 08:24 UTC - Codex-2
+- Changed: Completed VoltType Project 3 documentation pass: added `RESEND-DNS-STATUS-2026-05-14.md`, `AUTO-UPDATER-SMOKE-2026-05-14.md`, and `READINESS-2026-05-13.md`.
+- Verified: Resend API reports `volttype.com` verified with sending enabled; DNS resolves DKIM at `resend._domainkey.volttype.com`, SPF at `send.volttype.com`, and MX at `send.volttype.com`; local artifacts show `1.0.1`, `1.2.0`, `1.2.1`, and `latest.yml`.
+- Risk/blocker: Auto-updater and paid checkout welcome-email are not marked green because they require a clean Windows install profile and a safe Stripe test-mode checkout/webhook smoke; no real-money checkout was attempted.
+- Next: Run clean Windows auto-update smoke and Stripe test-mode welcome-email smoke before any paid traffic.
+
 ## Update - 2026-05-08 07:27 - Codex
 - Changed: Completed T-005 audit/fix/deploy pass. Replaced unverified named testimonial section with honest "Private Beta Notes" validation copy and updated stale offline service-worker copy.
 - Verified: `npm.cmd run build` produced VoltType 1.2.1 Windows installer + portable; live curl returned 200 for `volttype.com` and `app.volttype.com`; deployed Pages preview `https://0d2b4bce.volttype.pages.dev`; Playwright live smoke found 0 console errors and 0 failed responses on preview, `volttype.com`, and `app.volttype.com`; preview/custom domain show Private Beta Notes and no old testimonial names/copy.
