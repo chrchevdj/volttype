@@ -28,6 +28,7 @@ class AudioCapture {
     this._onSilenceStop = null;      // callback when VAD triggers stop
     this._onAudioLevel = null;       // callback with live audio level (0-100)
     this._hasSpoken = false;         // has the user actually spoken yet?
+    this._recordingStartedAt = 0;
   }
 
   async init() {
@@ -174,6 +175,7 @@ class AudioCapture {
 
       this._isRecording = true;
       this._hasSpoken = false;
+      this._recordingStartedAt = Date.now();
       this._silenceStart = 0;
 
       // Start VAD — analyze audio levels in real-time
@@ -283,6 +285,7 @@ class AudioCapture {
     }
 
     const hasSpoken = this._hasSpoken;
+    const recordingDurationMs = this._recordingStartedAt ? Date.now() - this._recordingStartedAt : 0;
     return new Promise((resolve) => {
       let settled = false;
       const finish = (result) => {
@@ -307,16 +310,19 @@ class AudioCapture {
         const blob = new Blob(this._chunks, { type: mimeType });
         const arrayBuffer = await blob.arrayBuffer();
 
-        console.log(`[AUDIO] Stopped. Captured ${Math.round(arrayBuffer.byteLength / 1024)}KB, ${this._chunks.length} chunks, spoke=${hasSpoken}`);
+        console.log(`[AUDIO] Stopped. Captured ${Math.round(arrayBuffer.byteLength / 1024)}KB, ${this._chunks.length} chunks, spoke=${hasSpoken}, duration=${recordingDurationMs}ms`);
 
         this._cleanup();
 
         // VAD gate: if VAD never saw real speech during the clip, don't send it
         // to Whisper — silent clips cause hallucinations (invented phrases).
-        if (!hasSpoken) {
-          console.log('[AUDIO] VAD gate: no speech detected, returning empty buffer');
+        if (!hasSpoken && recordingDurationMs <= 1500) {
+          console.log(`[AUDIO] VAD gate: no speech detected in ${recordingDurationMs}ms, returning empty buffer`);
           finish({ blob, mimeType, arrayBuffer: new ArrayBuffer(0) });
           return;
+        }
+        if (!hasSpoken) {
+          console.log(`[AUDIO] VAD fallback: ${recordingDurationMs}ms clip will be transcribed despite no speech flag`);
         }
 
         finish({ blob, mimeType, arrayBuffer });
@@ -336,6 +342,7 @@ class AudioCapture {
     this._chunks = [];
     this._isRecording = false;
     this._mediaRecorder = null;
+    this._recordingStartedAt = 0;
 
     // Re-warm mic for next recording (non-blocking)
     this.preWarm();

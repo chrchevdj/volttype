@@ -35,7 +35,7 @@ function saveForegroundWindow() {
 async function injectText(text) {
   if (!text || text.trim().length === 0) {
     console.log('[INJECT] No text');
-    return;
+    return { success: false, error: 'empty-text' };
   }
   console.log(`[INJECT] Pasting ${text.length} chars`);
 
@@ -53,24 +53,38 @@ async function injectText(text) {
 
   const psScript = `${focusCmd} Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.SendKeys]::SendWait('^v')`;
 
-  return new Promise((resolve) => {
+  const runPaste = (attempt) => new Promise((resolve) => {
     exec(`powershell -NoProfile -NonInteractive -Command "${psScript}"`, {
       windowsHide: true,
       timeout: 6000,
     }, (err) => {
       if (err) {
-        console.error('[INJECT] Paste failed:', err.message);
-        console.log('[INJECT] Text is in clipboard — Ctrl+V to paste manually');
+        console.error(`[INJECT] Paste attempt ${attempt} failed:`, err.message);
+        resolve({ success: false, error: err.message });
       } else {
-        console.log('[INJECT] Pasted OK');
+        console.log(`[INJECT] Paste attempt ${attempt} OK`);
+        resolve({ success: true });
       }
-
-      // Restore clipboard
-      setTimeout(() => {
-        try { if (oldClip) clipboard.writeText(oldClip); } catch {}
-        resolve();
-      }, 600);
     });
+  });
+
+  const first = await runPaste(1);
+  let finalResult = first;
+  if (!first.success) {
+    console.log('[INJECT] Retrying paste once after refocus delay');
+    await new Promise(resolve => setTimeout(resolve, 250));
+    finalResult = await runPaste(2);
+  }
+
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      if (finalResult.success) {
+        try { if (oldClip) clipboard.writeText(oldClip); } catch {}
+      } else {
+        console.log('[INJECT] Text is still in clipboard - press Ctrl+V to paste manually');
+      }
+      resolve(finalResult);
+    }, 600);
   });
 }
 

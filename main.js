@@ -771,8 +771,17 @@ ipcMain.handle('audio-captured', async (event, { audioBase64, mimeType }) => {
 
     // Inject into focused app
     hideOverlay();
-    await injectText(text);
-    console.log('[INJECT] Done');
+    console.log(`[STT] Transcription ready for paste: ${text.length} chars`);
+    const pasteResult = await injectText(text);
+    console.log(`[INJECT] Done success=${!!(pasteResult && pasteResult.success)}`);
+    if (!pasteResult || !pasteResult.success) {
+      console.log('[INJECT] Paste fallback: text remains in clipboard for manual Ctrl+V');
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('transcription-error', {
+          message: 'Text ready - paste with Ctrl+V if it did not appear.',
+        });
+      }
+    }
 
     updateTrayState('idle');
     setTranscribing(false);
