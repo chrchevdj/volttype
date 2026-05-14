@@ -7,6 +7,7 @@ import electronMock from '../mocks/electron.js';
 import { createTempDir, removeDir } from '../support/helpers.js';
 
 const SUPABASE_URL = 'https://ceuymixybyaxpldgggin.supabase.co';
+const WORKER_URL = 'https://volttype-api.crcaway.workers.dev';
 
 const server = setupServer(
   http.post(`${SUPABASE_URL}/auth/v1/signup`, async ({ request }) => {
@@ -22,6 +23,7 @@ const server = setupServer(
     });
   }),
   http.post(`${SUPABASE_URL}/rest/v1/volttype_profiles`, () => new HttpResponse(null, { status: 201 })),
+  http.post(`${WORKER_URL}/v1/auth/claim-activation`, () => HttpResponse.json({ claimed: false })),
   http.post(`${SUPABASE_URL}/auth/v1/token`, async ({ request }) => {
     const url = new URL(request.url);
     const body = await request.json();

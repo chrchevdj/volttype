@@ -12,6 +12,7 @@ const electronNet = getNet();
 
 const SUPABASE_URL = 'https://ceuymixybyaxpldgggin.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNldXltaXh5YnlheHBsZGdnZ2luIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3ODgwNzYsImV4cCI6MjA4NzM2NDA3Nn0.OprbSZuB-wo2Q_aWnkhC0I7e7iPePT9lD8LT2BrlEWE';
+const WORKER_URL = 'https://volttype-api.crcaway.workers.dev';
 
 class Auth {
   constructor() {
@@ -124,6 +125,8 @@ class Auth {
           console.warn('[AUTH] Profile upsert failed (non-critical):', e.message);
         }
       }
+
+      await this._claimPendingActivation();
     }
 
     return data;
@@ -155,9 +158,38 @@ class Auth {
     };
     this._save();
     this._scheduleRefresh();
+    await this._claimPendingActivation();
 
     console.log('[AUTH] Logged in as', data.user?.email);
     return data;
+  }
+
+  async _claimPendingActivation() {
+    const token = this.getToken();
+    if (!token) return null;
+
+    try {
+      const res = await electronNet.fetch(`${WORKER_URL}/v1/auth/claim-activation`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        console.warn('[AUTH] Pending activation claim failed:', data.error || res.status);
+        return null;
+      }
+      if (data.claimed) {
+        console.log('[AUTH] Claimed pending activation:', data.plan);
+      }
+      return data;
+    } catch (e) {
+      console.warn('[AUTH] Pending activation claim failed (non-critical):', e.message);
+      return null;
+    }
   }
 
   /**

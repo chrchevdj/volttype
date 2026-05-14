@@ -16,7 +16,7 @@ import { proxyTranscribe, proxyClean, proxyCommand } from './groq-proxy.js';
 
 // Routes that require an authenticated user but do NOT require the user
 // to already be tagged as a VoltType user. Everything else needs the tag.
-const PRODUCT_TAG_OPT_OUT = new Set(['/v1/auth/join-product']);
+const PRODUCT_TAG_OPT_OUT = new Set(['/v1/auth/join-product', '/v1/auth/claim-activation']);
 
 const CHECKOUT_PRICE_FALLBACKS = {
   pro: {
@@ -84,6 +84,18 @@ export default {
       try {
         const products = await addUserProduct(user.userId, product, env);
         return json({ ok: true, products }, 200, request);
+      } catch (err) {
+        return json({ error: err.message }, 500, request);
+      }
+    }
+
+    // --- POST /v1/auth/claim-activation ---
+    // Website buyers can pay before signing up. After signup/login, this
+    // endpoint claims any Stripe activation that was parked by email.
+    if (path === '/v1/auth/claim-activation' && request.method === 'POST') {
+      try {
+        const result = await claimPendingActivation(user, env);
+        return json(result, 200, request);
       } catch (err) {
         return json({ error: err.message }, 500, request);
       }
@@ -446,15 +458,16 @@ export async function handleStripeWebhook(request, env) {
           await updateProfile(userId, { stripe_customer_id: customerId }, env);
         }
 
+        const customerEmail = session?.customer_details?.email || session?.customer_email;
+
         if (session?.subscription) {
           const subscription = await fetchStripeSubscription(session.subscription, env);
           if (subscription) {
-            await syncStripeSubscription(subscription, env);
+            await syncStripeSubscription(subscription, env, { customerEmail });
           }
         }
 
         // Send welcome email via Resend
-        const customerEmail = session?.customer_details?.email || session?.customer_email;
         const purchasedPlan = session?.metadata?.plan || 'basic';
         if (customerEmail && env.RESEND_API_KEY) {
           await sendWelcomeEmail(customerEmail, purchasedPlan, env).catch((err) => {
@@ -493,24 +506,30 @@ export async function handleStripeWebhook(request, env) {
   }
 }
 
-export async function syncStripeSubscription(subscription, env) {
+export async function syncStripeSubscription(subscription, env, options = {}) {
   if (!subscription?.id) return;
 
   const customerId = getStripeId(subscription.customer);
   let userId = subscription.metadata?.user_id || null;
   let existingProfile = null;
+  let customerEmail = normalizeEmail(options.customerEmail || subscription.customer_email || null);
 
   if (!userId && customerId) {
     existingProfile = await getProfileByCustomerId(customerId, env);
     userId = existingProfile?.id || null;
   }
 
-  if (!userId) {
-    console.warn('[STRIPE] Missing user mapping for subscription', subscription.id);
-    return;
+  if (!userId && !existingProfile) {
+    if (!customerEmail && customerId) {
+      customerEmail = await fetchStripeCustomerEmail(customerId, env);
+    }
+    if (customerEmail) {
+      existingProfile = await getProfileByEmail(customerEmail, env);
+      userId = existingProfile?.id || null;
+    }
   }
 
-  if (!existingProfile) {
+  if (userId && !existingProfile) {
     existingProfile = await getProfileByUserId(userId, env);
   }
 
@@ -523,6 +542,27 @@ export async function syncStripeSubscription(subscription, env) {
   const effectivePlan = isActiveSubscription
     ? plan || fallbackPlan || null
     : 'free';
+
+  if (!userId) {
+    if (customerEmail && isActiveSubscription && effectivePlan) {
+      await upsertPendingActivation({
+        email: customerEmail,
+        plan: effectivePlan,
+        stripe_customer_id: customerId,
+        stripe_subscription_id: subscription.id,
+        status: subscription.status || 'active',
+        current_period_start: unixToIso(subscription.current_period_start),
+        current_period_end: unixToIso(subscription.current_period_end),
+      }, env).catch((err) => {
+        if (!isMissingPendingActivationTable(err)) throw err;
+        console.warn('[STRIPE] Pending activation table missing; signup claim will fall back to Stripe email lookup');
+      });
+      console.warn('[STRIPE] Pending activation saved for email-only subscription', subscription.id);
+      return;
+    }
+    console.warn('[STRIPE] Missing user mapping for subscription', subscription.id);
+    return;
+  }
 
   if (isActiveSubscription && !plan) {
     console.error('[STRIPE] Active subscription has unmapped plan/price', {
@@ -552,6 +592,22 @@ export async function syncStripeSubscription(subscription, env) {
     },
     env
   );
+}
+
+export async function fetchStripeCustomerEmail(customerId, env) {
+  if (!customerId || !env.STRIPE_SECRET_KEY) return null;
+  const res = await fetch(`https://api.stripe.com/v1/customers/${customerId}`, {
+    headers: {
+      'Authorization': `Bearer ${env.STRIPE_SECRET_KEY}`,
+      'Stripe-Version': '2026-02-25.clover',
+    },
+  });
+  if (!res.ok) {
+    console.error('[STRIPE] Failed to fetch customer email:', await res.text());
+    return null;
+  }
+  const customer = await res.json();
+  return normalizeEmail(customer?.email || null);
 }
 
 export async function fetchStripeSubscription(subscriptionId, env) {
@@ -617,6 +673,142 @@ export async function getProfileByCustomerId(customerId, env) {
   return Array.isArray(res) ? res[0] || null : null;
 }
 
+export async function getProfileByEmail(email, env) {
+  const normalized = normalizeEmail(email);
+  if (!normalized) return null;
+  const res = await supabaseRequest(
+    `/rest/v1/volttype_profiles?select=id,email,plan,stripe_customer_id&email=eq.${encodeURIComponent(normalized)}`,
+    env
+  );
+  return Array.isArray(res) ? res[0] || null : null;
+}
+
+export async function claimPendingActivation(user, env) {
+  const email = normalizeEmail(user?.email);
+  if (!user?.userId || !email) {
+    throw new Error('Authenticated user with email required');
+  }
+
+  const pendingRows = await supabaseRequest(
+    `/rest/v1/volttype_pending_activations?select=*&email=eq.${encodeURIComponent(email)}&status=in.(active,trialing,past_due)&order=updated_at.desc&limit=1`,
+    env
+  ).catch((err) => {
+    if (String(err.message || '').includes('volttype_pending_activations')) {
+      return [];
+    }
+    throw err;
+  });
+  const pending = Array.isArray(pendingRows) ? pendingRows[0] || null : null;
+
+  if (!pending) {
+    return claimStripeActivationByEmail(user, env);
+  }
+
+  await applyActivationToUser(user, {
+    plan: pending.plan || 'pro',
+    stripe_customer_id: pending.stripe_customer_id || null,
+    stripe_subscription_id: pending.stripe_subscription_id || null,
+    status: pending.status || 'active',
+    current_period_start: pending.current_period_start || null,
+    current_period_end: pending.current_period_end || null,
+  }, env);
+
+  await markPendingActivationClaimed(email, user.userId, env);
+  return { claimed: true, plan: pending.plan || 'pro' };
+}
+
+export async function claimStripeActivationByEmail(user, env) {
+  const email = normalizeEmail(user?.email);
+  if (!email || !env.STRIPE_SECRET_KEY) {
+    return { claimed: false };
+  }
+
+  const subscription = await findActiveStripeSubscriptionByEmail(email, env);
+  if (!subscription) {
+    return { claimed: false };
+  }
+
+  const plan = getPlanFromSubscription(subscription, env);
+  if (!plan) {
+    console.error('[STRIPE] Email claim found active subscription with unmapped plan/price', {
+      subscriptionId: subscription.id,
+      priceId: subscription?.items?.data?.[0]?.price?.id || null,
+      email,
+    });
+    return { claimed: false };
+  }
+
+  await applyActivationToUser(user, {
+    plan,
+    stripe_customer_id: getStripeId(subscription.customer),
+    stripe_subscription_id: subscription.id,
+    status: subscription.status || 'active',
+    current_period_start: unixToIso(subscription.current_period_start),
+    current_period_end: unixToIso(subscription.current_period_end),
+  }, env);
+
+  return { claimed: true, plan, source: 'stripe' };
+}
+
+export async function findActiveStripeSubscriptionByEmail(email, env) {
+  const normalized = normalizeEmail(email);
+  if (!normalized || !env.STRIPE_SECRET_KEY) return null;
+
+  const customersRes = await fetch(`https://api.stripe.com/v1/customers?email=${encodeURIComponent(normalized)}&limit=3`, {
+    headers: {
+      'Authorization': `Bearer ${env.STRIPE_SECRET_KEY}`,
+      'Stripe-Version': '2026-02-25.clover',
+    },
+  });
+  if (!customersRes.ok) {
+    console.error('[STRIPE] Failed to list customers by email:', await customersRes.text());
+    return null;
+  }
+
+  const customers = await customersRes.json();
+  const activeStatuses = new Set(['active', 'trialing', 'past_due']);
+  for (const customer of customers?.data || []) {
+    const customerId = getStripeId(customer);
+    if (!customerId) continue;
+    const subsRes = await fetch(`https://api.stripe.com/v1/subscriptions?customer=${encodeURIComponent(customerId)}&status=all&limit=10`, {
+      headers: {
+        'Authorization': `Bearer ${env.STRIPE_SECRET_KEY}`,
+        'Stripe-Version': '2026-02-25.clover',
+      },
+    });
+    if (!subsRes.ok) {
+      console.error('[STRIPE] Failed to list customer subscriptions:', await subsRes.text());
+      continue;
+    }
+    const subscriptions = await subsRes.json();
+    const match = (subscriptions?.data || []).find((sub) => activeStatuses.has(sub.status));
+    if (match) return match;
+  }
+
+  return null;
+}
+
+export async function applyActivationToUser(user, activation, env) {
+  const email = normalizeEmail(user?.email);
+  await upsertProfile({
+    id: user.userId,
+    email,
+    plan: activation.plan,
+    stripe_customer_id: activation.stripe_customer_id || null,
+  }, env);
+
+  if (activation.stripe_subscription_id) {
+    await upsertSubscription({
+      stripe_subscription_id: activation.stripe_subscription_id,
+      user_id: user.userId,
+      plan: activation.plan,
+      status: activation.status || 'active',
+      current_period_start: activation.current_period_start || null,
+      current_period_end: activation.current_period_end || null,
+    }, env);
+  }
+}
+
 export async function recordWebhookEvent(event, env) {
   if (!event?.id) {
     throw new Error('Stripe event missing id');
@@ -654,6 +846,20 @@ export async function updateProfile(userId, updates, env) {
   );
 }
 
+export async function upsertProfile(record, env) {
+  await supabaseRequest(
+    '/rest/v1/volttype_profiles?on_conflict=id',
+    env,
+    {
+      method: 'POST',
+      body: record,
+      headers: {
+        'Prefer': 'resolution=merge-duplicates,return=minimal',
+      },
+    }
+  );
+}
+
 export async function upsertSubscription(record, env) {
   await supabaseRequest(
     '/rest/v1/volttype_subscriptions?on_conflict=stripe_subscription_id',
@@ -665,6 +871,54 @@ export async function upsertSubscription(record, env) {
         'Prefer': 'resolution=merge-duplicates,return=minimal',
       },
     }
+  );
+}
+
+export async function upsertPendingActivation(record, env) {
+  await supabaseRequest(
+    '/rest/v1/volttype_pending_activations?on_conflict=email',
+    env,
+    {
+      method: 'POST',
+      body: {
+        ...record,
+        email: normalizeEmail(record.email),
+      },
+      headers: {
+        'Prefer': 'resolution=merge-duplicates,return=minimal',
+      },
+    }
+  );
+}
+
+export async function markPendingActivationClaimed(email, userId, env) {
+  await supabaseRequest(
+    `/rest/v1/volttype_pending_activations?email=eq.${encodeURIComponent(normalizeEmail(email))}`,
+    env,
+    {
+      method: 'PATCH',
+      body: {
+        status: 'claimed',
+        claimed_user_id: userId,
+        claimed_at: new Date().toISOString(),
+      },
+      headers: {
+        'Prefer': 'return=minimal',
+      },
+    }
+  );
+}
+
+export function normalizeEmail(email) {
+  return typeof email === 'string' ? email.trim().toLowerCase() : null;
+}
+
+export function isMissingPendingActivationTable(err) {
+  const message = String(err?.message || err || '');
+  return message.includes('volttype_pending_activations') && (
+    message.includes('PGRST205') ||
+    message.includes('does not exist') ||
+    message.includes('schema cache')
   );
 }
 

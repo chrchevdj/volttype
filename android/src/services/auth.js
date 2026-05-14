@@ -7,6 +7,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SUPABASE_URL = 'https://ceuymixybyaxpldgggin.supabase.co';
+const WORKER_URL = 'https://volttype-api.crcaway.workers.dev';
 const SUPABASE_ANON_KEY =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNldXltaXh5YnlheHBsZGdnZ2luIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3ODgwNzYsImV4cCI6MjA4NzM2NDA3Nn0.OprbSZuB-wo2Q_aWnkhC0I7e7iPePT9lD8LT2BrlEWE';
 
@@ -82,10 +83,12 @@ export async function signup(email, password, fullName) {
   // Auto-login if email confirmation is disabled
   if (data.access_token) {
     await saveSession(data);
+    await claimPendingActivation();
     return { session: true };
   }
   if (data.session?.access_token) {
     await saveSession(data.session);
+    await claimPendingActivation();
     return { session: true };
   }
   // Email confirmation required — user must click link in email
@@ -121,7 +124,7 @@ export async function joinVoltType() {
   const token = await AsyncStorage.getItem(TOKEN_KEY);
   if (!token) throw new Error('Not signed in');
 
-  const res = await fetch('https://volttype-api.crcaway.workers.dev/v1/auth/join-product', {
+  const res = await fetch(`${WORKER_URL}/v1/auth/join-product`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -166,7 +169,28 @@ export async function login(email, password) {
     throw new Error(msg);
   }
   await saveSession(data);
+  await claimPendingActivation();
   return data;
+}
+
+async function claimPendingActivation() {
+  const token = await AsyncStorage.getItem(TOKEN_KEY);
+  if (!token) return null;
+
+  try {
+    const res = await fetch(`${WORKER_URL}/v1/auth/claim-activation`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({}),
+    });
+    const data = await res.json().catch(() => ({}));
+    return res.ok ? data : null;
+  } catch {
+    return null;
+  }
 }
 
 /**
