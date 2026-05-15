@@ -1,6 +1,6 @@
 {
   "name": "volttype",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "VoltType — AI-powered voice typing that learns your style",
   "main": "main.js",
   "scripts": {

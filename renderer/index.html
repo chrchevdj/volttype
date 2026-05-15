@@ -561,6 +561,24 @@
             <button class="btn-secondary" id="btn-refresh-mics">Refresh Devices</button>
           </div>
 
+          <!-- Updates -->
+          <div class="settings-group">
+            <h3>App Updates</h3>
+            <div class="setting-row">
+              <label>Current version</label>
+              <span class="setting-value" id="app-version">Checking...</span>
+            </div>
+            <div class="setting-row">
+              <label>Update status</label>
+              <span class="setting-value" id="update-status-text">VoltType checks automatically on launch and in the background.</span>
+            </div>
+            <div class="setting-row update-actions-row">
+              <button class="btn-primary btn-small" id="btn-check-updates" type="button">Check for updates</button>
+              <button class="btn-primary btn-small hidden" id="btn-install-update-settings" type="button">Restart to install</button>
+            </div>
+            <p class="setting-note">Use this if the banner does not appear or you want to confirm the latest release manually.</p>
+          </div>
+
           <!-- Data -->
           <div class="settings-group">
             <h3>Data &amp; Privacy</h3>

@@ -94,6 +94,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Show app info in settings
   const appInfo = await vf.getAppInfo();
   document.getElementById('settings-path').textContent = appInfo.dataPath;
+  const appVersion = document.getElementById('app-version');
+  if (appVersion) appVersion.textContent = `v${appInfo.version}`;
 });
 
 // ---- Navigation ----
@@ -1157,6 +1159,31 @@ function setupSettingsHandlers() {
     }
   });
 
+  const checkUpdatesBtn = document.getElementById('btn-check-updates');
+  if (checkUpdatesBtn) {
+    checkUpdatesBtn.addEventListener('click', async () => {
+      checkUpdatesBtn.disabled = true;
+      checkUpdatesBtn.textContent = 'Checking...';
+      setUpdateStatusText('Checking for updates...');
+      try {
+        const result = await vf.checkForUpdates();
+        if (!result?.success) {
+          setUpdateStatusText(result?.error || 'Update check failed.', 'error');
+        }
+      } catch (err) {
+        setUpdateStatusText(err.message || 'Update check failed.', 'error');
+      } finally {
+        checkUpdatesBtn.disabled = false;
+        checkUpdatesBtn.textContent = 'Check for updates';
+      }
+    });
+  }
+
+  const settingsInstallBtn = document.getElementById('btn-install-update-settings');
+  if (settingsInstallBtn) {
+    settingsInstallBtn.addEventListener('click', () => vf.installUpdate());
+  }
+
   // Delete model button
   document.getElementById('btn-delete-model').addEventListener('click', async () => {
     const variant = document.getElementById('setting-local-model').value;
@@ -1479,10 +1506,20 @@ async function loadUsageStats() {
 }
 
 // ---- Auto-update banner ----
+function setUpdateStatusText(message, status) {
+  const statusEl = document.getElementById('update-status-text');
+  if (!statusEl) return;
+  statusEl.textContent = message || 'Update status unavailable.';
+  statusEl.classList.remove('update-status-ok', 'update-status-error');
+  if (status === 'ok') statusEl.classList.add('update-status-ok');
+  if (status === 'error') statusEl.classList.add('update-status-error');
+}
+
 function showUpdateBanner(status, message, version) {
   const banner = document.getElementById('update-banner');
   const messageEl = document.getElementById('update-message');
   const installBtn = document.getElementById('btn-install-update');
+  const settingsInstallBtn = document.getElementById('btn-install-update-settings');
   if (!banner || !messageEl) return;
 
   banner.classList.remove('hidden', 'update-ok', 'update-error');
@@ -1492,9 +1529,28 @@ function showUpdateBanner(status, message, version) {
   messageEl.textContent = message || (
     version ? `Update ${version} available, downloading...` : 'Checking for updates...'
   );
+  setUpdateStatusText(
+    messageEl.textContent,
+    status === 'not-available' ? 'ok' : (status === 'error' ? 'error' : null)
+  );
 
   if (installBtn && status !== 'downloaded') {
     installBtn.classList.add('hidden');
+  }
+  if (settingsInstallBtn && status !== 'downloaded') {
+    settingsInstallBtn.classList.add('hidden');
+  }
+
+  if (status === 'downloaded') {
+    const label = version ? `Restart to install ${version}` : 'Restart to install';
+    if (installBtn) {
+      installBtn.textContent = label;
+      installBtn.classList.remove('hidden');
+    }
+    if (settingsInstallBtn) {
+      settingsInstallBtn.textContent = label;
+      settingsInstallBtn.classList.remove('hidden');
+    }
   }
 
   if (status === 'not-available') {
@@ -1515,10 +1571,5 @@ if (vf?.onUpdateAvailable) {
 if (vf?.onUpdateDownloaded) {
   vf.onUpdateDownloaded(({ version }) => {
     showUpdateBanner('downloaded', `Update ${version} is ready. Restart to install.`, version);
-    const installBtn = document.getElementById('btn-install-update');
-    if (installBtn) {
-      installBtn.textContent = `Restart to install ${version}`;
-      installBtn.classList.remove('hidden');
-    }
   });
 }

@@ -70,6 +70,8 @@ const RECORDING_START_TIMEOUT_MS = 5000;
 let transcribingWatchdog = null;
 const TRANSCRIBING_TIMEOUT_MS = 30000; // 30s max per transcription
 const PAID_LOCAL_PLANS = new Set(['basic', 'pro', 'champion']);
+const UPDATE_RECHECK_INTERVAL_MS = 30 * 60 * 1000;
+let updateRecheckTimer = null;
 
 function sendUpdateStatus(status, payload = {}) {
   const data = { status, ...payload };
@@ -315,6 +317,10 @@ app.whenReady().then(() => {
     sendUpdateStatus('error', { message: err.message || 'Update check failed' });
   });
   checkForUpdates(false);
+  if (updateRecheckTimer) clearInterval(updateRecheckTimer);
+  updateRecheckTimer = setInterval(() => {
+    checkForUpdates(false);
+  }, UPDATE_RECHECK_INTERVAL_MS);
 
   // Ensure overlay is hidden on startup (prevents stuck overlay from previous crash)
   hideOverlay();
@@ -342,6 +348,10 @@ app.on('window-all-closed', (e) => {
 });
 
 app.on('will-quit', () => {
+  if (updateRecheckTimer) {
+    clearInterval(updateRecheckTimer);
+    updateRecheckTimer = null;
+  }
   globalShortcut.unregisterAll();
   if (hotkeyManager) hotkeyManager.stop();
   cleanupInjector();
