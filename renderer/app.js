@@ -11,6 +11,7 @@ const audio = window.audioCapture;
 // State
 let currentPage = 'home';
 let settings = {};
+let planStatus = { loggedIn: false, plan: 'free', canUseLocal: false };
 let isRecording = false;
 let recordingOpQueue = Promise.resolve(); // Serializes start/stop operations
 
@@ -31,6 +32,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Load settings
   settings = await vf.getSettings();
+  await refreshPlanStatus();
+  if (settings.engine === 'local' && !planStatus.canUseLocal) {
+    settings = await vf.updateSettings({ engine: 'groq' });
+  }
   applySettings(settings);
 
   // Check local STT status for engine display
@@ -577,7 +582,12 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function showUpgradeBanner() {
-  document.getElementById('upgrade-banner').classList.remove('hidden');
+  const banner = document.getElementById('upgrade-banner');
+  const title = document.getElementById('upgrade-title');
+  const message = document.getElementById('upgrade-message');
+  if (title) title.textContent = 'Pro required for offline mode';
+  if (message) message.textContent = 'Local offline dictation is included in Pro. Start the 14-day trial or switch to cloud/free mode.';
+  banner.classList.remove('hidden');
 }
 
 function hideUpgradeBanner() { // eslint-disable-line no-unused-vars
@@ -592,7 +602,10 @@ function handleTranscriptionError({ message }) {
   // Show meaningful error text (truncate at 40 chars so it fits the sidebar)
   let displayMsg = 'Error';
   if (message) {
-    if (message.includes('limit') || message.includes('Daily limit')) {
+    if (message.includes('Local offline dictation requires') || message.includes('start a Pro trial')) {
+      displayMsg = 'Pro required';
+      showUpgradeBanner();
+    } else if (message.includes('limit') || message.includes('Daily limit')) {
       displayMsg = 'Cloud limit reached';
       showUpgradeBanner();
     } else if (message.includes('timed out') || message.includes('timeout')) {
@@ -728,7 +741,7 @@ function updateQuickStart() {
   // Engine/account readiness
   const hasKey = settings.groqApiKey && settings.groqApiKey.length > 10;
   const stepKey = document.getElementById('step-apikey');
-  const localReady = settings.engine === 'local';
+  const localReady = settings.engine === 'local' && planStatus.canUseLocal;
   if (hasKey || localReady) {
     stepKey.classList.add('done');
     stepKey.querySelector('.step-status').innerHTML = '&#x2713;';
@@ -743,7 +756,10 @@ function updateQuickStart() {
   if (settings.engine === 'local') {
     engineLabel.textContent = 'Local (Offline)';
     // Check if local model is ready via cached status
-    if (window._localSttReady) {
+    if (!planStatus.canUseLocal) {
+      engineStatus.textContent = 'Pro Required';
+      engineStatus.className = 'card-status error';
+    } else if (window._localSttReady) {
       engineStatus.textContent = 'Ready';
       engineStatus.className = 'card-status ok';
     } else {
@@ -1091,8 +1107,16 @@ function setupSettingsHandlers() {
   const engineSelect = document.getElementById('setting-engine');
   engineSelect.addEventListener('change', async () => {
     const engine = engineSelect.value;
-    await vf.updateSettings({ engine });
-    settings.engine = engine;
+    const previousEngine = settings.engine;
+    const updated = await vf.updateSettings({ engine });
+    if (updated.engineDenied) {
+      engineSelect.value = previousEngine || updated.engine || 'groq';
+      showUpgradeBanner();
+      handleTranscriptionError({ message: updated.error || 'Local offline dictation requires an active Pro plan or trial.' });
+      return;
+    }
+    settings = updated;
+    await refreshPlanStatus();
     toggleLocalPanel(engine === 'local');
     updateQuickStart();
     if (engine === 'local') {
@@ -1127,6 +1151,9 @@ function setupSettingsHandlers() {
     } else {
       btn.textContent = 'Retry Download';
       document.getElementById('model-progress-label').textContent = 'Error: ' + (result.error || 'Download failed');
+      if (result.entitlement) {
+        showUpgradeBanner();
+      }
     }
   });
 
@@ -1288,6 +1315,15 @@ function setChecked(id, value) {
   if (el) el.checked = !!value;
 }
 
+async function refreshPlanStatus() {
+  try {
+    planStatus = await vf.getPlanStatus();
+  } catch {
+    planStatus = { loggedIn: false, plan: 'free', canUseLocal: false };
+  }
+  return planStatus;
+}
+
 // ---- Auth ----
 let authMode = 'login'; // 'login' or 'signup'
 
@@ -1298,15 +1334,11 @@ async function initAuth() {
   if (status.loggedIn) {
     // Already logged in — hide auth screen
     authScreen.classList.add('hidden');
+    await refreshPlanStatus();
     return;
   }
 
   const s = await vf.getSettings();
-  if (s.engine === 'local') {
-    authScreen.classList.add('hidden');
-    return;
-  }
-
   // Check if user has their own API key configured
   if (s.groqApiKey && s.groqApiKey.length > 10) {
     // Has own API key — skip auth, let them use BYOK
@@ -1353,6 +1385,8 @@ function setupAuthHandlers() {
     submitBtn.textContent = authMode === 'login' ? 'Sign In' : 'Create Account';
 
     if (result.success) {
+      await refreshPlanStatus();
+      updateQuickStart();
       document.getElementById('auth-screen').classList.add('hidden');
     } else {
       showAuthError(result.error || 'Something went wrong');
@@ -1376,10 +1410,11 @@ function setupAuthHandlers() {
     errorEl.classList.add('hidden');
   });
 
-  // Skip - continue in offline mode
-  skipBtn.addEventListener('click', () => {
+  // Skip - use BYOK/cloud mode instead of the paid local engine
+  skipBtn.addEventListener('click', async () => {
+    settings = await vf.updateSettings({ engine: 'groq' });
     document.getElementById('auth-screen').classList.add('hidden');
-    navigateTo('home');
+    navigateTo('settings');
   });
 }
 

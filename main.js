@@ -69,6 +69,7 @@ const RECORDING_START_TIMEOUT_MS = 5000;
 // Watchdog: if isTranscribing stays true too long → something hung, force reset
 let transcribingWatchdog = null;
 const TRANSCRIBING_TIMEOUT_MS = 30000; // 30s max per transcription
+const PAID_LOCAL_PLANS = new Set(['basic', 'pro', 'champion']);
 
 function sendUpdateStatus(status, payload = {}) {
   const data = { status, ...payload };
@@ -127,6 +128,56 @@ async function checkForUpdates(manual = false) {
     });
     return { success: false, error: err.message || String(err) };
   }
+}
+
+async function getPlanStatus() {
+  const token = auth?.getToken();
+  if (!token) {
+    return {
+      loggedIn: false,
+      plan: 'free',
+      canUseLocal: false,
+      reason: 'not_logged_in',
+    };
+  }
+
+  try {
+    const { net } = require('electron');
+    const res = await net.fetch('https://volttype-api.crcaway.workers.dev/v1/usage', {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    const data = await res.json().catch(() => ({}));
+    const plan = data.plan || 'free';
+    return {
+      loggedIn: true,
+      plan,
+      canUseLocal: PAID_LOCAL_PLANS.has(plan),
+      usage: data,
+    };
+  } catch (err) {
+    console.warn('[ENTITLEMENT] Failed to fetch plan status:', err.message);
+    return {
+      loggedIn: true,
+      plan: 'unknown',
+      canUseLocal: false,
+      reason: 'plan_check_failed',
+      error: err.message,
+    };
+  }
+}
+
+async function requireLocalEntitlement() {
+  const status = await getPlanStatus();
+  if (status.canUseLocal) return { ok: true, status };
+
+  const message = status.loggedIn
+    ? 'Local offline dictation requires an active Pro plan or trial.'
+    : 'Sign in or start a Pro trial to use local offline dictation.';
+  console.warn('[ENTITLEMENT] Local engine blocked:', {
+    plan: status.plan,
+    reason: status.reason || null,
+  });
+  return { ok: false, status, message };
 }
 
 function setTranscribing(val) {
@@ -783,6 +834,17 @@ ipcMain.handle('audio-captured', async (event, { audioBase64, mimeType }) => {
     let result;
 
     if (engineMode === 'local') {
+      const entitlement = await requireLocalEntitlement();
+      if (!entitlement.ok) {
+        hideOverlay();
+        updateTrayState('idle');
+        setTranscribing(false);
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('transcription-error', { message: entitlement.message });
+        }
+        return { success: false, error: entitlement.message, entitlement: entitlement.status };
+      }
+
       // Local engine selected — fail loudly if not ready (never silently fall back to cloud)
       if (!localSTT || !localSTT.isReady) {
         console.error('[STT] Local engine selected but not ready — model may not be downloaded');
@@ -968,6 +1030,18 @@ ipcMain.handle('audio-captured', async (event, { audioBase64, mimeType }) => {
 // Settings
 ipcMain.handle('get-settings', () => settings.getAll());
 ipcMain.handle('update-settings', async (event, partial) => {
+  if (partial.engine === 'local') {
+    const entitlement = await requireLocalEntitlement();
+    if (!entitlement.ok) {
+      return {
+        ...settings.getAll(),
+        engineDenied: true,
+        error: entitlement.message,
+        entitlement: entitlement.status,
+      };
+    }
+  }
+
   settings.update(partial);
   // Re-apply changed settings
   if (partial.groqApiKey !== undefined) {
@@ -1123,6 +1197,8 @@ ipcMain.handle('get-usage', async () => {
   }
 });
 
+ipcMain.handle('get-plan-status', () => getPlanStatus());
+
 // Auth
 ipcMain.handle('auth-login', async (event, { email, password }) => {
   try {
@@ -1214,6 +1290,11 @@ ipcMain.handle('local-stt-status', () => ({
 
 ipcMain.handle('local-stt-download', async (event, variant = 'base.en') => {
   try {
+    const entitlement = await requireLocalEntitlement();
+    if (!entitlement.ok) {
+      return { success: false, error: entitlement.message, entitlement: entitlement.status };
+    }
+
     console.log(`[MAIN] Downloading local model: ${variant}`);
     const paths = await modelManager.ensureModel(variant);
     // Auto-init after download
@@ -1243,6 +1324,11 @@ ipcMain.handle('local-stt-delete', (event, variant = 'base.en') => {
 
 ipcMain.handle('local-stt-init', async (event, variant) => {
   try {
+    const entitlement = await requireLocalEntitlement();
+    if (!entitlement.ok) {
+      return { success: false, error: entitlement.message, entitlement: entitlement.status };
+    }
+
     if (!modelManager.isModelReady(variant)) {
       return { success: false, error: 'Model not downloaded yet' };
     }

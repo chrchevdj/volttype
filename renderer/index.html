@@ -115,18 +115,18 @@
         <!-- Upgrade banner (shown when limit reached) -->
         <div id="upgrade-banner" class="hidden">
           <div class="upgrade-card">
-            <h3>Daily limit reached</h3>
-            <p>You've used all your free minutes for today. Upgrade for more voice typing.</p>
+            <h3 id="upgrade-title">Cloud limit reached</h3>
+            <p id="upgrade-message">You've used your free cloud quota. Upgrade for offline local dictation and unlimited usage.</p>
             <div class="upgrade-buttons">
               <button class="upgrade-btn basic" id="btn-upgrade-basic">
-                <span class="upgrade-plan">Basic</span>
-                <span class="upgrade-price">$4.99/mo</span>
-                <span class="upgrade-desc">30 min/day</span>
+                <span class="upgrade-plan">Champion</span>
+                <span class="upgrade-price">$20/mo</span>
+                <span class="upgrade-desc">Supporter tier</span>
               </button>
               <button class="upgrade-btn pro" id="btn-upgrade-pro">
                 <span class="upgrade-plan">Pro</span>
-                <span class="upgrade-price">$8.99/mo</span>
-                <span class="upgrade-desc">Unlimited</span>
+                <span class="upgrade-price">$7/mo</span>
+                <span class="upgrade-desc">Offline + unlimited</span>
               </button>
             </div>
           </div>
@@ -413,7 +413,7 @@
                 <label>Your CPU</label>
                 <span id="local-cpu-info" class="setting-value">Detecting...</span>
               </div>
-              <p class="setting-note">Runs 100% offline on your CPU. No API key needed, no cloud costs. Model is downloaded once and cached locally.</p>
+              <p class="setting-note">Pro-only. Runs 100% offline on your CPU. Model is downloaded once and cached locally.</p>
             </div>
             <div class="setting-row">
               <label>Language</label>
@@ -639,8 +639,8 @@
       </div>
 
       <div class="auth-divider"><span>or</span></div>
-      <button id="auth-skip" class="auth-btn-secondary">Use with my own API key</button>
-      <p class="auth-note">Free account: 10 min/day. No credit card needed.</p>
+      <button id="auth-skip" class="auth-btn-secondary">Use my own Groq API key</button>
+      <p class="auth-note">Free account includes cloud quota. Pro unlocks offline local dictation.</p>
     </div>
   </div>
 

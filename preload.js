@@ -55,6 +55,7 @@ contextBridge.exposeInMainWorld('volttype', {
   // Upgrade / checkout
   checkout: (plan) => ipcRenderer.invoke('checkout', plan),
   getUsage: () => ipcRenderer.invoke('get-usage'),
+  getPlanStatus: () => ipcRenderer.invoke('get-plan-status'),
 
   // Auth
   login: (data) => ipcRenderer.invoke('auth-login', data),

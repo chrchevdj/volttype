@@ -14,7 +14,7 @@ const DEFAULTS = {
   hotkey: 'Ctrl+Shift+D',
   microphone: 'default',
   language: 'en',
-  engine: 'local',          // 'local' | 'groq' — local is default (offline, private)
+  engine: 'groq',           // 'local' is Pro-only; free starts on cloud/BYOK
   groqApiKey: '',
   localModelVariant: 'base.en',  // 'base.en' | 'small'
   localModelPath: '',       // path to whisper.cpp model file
