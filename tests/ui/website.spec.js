@@ -8,7 +8,7 @@ test('renders the current sales page with download and pricing paths', async ({ 
   await page.goto('/');
 
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Type with your voice');
-  await expect(page.locator('.eyebrow')).toContainText('v1.2.2');
+  await expect(page.locator('.eyebrow')).toContainText('v1.2.3');
   await expect(page.getByRole('link', { name: /Download for Windows/i })).toHaveAttribute('href', '#download');
   await expect(page.getByRole('link', { name: /Download free/i })).toHaveAttribute('href', '/download');
   await expect(page.getByRole('link', { name: /Start 14-day Pro trial/i })).toHaveAttribute('data-checkout-plan', 'pro');

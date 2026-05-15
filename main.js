@@ -77,11 +77,43 @@ function sendUpdateStatus(status, payload = {}) {
   }
 }
 
+function compareVersions(a, b) {
+  const left = String(a || '').split(/[.-]/).map(part => Number.parseInt(part, 10) || 0);
+  const right = String(b || '').split(/[.-]/).map(part => Number.parseInt(part, 10) || 0);
+  const length = Math.max(left.length, right.length);
+  for (let i = 0; i < length; i++) {
+    if ((left[i] || 0) > (right[i] || 0)) return 1;
+    if ((left[i] || 0) < (right[i] || 0)) return -1;
+  }
+  return 0;
+}
+
+function isUpdateNewer(version) {
+  return compareVersions(version, app.getVersion()) > 0;
+}
+
+function sendUpToDateStatus(version, manual = false) {
+  const currentVersion = app.getVersion();
+  log.info('[UPDATE] Ignoring non-newer update candidate', {
+    manual,
+    candidate: version || null,
+    currentVersion,
+  });
+  sendUpdateStatus('not-available', {
+    manual,
+    version: currentVersion,
+    message: `VoltType is up to date (${currentVersion}).`,
+  });
+}
+
 async function checkForUpdates(manual = false) {
   try {
     log.info('[UPDATE] Checking for updates', { manual, version: app.getVersion() });
     sendUpdateStatus('checking', { manual, message: 'Checking for updates...' });
     const result = await autoUpdater.checkForUpdates();
+    if (result?.updateInfo?.version && !isUpdateNewer(result.updateInfo.version)) {
+      sendUpToDateStatus(result.updateInfo.version, manual);
+    }
     log.info('[UPDATE] Check completed', {
       manual,
       version: result?.updateInfo?.version || null,
@@ -193,6 +225,10 @@ app.whenReady().then(() => {
     sendUpdateStatus('checking', { message: 'Checking for updates...' });
   });
   autoUpdater.on('update-available', (info) => {
+    if (!isUpdateNewer(info.version)) {
+      sendUpToDateStatus(info.version);
+      return;
+    }
     log.info('[UPDATE] Update available:', info.version);
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('update-available', { version: info.version });
@@ -210,6 +246,10 @@ app.whenReady().then(() => {
     });
   });
   autoUpdater.on('update-downloaded', (info) => {
+    if (!isUpdateNewer(info.version)) {
+      sendUpToDateStatus(info.version);
+      return;
+    }
     log.info('[UPDATE] Update downloaded:', info.version);
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('update-downloaded', { version: info.version });
