@@ -7,6 +7,7 @@
 const { app, BrowserWindow, globalShortcut, ipcMain, session, Tray, Menu } = require('electron');
 const path = require('path');
 const { autoUpdater } = require('electron-updater');
+const log = require('electron-log');
 const Settings = require('./src/settings');
 const History = require('./src/history');
 const Dictionary = require('./src/dictionary');
@@ -55,15 +56,46 @@ let vocabLearner = null;
 let auth = null;
 let hotkeyManager = null;
 let isRecording = false;
+let isStartingRecording = false;
 let isTranscribing = false;  // Block new recordings while transcribing
 let recordingStartTime = 0;
 let currentHotkey = null;
 let lastToggleTime = 0;      // Debounce protection
 let recordingMode = 'hold';  // 'hold' = Ctrl+Space, 'toggle' = Ctrl+Shift+D
 const TOGGLE_DEBOUNCE_MS = 500;
+let recordingStartWatchdog = null;
+let pendingStopAfterStart = false;
+const RECORDING_START_TIMEOUT_MS = 5000;
 // Watchdog: if isTranscribing stays true too long → something hung, force reset
 let transcribingWatchdog = null;
 const TRANSCRIBING_TIMEOUT_MS = 30000; // 30s max per transcription
+
+function sendUpdateStatus(status, payload = {}) {
+  const data = { status, ...payload };
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('update-status', data);
+  }
+}
+
+async function checkForUpdates(manual = false) {
+  try {
+    log.info('[UPDATE] Checking for updates', { manual, version: app.getVersion() });
+    sendUpdateStatus('checking', { manual, message: 'Checking for updates...' });
+    const result = await autoUpdater.checkForUpdates();
+    log.info('[UPDATE] Check completed', {
+      manual,
+      version: result?.updateInfo?.version || null,
+    });
+    return { success: true, version: result?.updateInfo?.version || null };
+  } catch (err) {
+    log.error('[UPDATE] Check failed', err);
+    sendUpdateStatus('error', {
+      manual,
+      message: err.message || 'Update check failed',
+    });
+    return { success: false, error: err.message || String(err) };
+  }
+}
 
 function setTranscribing(val) {
   isTranscribing = val;
@@ -150,29 +182,55 @@ app.whenReady().then(() => {
   createTray();
   registerHotkeys();
 
-  // Auto-update: check GitHub releases silently
+  // Auto-update: check GitHub releases with persistent file logging.
+  log.transports.file.level = 'info';
+  log.transports.file.resolvePathFn = () => path.join(app.getPath('userData'), 'logs', 'updater.log');
+  autoUpdater.logger = log;
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
-  autoUpdater.checkForUpdatesAndNotify().catch(err => {
-    console.log('[UPDATE] Check failed (no internet or no release):', err.message);
+  autoUpdater.on('checking-for-update', () => {
+    log.info('[UPDATE] checking-for-update');
+    sendUpdateStatus('checking', { message: 'Checking for updates...' });
   });
   autoUpdater.on('update-available', (info) => {
-    console.log('[UPDATE] Update available:', info.version);
+    log.info('[UPDATE] Update available:', info.version);
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('update-available', { version: info.version });
     }
+    sendUpdateStatus('available', {
+      version: info.version,
+      message: `Update ${info.version} available. Downloading...`,
+    });
+  });
+  autoUpdater.on('update-not-available', (info) => {
+    log.info('[UPDATE] No update available:', info?.version || app.getVersion());
+    sendUpdateStatus('not-available', {
+      version: info?.version || app.getVersion(),
+      message: `VoltType is up to date (${app.getVersion()}).`,
+    });
   });
   autoUpdater.on('update-downloaded', (info) => {
-    console.log('[UPDATE] Update downloaded:', info.version);
+    log.info('[UPDATE] Update downloaded:', info.version);
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('update-downloaded', { version: info.version });
     }
+    sendUpdateStatus('downloaded', {
+      version: info.version,
+      message: `Update ${info.version} is ready.`,
+    });
   });
+  autoUpdater.on('error', (err) => {
+    log.error('[UPDATE] updater error:', err);
+    sendUpdateStatus('error', { message: err.message || 'Update check failed' });
+  });
+  checkForUpdates(false);
 
   // Ensure overlay is hidden on startup (prevents stuck overlay from previous crash)
   hideOverlay();
   setTranscribing(false);
   isRecording = false;
+  isStartingRecording = false;
+  pendingStopAfterStart = false;
 
   // Apply auto-start setting
   if (settings.get('startWithWindows') && !getAutoStartEnabled()) {
@@ -322,6 +380,14 @@ function createOverlay() {
         background: linear-gradient(135deg, #7c3aed, #4f46e5);
         box-shadow: 0 4px 24px rgba(124,58,237,0.6);
       }
+      .starting {
+        background: linear-gradient(135deg, #38bdf8, #2563eb);
+        box-shadow: 0 4px 20px rgba(56,189,248,0.45);
+      }
+      .blocked {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        box-shadow: 0 4px 20px rgba(245,158,11,0.45);
+      }
       /* Listening indicator — pulsing red dot */
       .dot {
         width: 10px;
@@ -370,15 +436,22 @@ function showOverlay(mode) {
     return;
   }
   const isProcessing = mode === 'processing';
+  const label = mode === 'processing'
+    ? 'Transcribing...'
+    : mode === 'starting'
+      ? 'Starting mic...'
+      : mode === 'blocked'
+        ? 'Still processing...'
+        : 'Listening...';
   overlayWindow.webContents.executeJavaScript(`
     (function() {
       var pill = document.getElementById('pill');
       var indicator = document.getElementById('indicator');
       var label = document.getElementById('label');
       pill.className = 'pill ${mode}';
-      label.textContent = '${isProcessing ? 'Transcribing...' : 'Listening...'}';
+      label.textContent = '${label}';
       // Swap indicator: spinner for processing, dot for listening
-      indicator.className = '${isProcessing ? 'spinner' : 'dot'}';
+      indicator.className = '${(isProcessing || mode === 'starting') ? 'spinner' : 'dot'}';
     })();
   `).then(() => {
     if (overlayWindow && !overlayWindow.isDestroyed()) {
@@ -419,6 +492,14 @@ function createTray() {
         mainWindow.webContents.send('navigate', 'settings');
       },
     },
+    {
+      label: 'Check for updates',
+      click: () => {
+        mainWindow.show();
+        mainWindow.focus();
+        checkForUpdates(true);
+      },
+    },
     { type: 'separator' },
     {
       label: 'Quit',
@@ -457,6 +538,12 @@ function updateTrayState(state) {
 // Global Hotkeys
 // --------------------------------------------------
 function registerHotkeys() {
+  globalShortcut.unregisterAll();
+  if (hotkeyManager) {
+    hotkeyManager.stop();
+    hotkeyManager = null;
+  }
+
   // 1. Primary: Ctrl+Space hold-to-talk
   hotkeyManager = new HotkeyManager();
   hotkeyManager.setCallbacks(
@@ -501,7 +588,7 @@ function toggleRecording() {
   lastToggleTime = now;
 
   console.log('[HOTKEY] Toggle recording. State:', isRecording ? 'recording' : 'idle', isTranscribing ? '(transcribing)' : '');
-  if (isRecording) {
+  if (isRecording || isStartingRecording) {
     stopRecording();
   } else {
     recordingMode = 'toggle';
@@ -510,18 +597,14 @@ function toggleRecording() {
 }
 
 function startRecording() {
-  if (isRecording || isTranscribing) {
-    console.log('[RECORD] Blocked — already', isRecording ? 'recording' : 'transcribing');
+  if (isRecording || isStartingRecording || isTranscribing) {
+    console.log('[RECORD] Blocked — already', isRecording ? 'recording' : (isStartingRecording ? 'starting' : 'transcribing'));
     // Flash a "Busy" hint on the overlay so user knows shortcut was received but blocked
     if (isTranscribing && overlayWindow && !overlayWindow.isDestroyed()) {
-      overlayWindow.webContents.executeJavaScript(`
-        (function() {
-          var label = document.getElementById('label');
-          var prev = label.textContent;
-          label.textContent = 'Still processing...';
-          setTimeout(function() { label.textContent = prev; }, 1000);
-        })();
-      `).catch(() => {});
+      showOverlay('blocked');
+      setTimeout(() => {
+        if (isTranscribing) showOverlay('processing');
+      }, 1000);
     }
     return;
   }
@@ -529,18 +612,35 @@ function startRecording() {
   // Save which window has focus right now
   saveForegroundWindow();
 
-  isRecording = true;
+  isStartingRecording = true;
+  pendingStopAfterStart = false;
   recordingStartTime = Date.now();
   updateTrayState('recording');
-  showOverlay('recording');
+  showOverlay('starting');
   console.log(`[RECORD] Started (${recordingMode} mode) — telling renderer to capture audio`);
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send('recording-state', { recording: true, mode: recordingMode });
   }
+
+  if (recordingStartWatchdog) clearTimeout(recordingStartWatchdog);
+  recordingStartWatchdog = setTimeout(() => {
+    if (!isStartingRecording) return;
+    console.error('[WATCHDOG] Renderer did not confirm audio start — resetting recording state');
+    resetRecordingState('Microphone did not start. Check your selected microphone and try again.');
+  }, RECORDING_START_TIMEOUT_MS);
 }
 
 function stopRecording() {
+  if (isStartingRecording && !isRecording) {
+    console.log('[RECORD] Stop requested while microphone is starting — will stop after start confirmation');
+    pendingStopAfterStart = true;
+    return;
+  }
   if (!isRecording) return;
+  if (recordingStartWatchdog) {
+    clearTimeout(recordingStartWatchdog);
+    recordingStartWatchdog = null;
+  }
   const holdDuration = Date.now() - recordingStartTime;
   isRecording = false;
 
@@ -561,6 +661,22 @@ function stopRecording() {
   console.log(`[RECORD] Stopped after ${holdDuration}ms — waiting for audio from renderer`);
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send('recording-state', { recording: false });
+  }
+}
+
+function resetRecordingState(message) {
+  if (recordingStartWatchdog) {
+    clearTimeout(recordingStartWatchdog);
+    recordingStartWatchdog = null;
+  }
+  isRecording = false;
+  isStartingRecording = false;
+  pendingStopAfterStart = false;
+  setTranscribing(false);
+  hideOverlay();
+  updateTrayState('idle');
+  if (message && mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('transcription-error', { message });
   }
 }
 
@@ -890,23 +1006,38 @@ ipcMain.on('vad-auto-stop', () => {
   stopRecording();
 });
 
+// Renderer confirms MediaRecorder actually started. Main only treats the app
+// as actively recording after this acknowledgement, which prevents stale
+// "recording" state when the mic fails to open.
+ipcMain.on('renderer-recording-started', () => {
+  if (!isStartingRecording) return;
+  if (recordingStartWatchdog) {
+    clearTimeout(recordingStartWatchdog);
+    recordingStartWatchdog = null;
+  }
+  isStartingRecording = false;
+  isRecording = true;
+  showOverlay('recording');
+  console.log('[RECORD] Renderer confirmed audio capture started');
+
+  if (pendingStopAfterStart) {
+    pendingStopAfterStart = false;
+    stopRecording();
+  }
+});
+
 // Renderer reports it has no audio to send (empty capture / VAD gate / error)
 // Critical for freeze prevention: without this, isTranscribing stays true forever
 // if renderer never calls audio-captured after stopRecording().
 ipcMain.on('renderer-no-audio', (_e, reason) => {
   console.log('[RECOVERY] Renderer reported no audio:', reason || '(none)');
-  hideOverlay();
-  updateTrayState('idle');
-  setTranscribing(false);
+  resetRecordingState();
 });
 
 // Explicit panic reset — if UI ever detects stuck state
 ipcMain.handle('force-reset-state', () => {
   console.log('[RECOVERY] Force reset state requested by renderer');
-  isRecording = false;
-  setTranscribing(false);
-  hideOverlay();
-  updateTrayState('idle');
+  resetRecordingState();
   return true;
 });
 
@@ -1093,7 +1224,7 @@ ipcMain.on('window-maximize', () => {
 ipcMain.on('window-close', () => mainWindow.hide());
 
 // Recording state query
-ipcMain.handle('get-recording-state', () => isRecording);
+ipcMain.handle('get-recording-state', () => isRecording || isStartingRecording);
 
 // Get app info
 ipcMain.handle('get-app-info', () => ({
@@ -1107,3 +1238,5 @@ ipcMain.handle('get-app-info', () => ({
 ipcMain.on('install-update', () => {
   autoUpdater.quitAndInstall();
 });
+
+ipcMain.handle('check-for-updates', () => checkForUpdates(true));

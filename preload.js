@@ -9,7 +9,10 @@ contextBridge.exposeInMainWorld('volttype', {
   onRecordingState: (callback) => ipcRenderer.on('recording-state', (_, data) => callback(data)),
   sendAudioCaptured: (data) => ipcRenderer.invoke('audio-captured', data),
   getRecordingState: () => ipcRenderer.invoke('get-recording-state'),
+  rendererRecordingStarted: () => ipcRenderer.send('renderer-recording-started'),
   vadAutoStop: () => ipcRenderer.send('vad-auto-stop'),
+  rendererNoAudio: (reason) => ipcRenderer.send('renderer-no-audio', reason),
+  forceResetState: () => ipcRenderer.invoke('force-reset-state'),
 
   // Transcription results
   onTranscriptionResult: (callback) => ipcRenderer.on('transcription-result', (_, data) => callback(data)),
@@ -78,5 +81,7 @@ contextBridge.exposeInMainWorld('volttype', {
   // Auto-updater
   onUpdateAvailable: (callback) => ipcRenderer.on('update-available', (_, data) => callback(data)),
   onUpdateDownloaded: (callback) => ipcRenderer.on('update-downloaded', (_, data) => callback(data)),
+  onUpdateStatus: (callback) => ipcRenderer.on('update-status', (_, data) => callback(data)),
+  checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
   installUpdate: () => ipcRenderer.send('install-update'),
 });

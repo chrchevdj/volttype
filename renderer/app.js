@@ -363,10 +363,12 @@ async function _handleRecordingState({ recording, skip, mode }) {
     }
     try {
       await audio.startRecording();
+      try { vf.rendererRecordingStarted(); } catch {}
       playStartSound();
       console.log(`[APP] Audio capture started (${mode} mode, VAD ${mode === 'toggle' ? 'ON' : 'OFF'})`);
     } catch (err) {
       console.error('[APP] Audio start failed:', err);
+      try { await vf.forceResetState(); } catch {}
       playErrorSound();
       stopWaveformAnimation();
       banner.classList.add('hidden');
@@ -591,7 +593,7 @@ function handleTranscriptionError({ message }) {
   let displayMsg = 'Error';
   if (message) {
     if (message.includes('limit') || message.includes('Daily limit')) {
-      displayMsg = 'Daily limit reached';
+      displayMsg = 'Cloud limit reached';
       showUpgradeBanner();
     } else if (message.includes('timed out') || message.includes('timeout')) {
       displayMsg = 'Timed out — try again';
@@ -723,12 +725,16 @@ function updateMicStatus(ok) {
 }
 
 function updateQuickStart() {
-  // API key check
+  // Engine/account readiness
   const hasKey = settings.groqApiKey && settings.groqApiKey.length > 10;
   const stepKey = document.getElementById('step-apikey');
-  if (hasKey) {
+  const localReady = settings.engine === 'local';
+  if (hasKey || localReady) {
     stepKey.classList.add('done');
     stepKey.querySelector('.step-status').innerHTML = '&#x2713;';
+  } else {
+    stepKey.classList.remove('done');
+    stepKey.querySelector('.step-status').innerHTML = '&#x2717;';
   }
 
   // Engine status
@@ -1295,8 +1301,13 @@ async function initAuth() {
     return;
   }
 
-  // Check if user has their own API key configured
   const s = await vf.getSettings();
+  if (s.engine === 'local') {
+    authScreen.classList.add('hidden');
+    return;
+  }
+
+  // Check if user has their own API key configured
   if (s.groqApiKey && s.groqApiKey.length > 10) {
     // Has own API key — skip auth, let them use BYOK
     authScreen.classList.add('hidden');
@@ -1365,10 +1376,10 @@ function setupAuthHandlers() {
     errorEl.classList.add('hidden');
   });
 
-  // Skip — use own API key
+  // Skip - continue in offline mode
   skipBtn.addEventListener('click', () => {
     document.getElementById('auth-screen').classList.add('hidden');
-    navigateTo('settings');
+    navigateTo('home');
   });
 }
 
@@ -1403,11 +1414,14 @@ function initOnboarding() {
     overlay.classList.add('hidden');
   });
 
-  // Open Groq link in browser
-  document.getElementById('ob-groq-link').addEventListener('click', (e) => {
-    e.preventDefault();
-    window.open('https://console.groq.com', '_blank');
-  });
+  // Older onboarding builds included a Groq link; guard for users on updated copy.
+  const groqLink = document.getElementById('ob-groq-link');
+  if (groqLink) {
+    groqLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.open('https://console.groq.com', '_blank');
+    });
+  }
 }
 
 // ---- Usage stats ----
@@ -1430,21 +1444,45 @@ async function loadUsageStats() {
 }
 
 // ---- Auto-update banner ----
-if (window.volttype?.onUpdateAvailable) {
-  window.volttype.onUpdateAvailable(({ version }) => {
-    const banner = document.getElementById('update-banner');
-    const versionEl = document.getElementById('update-version');
-    if (banner) { banner.classList.remove('hidden'); }
-    if (versionEl) { versionEl.textContent = version; }
+function showUpdateBanner(status, message, version) {
+  const banner = document.getElementById('update-banner');
+  const messageEl = document.getElementById('update-message');
+  const installBtn = document.getElementById('btn-install-update');
+  if (!banner || !messageEl) return;
+
+  banner.classList.remove('hidden', 'update-ok', 'update-error');
+  if (status === 'not-available') banner.classList.add('update-ok');
+  if (status === 'error') banner.classList.add('update-error');
+
+  messageEl.textContent = message || (
+    version ? `Update ${version} available, downloading...` : 'Checking for updates...'
+  );
+
+  if (installBtn && status !== 'downloaded') {
+    installBtn.classList.add('hidden');
+  }
+
+  if (status === 'not-available') {
+    setTimeout(() => banner.classList.add('hidden'), 5000);
+  }
+}
+
+if (vf?.onUpdateStatus) {
+  vf.onUpdateStatus(({ status, message, version }) => {
+    showUpdateBanner(status, message, version);
   });
 }
-if (window.volttype?.onUpdateDownloaded) {
-  window.volttype.onUpdateDownloaded(({ version }) => {
-    const banner = document.getElementById('update-banner');
+if (vf?.onUpdateAvailable) {
+  vf.onUpdateAvailable(({ version }) => {
+    showUpdateBanner('available', `Update ${version} available, downloading...`, version);
+  });
+}
+if (vf?.onUpdateDownloaded) {
+  vf.onUpdateDownloaded(({ version }) => {
+    showUpdateBanner('downloaded', `Update ${version} is ready. Restart to install.`, version);
     const installBtn = document.getElementById('btn-install-update');
-    if (banner) { banner.classList.remove('hidden'); }
     if (installBtn) {
-      installBtn.textContent = `Install v${version} & Restart`;
+      installBtn.textContent = `Restart to install ${version}`;
       installBtn.classList.remove('hidden');
     }
   });

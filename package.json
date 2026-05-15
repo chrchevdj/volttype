@@ -1,6 +1,6 @@
 {
   "name": "volttype",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "VoltType — AI-powered voice typing that learns your style",
   "main": "main.js",
   "scripts": {
@@ -39,6 +39,7 @@
     "vitest": "^3.2.4"
   },
   "dependencies": {
+    "electron-log": "^5.4.4",
     "electron-updater": "^6.3.0",
     "ffmpeg-static": "^5.3.0",
     "uiohook-napi": "^1.5.5"
@@ -113,7 +114,9 @@
       {
         "from": "models/",
         "to": "models/",
-        "filter": ["**/*.bin"]
+        "filter": [
+          "**/*.bin"
+        ]
       },
       {
         "from": "whisper-bin/whisper-cli.exe",
